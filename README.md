@@ -48,3 +48,12 @@ completo, aprovação, atividade e ausência de bloqueio/exclusão. Dados clíni
 usam owner_user_id = auth.uid(); Gestão e Administrador não recebem leitura
 clínica implícita. RPCs administrativas revalidam o papel no banco e auditam
 mudanças de aprovação, papel e bloqueio.
+
+## Pacote de registro
+
+A documentação para registro do programa está em `docs/registro/` — comece por
+`docs/registro/LEIA-ME.md`. O pacote reprodutível é gerado com:
+
+    ./scripts/gerar-pacote-registro.sh
+
+As evidências da bateria de verificação estão em `docs/VERIFICACAO_V3.md`.
