@@ -13,6 +13,7 @@ function row(overrides: Partial<AdminProfileRow> = {}): AdminProfileRow {
     email: "pessoa@exemplo.br",
     full_name: "Pessoa Teste",
     role: "profissional",
+    requested_role: null,
     approval_status: "aprovado",
     is_active: true,
     completed_at: "2026-09-01T10:00:00Z",
