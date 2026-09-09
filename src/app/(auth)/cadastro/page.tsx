@@ -6,7 +6,7 @@ export default function SignUpPage() {
     <AuthShell
       eyebrow="Novo acesso"
       title="Criar conta"
-      description="O cadastro público solicita somente o perfil Profissional e depende de aprovação administrativa."
+      description="Profissionais da APS e integrantes da Gestão Municipal podem criar uma conta e solicitar o perfil correspondente. Todo acesso depende de aprovação administrativa."
     >
       <SignUpForm />
     </AuthShell>

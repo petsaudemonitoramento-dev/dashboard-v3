@@ -13,9 +13,9 @@ export default async function CompleteProfilePage() {
 
   return (
     <AuthShell
-      eyebrow="Perfil profissional"
+      eyebrow="Solicitação de acesso"
       title="Complete seu cadastro"
-      description="Esses dados serão revisados antes da liberação do acesso."
+      description="Informe seus dados e escolha o tipo de acesso solicitado. O perfil será revisado antes da liberação."
     >
       <CompleteProfileForm />
     </AuthShell>

@@ -70,6 +70,19 @@ function Field({
   );
 }
 
+function GoogleButton() {
+  return (
+    <form action={signInWithGoogleAction}>
+      <button
+        className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-800 transition hover:bg-slate-50"
+        type="submit"
+      >
+        Continuar com Google
+      </button>
+    </form>
+  );
+}
+
 export function SignInForm() {
   const [state, action] = useActionState(signInAction, INITIAL_STATE);
   return (
@@ -87,14 +100,7 @@ export function SignInForm() {
       <div className="flex items-center gap-3 text-xs uppercase text-slate-400 before:h-px before:flex-1 before:bg-slate-200 after:h-px after:flex-1 after:bg-slate-200">
         ou
       </div>
-      <form action={signInWithGoogleAction}>
-        <button
-          className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-800 transition hover:bg-slate-50"
-          type="submit"
-        >
-          Continuar com Google
-        </button>
-      </form>
+      <GoogleButton />
       <div className="flex justify-between gap-4 text-sm font-bold text-[#0d4d80]">
         <Link href="/recuperar-senha">Esqueci minha senha</Link>
         <Link href="/cadastro">Criar conta</Link>
@@ -106,20 +112,26 @@ export function SignInForm() {
 export function SignUpForm() {
   const [state, action] = useActionState(signUpAction, INITIAL_STATE);
   return (
-    <form action={action} className="grid gap-4">
-      <Field label="E-mail" name="email" type="email" />
-      <Field label="Senha" name="password" type="password" />
-      <Field
-        label="Confirme a senha"
-        name="passwordConfirmation"
-        type="password"
-      />
-      <Message state={state} />
-      <SubmitButton label="Criar conta profissional" />
+    <div className="grid gap-5">
+      <form action={action} className="grid gap-4">
+        <Field label="E-mail" name="email" type="email" />
+        <Field label="Senha" name="password" type="password" />
+        <Field
+          label="Confirme a senha"
+          name="passwordConfirmation"
+          type="password"
+        />
+        <Message state={state} />
+        <SubmitButton label="Criar conta" />
+      </form>
+      <div className="flex items-center gap-3 text-xs uppercase text-slate-400 before:h-px before:flex-1 before:bg-slate-200 after:h-px after:flex-1 after:bg-slate-200">
+        ou
+      </div>
+      <GoogleButton />
       <Link className="text-sm font-bold text-[#0d4d80]" href="/entrar">
         Voltar para entrar
       </Link>
-    </form>
+    </div>
   );
 }
 
@@ -162,11 +174,27 @@ export function CompleteProfileForm() {
     <form action={action} className="grid gap-4">
       <Field label="Nome completo" name="fullName" />
       <Field label="Telefone (opcional)" name="phone" required={false} />
+      <label className="grid gap-2 text-sm font-bold text-slate-700">
+        Tipo de acesso solicitado
+        <select
+          className="min-h-12 rounded-xl border border-slate-200 px-4 font-normal outline-none transition focus:border-[#0d4d80] focus:ring-4 focus:ring-[#0d4d80]/10"
+          defaultValue="profissional"
+          name="requestedRole"
+          required
+        >
+          <option value="profissional">Profissional da APS</option>
+          <option value="gestao_municipal">Gestão Municipal</option>
+        </select>
+      </label>
       <Field
-        label="Registro profissional (opcional)"
+        label="Registro profissional (quando aplicável)"
         name="professionalRegistration"
         required={false}
       />
+      <p className="text-xs leading-5 text-slate-500">
+        O perfil solicitado será analisado pelo Administrador. A solicitação não
+        libera acesso automaticamente e não permite solicitar perfil de Administrador.
+      </p>
       <Message state={state} />
       <SubmitButton label="Enviar para aprovação" />
     </form>

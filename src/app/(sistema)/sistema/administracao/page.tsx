@@ -8,13 +8,9 @@ import { UserCard } from "./user-card";
 export const dynamic = "force-dynamic";
 
 const COLUMNS =
-  "user_id, email, full_name, role, approval_status, is_active, completed_at, blocked_at, created_at";
+  "user_id, email, full_name, role, requested_role, approval_status, is_active, completed_at, blocked_at, created_at";
 
 export default async function AdministrationPage() {
-  // A leitura da lista completa só é possível porque a política
-  // `profiles_select_own_or_administrator` autoriza o administrador. Sem o
-  // papel, o RLS devolveria apenas o próprio perfil — a página não depende de
-  // esconder elementos para proteger nada.
   const context = await enforceRouteGuard(() => requireAdministrator());
 
   const supabase = await createClient();
@@ -47,9 +43,9 @@ export default async function AdministrationPage() {
           Usuários e acessos
         </h1>
         <p className="mt-3 max-w-3xl text-slate-600">
-          Aprovação, papel e bloqueio são validados no servidor e no banco, e
-          toda alteração fica registrada na auditoria. Este perfil é técnico:
-          não concede acesso a dados clínicos do módulo Profissional.
+          Profissionais e integrantes da Gestão Municipal solicitam o perfil no
+          cadastro. A aprovação é validada no servidor e no banco, e toda
+          alteração privilegiada fica registrada na auditoria.
         </p>
       </header>
 

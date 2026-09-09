@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 
 import { getPublicEnv } from "@/config/env";
 import { requireAdministrator } from "@/lib/auth/guards";
-import { isReauthenticationRequired } from "@/lib/auth/supabase-errors";
+import {
+  describeSignUpError,
+  isReauthenticationRequired,
+} from "@/lib/auth/supabase-errors";
 import { createClient } from "@/lib/supabase/server";
 import {
   adminProfileUpdateSchema,
@@ -16,7 +19,7 @@ import {
 } from "@/lib/validation/auth";
 
 export type FormState = {
-   message: string;
+  message: string;
   ok: boolean;
 };
 
@@ -27,17 +30,7 @@ function formValue(formData: FormData, name: string) {
   return typeof value === "string" ? value : "";
 }
 
-/**
- * Origem canônica da aplicação.
- *
- * Vem exclusivamente da configuração. Nenhum cabeçalho da requisição
- * (`x-forwarded-host`, `host`, `x-forwarded-proto`) participa da decisão:
- * eles são controlados por quem faz a chamada e permitiriam apontar o link de
- * recuperação de senha para um domínio hostil, entregando o `code` da vítima.
- *
- * `getPublicEnv()` falha explicitamente no boot se a variável não estiver
- * configurada, então aqui o valor é sempre confiável.
- */
+/** Origem canônica da aplicação; nunca deriva de cabeçalhos da requisição. */
 function canonicalOrigin() {
   return getPublicEnv().NEXT_PUBLIC_APP_URL;
 }
@@ -49,7 +42,7 @@ export async function signInAction(
   const parsed = signInSchema.safeParse({
     email: formValue(formData, "email"),
     password: formValue(formData, "password"),
-   });
+  });
   if (!parsed.success) {
     return initialError(parsed.error.issues[0]?.message ?? "Dados inválidos.");
   }
@@ -83,17 +76,17 @@ export async function signUpAction(
     password: parsed.data.password,
     options: {
       emailRedirectTo: origin + "/auth/callback?next=/completar-cadastro",
-      data: { registration_source: "public_professional" },
+      data: { registration_source: "public_access_request" },
     },
   });
 
   if (result.error) {
-    return initialError("Não foi possível criar a conta.");
+    return initialError(describeSignUpError(result.error));
   }
 
   return {
     ok: true,
-    message: "Conta criada. Confirme o e-mail para continuar.",
+    message: "Conta criada. Confirme o e-mail para continuar e solicitar seu perfil de acesso.",
   };
 }
 
@@ -155,11 +148,6 @@ export async function updatePasswordAction(
   const supabase = await createClient();
   const result = await supabase.auth.updateUser({ password: parsed.data.password });
   if (result.error) {
-    // Com "Secure password change" ativo, o Supabase só aceita a troca quando a
-    // sessão foi criada nas últimas 24h. O fluxo "Esqueci minha senha" sempre
-    // satisfaz isso, porque o link de recuperação cria uma sessão nova. Uma
-    // sessão antiga esquecida em dispositivo compartilhado, não — e é
-    // exatamente esse caso que passa a exigir novo login.
     if (isReauthenticationRequired(result.error)) {
       return initialError(
         "Por segurança, refaça o login ou use o link de recuperação para definir uma nova senha.",
@@ -178,6 +166,7 @@ export async function completeProfileAction(
     fullName: formValue(formData, "fullName"),
     phone: formValue(formData, "phone"),
     professionalRegistration: formValue(formData, "professionalRegistration"),
+    requestedRole: formValue(formData, "requestedRole"),
   });
   if (!parsed.success) {
     return initialError(parsed.error.issues[0]?.message ?? "Dados inválidos.");
@@ -193,6 +182,7 @@ export async function completeProfileAction(
     p_full_name: parsed.data.fullName,
     p_phone: parsed.data.phone,
     p_professional_registration: parsed.data.professionalRegistration,
+    p_requested_role: parsed.data.requestedRole,
   });
   if (result.error) {
     return initialError("Não foi possível completar o cadastro.");

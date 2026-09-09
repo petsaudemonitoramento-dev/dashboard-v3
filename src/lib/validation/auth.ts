@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { REQUESTABLE_USER_ROLES } from "@/lib/auth/types";
+
 const email = z.email("Informe um e-mail válido.").max(254);
 const password = z
   .string()
@@ -39,6 +41,7 @@ export const completeProfileSchema = z.object({
     .trim()
     .max(80)
     .transform((value) => value || null),
+  requestedRole: z.enum(REQUESTABLE_USER_ROLES),
 });
 
 export const adminProfileUpdateSchema = z.object({

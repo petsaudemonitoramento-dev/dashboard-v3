@@ -1,4 +1,8 @@
-import type { ApprovalStatus, UserRole } from "@/lib/auth/types";
+import type {
+  ApprovalStatus,
+  RequestableUserRole,
+  UserRole,
+} from "@/lib/auth/types";
 
 export type ProfileSituation =
   | "ativo"
@@ -13,6 +17,7 @@ export type AdminProfileRow = {
   email: string;
   full_name: string | null;
   role: UserRole;
+  requested_role: RequestableUserRole | null;
   approval_status: ApprovalStatus;
   is_active: boolean;
   completed_at: string | null;
@@ -20,11 +25,6 @@ export type AdminProfileRow = {
   created_at: string;
 };
 
-/**
- * Situação efetiva do perfil, na mesma ordem de precedência que
- * `evaluateActiveProfile` usa no servidor. Manter as duas alinhadas evita que a
- * interface mostre "ativo" para quem o guard recusa.
- */
 export function situationOf(profile: AdminProfileRow): ProfileSituation {
   if (profile.blocked_at) return "bloqueado";
   if (!profile.is_active) return "inativo";
@@ -58,10 +58,6 @@ export const ROLE_LABEL: Record<UserRole, string> = {
   profissional: "Profissional",
 };
 
-/**
- * Ações oferecidas para a situação atual. É conveniência de interface — o banco
- * recusa qualquer ação inválida independentemente do que a tela mostrar.
- */
 export function availableActions(situation: ProfileSituation) {
   switch (situation) {
     case "pendente":

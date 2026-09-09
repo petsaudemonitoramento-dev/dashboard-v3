@@ -55,12 +55,20 @@ export function UserCard({
         </span>
       </header>
 
-      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
+      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
         <div>
           <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">
-            Perfil
+            Perfil atual
           </dt>
           <dd className="text-slate-800">{ROLE_LABEL[profile.role]}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">
+            Acesso solicitado
+          </dt>
+          <dd className="text-slate-800">
+            {profile.requested_role ? ROLE_LABEL[profile.requested_role] : "—"}
+          </dd>
         </div>
         <div>
           <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -100,7 +108,7 @@ export function UserCard({
             Papel
             <select
               className="rounded-lg border border-slate-300 p-2 text-sm font-normal text-slate-800"
-              defaultValue={profile.role}
+              defaultValue={profile.requested_role ?? profile.role}
               name="role"
             >
               {USER_ROLES.map((role) => (

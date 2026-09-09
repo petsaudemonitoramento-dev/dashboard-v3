@@ -6,6 +6,13 @@ export const USER_ROLES = [
 
 export type UserRole = (typeof USER_ROLES)[number];
 
+export const REQUESTABLE_USER_ROLES = [
+  "gestao_municipal",
+  "profissional",
+] as const;
+
+export type RequestableUserRole = (typeof REQUESTABLE_USER_ROLES)[number];
+
 export const APPROVAL_STATUSES = [
   "pendente",
   "aprovado",
