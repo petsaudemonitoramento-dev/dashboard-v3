@@ -1,113 +1,130 @@
-import { updateProfileByAdministratorAction } from "@/app/(auth)/actions";
 import { requireAdministrator } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createClient } from "@/lib/supabase/server";
+import { situationOf, type AdminProfileRow } from "@/lib/admin/status";
 
-type ProfileRow = {
-  user_id: string;
-  email: string;
-  full_name: string | null;
-  role: "administrador" | "gestao_municipal" | "profissional";
-  approval_status: "pendente" | "aprovado" | "rejeitado";
-  is_active: boolean;
-  blocked_at: string | null;
-};
+import { UserCard } from "./user-card";
+
+export const dynamic = "force-dynamic";
+
+const COLUMNS =
+  "user_id, email, full_name, role, approval_status, is_active, completed_at, blocked_at, created_at";
 
 export default async function AdministrationPage() {
-  await enforceRouteGuard(() => requireAdministrator());
+  // A leitura da lista completa só é possível porque a política
+  // `profiles_select_own_or_administrator` autoriza o administrador. Sem o
+  // papel, o RLS devolveria apenas o próprio perfil — a página não depende de
+  // esconder elementos para proteger nada.
+  const context = await enforceRouteGuard(() => requireAdministrator());
+
   const supabase = await createClient();
   const result = await supabase
     .schema("core")
     .from("profiles")
-    .select("user_id, email, full_name, role, approval_status, is_active, blocked_at")
+    .select(COLUMNS)
     .is("deleted_at", null)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   if (result.error) {
     throw new Error("Não foi possível listar os perfis.");
   }
-  const profiles = (result.data ?? []) as ProfileRow[];
+
+  const profiles = (result.data ?? []) as AdminProfileRow[];
+  const pendentes = profiles.filter((p) => {
+    const s = situationOf(p);
+    return s === "pendente" || s === "incompleto";
+  });
+  const ativos = profiles.filter((p) => situationOf(p) === "ativo");
+  const administradores = ativos.filter((p) => p.role === "administrador");
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-      <span className="text-xs font-bold uppercase tracking-widest text-[#0d4d80]">
-        Administração
-      </span>
-      <h1 className="mt-3 text-3xl font-semibold text-[#071d35]">
-        Aprovação de usuários
-      </h1>
-      <p className="mt-3 text-slate-600">
-        Alterações de papel, aprovação e bloqueio são validadas no servidor e
-        registradas na auditoria.
-      </p>
+    <section className="grid gap-6">
+      <header>
+        <span className="text-xs font-bold uppercase tracking-widest text-[#0d4d80]">
+          Administração técnica
+        </span>
+        <h1 className="mt-2 text-3xl font-semibold text-[#071d35]">
+          Usuários e acessos
+        </h1>
+        <p className="mt-3 max-w-3xl text-slate-600">
+          Aprovação, papel e bloqueio são validados no servidor e no banco, e
+          toda alteração fica registrada na auditoria. Este perfil é técnico:
+          não concede acesso a dados clínicos do módulo Profissional.
+        </p>
+      </header>
 
-      <div className="mt-8 grid gap-4">
-        {profiles.map((profile) => (
-          <form
-            action={updateProfileByAdministratorAction}
-            className="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-[1.4fr_repeat(4,1fr)_auto]"
-            key={profile.user_id}
-          >
-            <input name="userId" type="hidden" value={profile.user_id} />
-            <div>
-              <strong>{profile.full_name ?? "Cadastro incompleto"}</strong>
-              <p className="text-sm text-slate-500">{profile.email}</p>
-            </div>
-            <label className="grid gap-1 text-xs font-bold text-slate-600">
-              Papel
-              <select
-                className="rounded-lg border border-slate-200 p-2"
-                defaultValue={profile.role}
-                name="role"
-              >
-                <option value="profissional">Profissional</option>
-                <option value="gestao_municipal">Gestão Municipal</option>
-                <option value="administrador">Administrador</option>
-              </select>
-            </label>
-            <label className="grid gap-1 text-xs font-bold text-slate-600">
-              Aprovação
-              <select
-                className="rounded-lg border border-slate-200 p-2"
-                defaultValue={profile.approval_status}
-                name="approvalStatus"
-              >
-                <option value="pendente">Pendente</option>
-                <option value="aprovado">Aprovado</option>
-                <option value="rejeitado">Rejeitado</option>
-              </select>
-            </label>
-            <label className="grid gap-1 text-xs font-bold text-slate-600">
-              Ativo
-              <select
-                className="rounded-lg border border-slate-200 p-2"
-                defaultValue={String(profile.is_active)}
-                name="isActive"
-              >
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-            </label>
-            <label className="grid gap-1 text-xs font-bold text-slate-600">
-              Bloqueado
-              <select
-                className="rounded-lg border border-slate-200 p-2"
-                defaultValue={String(Boolean(profile.blocked_at))}
-                name="isBlocked"
-              >
-                <option value="false">Não</option>
-                <option value="true">Sim</option>
-              </select>
-            </label>
-            <button
-              className="rounded-lg bg-[#0d4d80] px-4 py-2 font-bold text-white"
-              type="submit"
-            >
-              Salvar
-            </button>
-          </form>
-        ))}
+      <dl className="grid gap-3 sm:grid-cols-3">
+        <Metric label="Aguardando decisão" value={pendentes.length} highlight />
+        <Metric label="Ativos" value={ativos.length} />
+        <Metric label="Administradores ativos" value={administradores.length} />
+      </dl>
+
+      {administradores.length === 1 ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Existe apenas um administrador ativo. O banco recusa qualquer operação
+          que deixe o sistema sem administrador — promova outra pessoa antes de
+          alterar este acesso.
+        </p>
+      ) : null}
+
+      {pendentes.length > 0 ? (
+        <div className="grid gap-3">
+          <h2 className="text-lg font-semibold text-[#071d35]">
+            Aguardando decisão
+          </h2>
+          {pendentes.map((profile) => (
+            <UserCard
+              isSelf={profile.user_id === context.user.id}
+              key={profile.user_id}
+              profile={profile}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      <div className="grid gap-3">
+        <h2 className="text-lg font-semibold text-[#071d35]">
+          Todos os usuários ({profiles.length})
+        </h2>
+        {profiles.length === 0 ? (
+          <p className="rounded-xl border border-slate-200 bg-white p-6 text-slate-600">
+            Nenhum usuário cadastrado ainda.
+          </p>
+        ) : (
+          profiles.map((profile) => (
+            <UserCard
+              isSelf={profile.user_id === context.user.id}
+              key={profile.user_id}
+              profile={profile}
+            />
+          ))
+        )}
       </div>
     </section>
+  );
+}
+
+function Metric({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: number;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border p-4 ${
+        highlight && value > 0
+          ? "border-amber-300 bg-amber-50"
+          : "border-slate-200 bg-white"
+      }`}
+    >
+      <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">
+        {label}
+      </dt>
+      <dd className="mt-1 text-3xl font-semibold text-[#071d35]">{value}</dd>
+    </div>
   );
 }
