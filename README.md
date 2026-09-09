@@ -1,46 +1,50 @@
 # Cuidado na Gestação na APS — V3
 
-Nova geração da plataforma institucional de acompanhamento e análise do cuidado na gestação na Atenção Primária à Saúde.
+Fundação da plataforma institucional de cuidado na gestação na APS.
+A especificação normativa está em docs/IMPLEMENTATION_CONTRACT.md.
 
-## Status
+## Escopo da Fase 1
 
-Arquitetura V3.0 congelada. Implementação iniciada em ambiente isolado, sem alterar a V2 em produção.
+Next.js 16, Supabase Auth, perfis V3, aprovação administrativa, guards
+server-side, schemas isolados, RLS, Storage privado, auditoria e testes.
+Dashboard analítico, Metabase e parsers completos estão fora desta fase.
 
-## Escopo inicial
+## Desenvolvimento local
 
-- Município inicial: Campina Grande-PB.
-- Série oficial de gestão: competências SIAPS a partir de janeiro de 2026.
-- Indicador inicial: C3 — Cuidado na Gestação e Puerpério.
-- Perfis: `administrador`, `gestao_municipal`, `profissional`.
-- Gestão: dados oficiais do SIAPS, exclusivamente por importação de Relatório Qualidade — Visão por Competência.
-- Profissional: diário clínico privado e importação PEC, sem alimentar indicadores oficiais de gestão.
-- Território: Município → Distrito → UBS → Equipe.
-- UBS entram no painel; policlínicas e âncoras são reconhecidas e excluídas do escopo analítico.
+1. Execute npm install.
+2. Copie .env.example para .env.local e informe apenas a URL e a chave publicável V3.
+3. Execute npm run db:start, npm run db:reset e npm run test:db.
+4. Execute npm run dev.
+5. Valide com npm run build, npm run lint e npm test.
 
-## Stack alvo
+Nunca use service_role, senha do banco ou credenciais da V2.
 
-- Next.js 16.x
-- React 19.x
-- TypeScript 5.x
-- Supabase Auth / PostgreSQL / Storage / RLS
-- `@supabase/ssr` e `@supabase/supabase-js`
-- PostgreSQL acessível por camada server-side quando necessário
-- SheetJS/XLSX para ingestão SIAPS
-- Vitest para testes automatizados
-- Vercel para deploy do frontend
-- Metabase institucional UFCG futuramente, consumindo apenas a camada analítica read-only
+## Supabase hospedado
 
-## Supabase V3
+Habilite e-mail/senha, confirmação de e-mail e Google OAuth. Inclua a URL
+pública da aplicação e /auth/callback na allow-list. A Data API expõe apenas
+public, graphql_public, core e security; os schemas professional, siaps,
+analytics_gestao e audit permanecem fora da API.
 
-- Project ref: `nyexakdyxtstcyycmlng`
-- Region: `sa-east-1`
-- URL pública do projeto deve ser fornecida por variável de ambiente.
-- Nunca versionar chaves secretas/service-role.
+As migrations criam os buckets privados siaps-source, territorio-source e
+professional-source. Arquivos profissionais usam auth.uid() como primeiro
+segmento do caminho; os outros buckets não aceitam acesso direto de usuários.
 
-## Contrato técnico
+## Primeiro administrador
 
-Ver [`docs/IMPLEMENTATION_CONTRACT.md`](docs/IMPLEMENTATION_CONTRACT.md).
+O cadastro público sempre nasce como profissional pendente. Depois de criar,
+confirmar e completar o primeiro cadastro, execute no SQL Editor:
 
-## Regra de ouro
+    select security.bootstrap_first_administrator('email@instituicao.br');
 
-Dados do módulo Profissional e dados oficiais da Gestão são domínios separados. Dados clínicos privados de profissionais **nunca** alimentam os indicadores oficiais de gestão.
+A função só funciona antes de existir um Administrador ativo e aprovado, não
+pode ser chamada por anon/authenticated e registra o bootstrap na auditoria.
+As aprovações seguintes são feitas em /sistema/administracao.
+
+## Segurança
+
+O servidor valida auth.getUser(). Um perfil ativo também exige cadastro
+completo, aprovação, atividade e ausência de bloqueio/exclusão. Dados clínicos
+usam owner_user_id = auth.uid(); Gestão e Administrador não recebem leitura
+clínica implícita. RPCs administrativas revalidam o papel no banco e auditam
+mudanças de aprovação, papel e bloqueio.
