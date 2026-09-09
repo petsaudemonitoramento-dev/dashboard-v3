@@ -226,10 +226,14 @@ def main() -> int:
     a(f"| **SHA-256 do pacote** | `{sha_zip}` |")
     a(f"| Arquivos incluídos | {len(incluidos)} |")
     a("")
-    a("O pacote é reprodutível: gerar novamente a partir do mesmo commit produz")
-    a("bytes idênticos e, portanto, o mesmo SHA-256. Toda entrada do ZIP tem data")
-    a("fixa e ordem estável, e o conteúdo é lido do commit, não do diretório de")
-    a("trabalho.")
+    a("O **pacote** é reprodutível: gerar novamente a partir do mesmo commit")
+    a("produz bytes idênticos e, portanto, o mesmo SHA-256. Toda entrada do ZIP")
+    a("tem data fixa e ordem estável, e o conteúdo é lido do commit, não do")
+    a("diretório de trabalho.")
+    a("")
+    a("Este **manifesto** não é byte a byte idêntico entre gerações, porque")
+    a("registra o instante em que foi gerado. O que ele prova é o pacote, e o")
+    a("resumo do pacote não muda.")
     a("")
     a("Conferência:")
     a("")
@@ -283,7 +287,7 @@ def main() -> int:
         a(f"| {i} | `{caminho}` | `{sha}` |")
     a("")
 
-    corpo = "\n".join(linhas)
+    corpo = "\n".join(linhas) + "\n"
     sha_manifesto = hashlib.sha256(corpo.encode("utf-8")).hexdigest()
     corpo += (
         "## Resumo deste manifesto\n\n"
