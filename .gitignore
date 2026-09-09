@@ -11,3 +11,6 @@ supabase/.temp/
 
 # artefatos de execucao do Vitest
 .vitest/
+
+# pacote gerado para registro
+dist-registro/
