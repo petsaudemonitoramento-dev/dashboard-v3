@@ -10,7 +10,10 @@ export function homeForRole(role: UserRole) {
   return ROLE_HOME[role];
 }
 
-export function destinationForAccessError(error: unknown) {
+/** Destino usado quando o motivo da negativa não é reconhecido. */
+const FALLBACK_DESTINATION = "/acesso-negado";
+
+export function destinationForAccessError(error: unknown): string {
   if (!(error instanceof AccessDeniedError)) {
     return "/erro";
   }
@@ -33,5 +36,9 @@ export function destinationForAccessError(error: unknown) {
       return "/aguardando-aprovacao?status=removido";
     case "FORBIDDEN":
       return "/acesso-negado";
+    // Um código novo de AccessDeniedError não pode fazer a rota retornar
+    // `undefined` e derrubar o redirect: nega por padrão.
+    default:
+      return FALLBACK_DESTINATION;
   }
 }
