@@ -8,3 +8,6 @@ coverage/
 *.tsbuildinfo
 supabase/.branches/
 supabase/.temp/
+
+# artefatos de execucao do Vitest
+.vitest/

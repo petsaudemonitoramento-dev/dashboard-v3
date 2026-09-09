@@ -6,7 +6,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(24);
 
 insert into auth.users (id, email, encrypted_password, aud, role, created_at, updated_at)
 values
@@ -169,6 +169,25 @@ select is((select count(*) from professional.patients), 2::bigint,
   'a desduplicação evitou registro duplicado');
 
 reset role;
+
+-- ---------------------------------------------------------------------------
+-- Não contaminação: o módulo Profissional não toca o indicador oficial
+-- ---------------------------------------------------------------------------
+
+-- Duas importações do PEC acabaram de acontecer. Se o indicador institucional
+-- pudesse ser movido por dado assistencial local, o número deixaria de ser o
+-- do SIAPS — é exatamente a separação que o produto promete.
+select is(
+  (select count(*) from analytics_gestao.c3_team_competency),
+  0::bigint,
+  'importar PEC não escreve nada nos fatos do indicador oficial'
+);
+
+select is(
+  (select count(*) from siaps.quality_rows),
+  0::bigint,
+  'importar PEC não escreve nada na base bruta do SIAPS'
+);
 
 select * from finish();
 rollback;

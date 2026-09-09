@@ -10,7 +10,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(24);
 
 insert into auth.users (id, email, encrypted_password, aud, role, created_at, updated_at)
 values
@@ -228,6 +228,25 @@ select is(
   'profissional não lê os fatos da gestão'
 );
 reset role;
+
+-- ---------------------------------------------------------------------------
+-- Não contaminação: a ingestão do SIAPS não cria dado assistencial
+-- ---------------------------------------------------------------------------
+
+-- O relatório é agregado por equipe e não carrega pessoa alguma. Se a ingestão
+-- criasse paciente, o módulo Gestão passaria a produzir dado de saúde
+-- identificável — o oposto do desenho.
+select is(
+  (select count(*) from professional.patients),
+  0::bigint,
+  'importar SIAPS não cria paciente no módulo Profissional'
+);
+
+select is(
+  (select count(*) from professional.pec_imports),
+  0::bigint,
+  'importar SIAPS não registra importação no módulo Profissional'
+);
 
 select * from finish();
 rollback;
