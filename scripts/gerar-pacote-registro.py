@@ -65,30 +65,39 @@ PROIBIDOS_RX = [re.compile(p, re.IGNORECASE) for p in PROIBIDOS]
 # Um arquivo versionado que contenha um destes marcadores derruba a geração.
 # É uma verificação de conteúdo, não só de nome: um segredo colado dentro de um
 # arquivo legítimo não seria pego pela lista acima.
-MARCADORES_SEGREDO = [
-    re.compile(rb"service_role"),
-    re.compile(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
-    re.compile(rb"\bsb_secret_[A-Za-z0-9_\-]{10,}"),
-    re.compile(rb"\bsbp_[A-Za-z0-9]{30,}"),          # token de acesso Supabase
-    re.compile(rb"\bgh[pousr]_[A-Za-z0-9]{30,}"),    # token GitHub
-    re.compile(rb"\bAIza[0-9A-Za-z_\-]{30,}"),       # chave Google
-    re.compile(rb"GOCSPX-[A-Za-z0-9_\-]{10,}"),      # client secret Google
-    re.compile(rb"\beyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\."),  # JWT
+#
+# Os marcadores fortes casam com a *forma* de uma credencial e valem para todo
+# arquivo. Não há motivo legítimo para uma chave privada ou um JWT estarem no
+# repositório, nem mesmo em documentação.
+MARCADORES_FORTES = [
+    (re.compile(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "chave privada"),
+    (re.compile(rb"\bsb_secret_[A-Za-z0-9_\-]{10,}"), "chave secreta Supabase"),
+    (re.compile(rb"\bsbp_[A-Za-z0-9]{30,}"), "token de acesso Supabase"),
+    (re.compile(rb"\bgh[pousr]_[A-Za-z0-9]{30,}"), "token GitHub"),
+    (re.compile(rb"\bAIza[0-9A-Za-z_\-]{30,}"), "chave de API Google"),
+    (re.compile(rb"GOCSPX-[A-Za-z0-9_\-]{10,}"), "client secret Google"),
+    (re.compile(rb"\beyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\."), "JWT"),
 ]
 
-# Arquivos onde a palavra aparece legitimamente, por estar sendo *proibida*
-# no código ou explicada na documentação.
-ISENTOS_MARCADOR = {
-    "src/config/env.ts",
-    "tests/config/env.test.ts",
-    "docs/registro/PRIVACIDADE_E_SEGURANCA.md",
-    "docs/registro/TECNOLOGIAS.md",
-    "docs/SECURITY_DEBT.md",
-    "docs/IMPLEMENTATION_CONTRACT.md",
-    "docs/VERIFICACAO_V3.md",
-    "README.md",
-    "scripts/gerar-pacote-registro.py",
-}
+# O marcador fraco é a palavra `service_role` solta. Ela indica uso indevido
+# quando aparece em código, mas é legítima em documentação e em teste — os dois
+# lugares onde a chave está sendo justamente *proibida* ou explicada. Aplicá-la
+# a tudo transformaria o verificador em ruído, e um verificador ruidoso acaba
+# sendo desligado.
+MARCADOR_FRACO = re.compile(rb"service_role")
+
+
+def sujeito_ao_marcador_fraco(caminho: str) -> bool:
+    if caminho.startswith("docs/") and caminho.endswith(".md"):
+        return False
+    if caminho in {
+        "README.md",
+        "src/config/env.ts",
+        "tests/config/env.test.ts",
+        "scripts/gerar-pacote-registro.py",
+    }:
+        return False
+    return True
 
 
 def git(*args: str) -> str:
@@ -111,11 +120,11 @@ def proibido(caminho: str) -> str | None:
 
 
 def contem_segredo(caminho: str, conteudo: bytes) -> str | None:
-    if caminho in ISENTOS_MARCADOR:
-        return None
-    for rx in MARCADORES_SEGREDO:
+    for rx, descricao in MARCADORES_FORTES:
         if rx.search(conteudo):
-            return rx.pattern
+            return descricao
+    if sujeito_ao_marcador_fraco(caminho) and MARCADOR_FRACO.search(conteudo):
+        return "referência a service_role fora de documentação"
     return None
 
 
@@ -163,7 +172,7 @@ def main() -> int:
         conteudo = git_bytes("show", f"HEAD:{caminho}")
         achado = contem_segredo(caminho, conteudo)
         if achado:
-            print(f"ERRO: possível segredo em {caminho} (padrão {achado!r}).\n"
+            print(f"ERRO: possível segredo em {caminho} ({achado}).\n"
                   "      A geração foi interrompida. Remova o segredo antes de\n"
                   "      empacotar — um pacote de registro é distribuído.",
                   file=sys.stderr)
@@ -257,8 +266,11 @@ def main() -> int:
         a("Nenhum arquivo versionado casou com os padrões de exclusão.")
     a("")
     a("Além disso, todo arquivo incluído é lido e verificado contra marcadores de")
-    a("segredo — chave privada, token de provedor, JWT, chave `service_role`. Um")
-    a("achado interrompe a geração em vez de produzir um pacote comprometido.")
+    a("segredo: chave privada, chave secreta e token de acesso do Supabase, token")
+    a("do GitHub, chave de API e *client secret* do Google, e JWT. Um achado")
+    a("interrompe a geração em vez de produzir um pacote comprometido. A palavra")
+    a("`service_role` é verificada à parte, fora da documentação e dos testes, onde")
+    a("ela aparece legitimamente por estar sendo proibida ou explicada.")
     a("")
     a("## Arquivos e resumos")
     a("")
