@@ -33,14 +33,17 @@ comprar a outra.
 
 ## Ciclo de vida do acesso
 
-Todo cadastro público nasce como **Profissional pendente**. Nenhum usuário se
-promove. A sequência é:
+Todo cadastro público nasce com **acesso pendente**. Nenhum usuário se
+promove. Ao completar o cadastro, o usuário solicita o perfil de **Profissional**
+ou **Gestão Municipal**. A solicitação não concede acesso automaticamente e o
+perfil **Administrador** não pode ser solicitado publicamente. A sequência é:
 
 1. **Cadastro** por e-mail e senha, ou por conta Google.
-2. **Confirmação** do e-mail.
-3. **Completar cadastro** — nome, telefone e registro profissional.
-4. **Aprovação** por um Administrador, que também define o perfil definitivo.
-5. **Acesso** à área correspondente ao perfil.
+2. **Confirmação ou autenticação** do e-mail.
+3. **Completar cadastro** — dados pessoais e perfil de acesso solicitado.
+4. **Solicitação de acesso** como Profissional ou Gestão Municipal.
+5. **Aprovação** por um Administrador, que efetiva ou redefine o perfil.
+6. **Acesso** à área correspondente ao perfil aprovado.
 
 Um Administrador pode, a qualquer momento, aprovar, rejeitar, ativar, inativar,
 bloquear, desbloquear e redefinir o perfil de um usuário. Duas invariantes são
