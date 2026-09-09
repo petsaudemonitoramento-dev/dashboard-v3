@@ -79,25 +79,24 @@ MARCADORES_FORTES = [
     (re.compile(rb"\beyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\."), "JWT"),
 ]
 
-# O marcador fraco é a palavra `service_role` solta. Ela indica uso indevido
-# quando aparece em código, mas é legítima em documentação e em teste — os dois
-# lugares onde a chave está sendo justamente *proibida* ou explicada. Aplicá-la
-# a tudo transformaria o verificador em ruído, e um verificador ruidoso acaba
-# sendo desligado.
+# O marcador fraco é a palavra `service_role` solta. Ela só é sinal de problema
+# no código da aplicação, que jamais deve tocar essa chave. Em documentação,
+# comentário de configuração e teste a palavra aparece legitimamente — é
+# justamente onde a chave está sendo proibida ou explicada. Aplicá-la a tudo
+# transformaria o verificador em ruído, e um verificador ruidoso acaba sendo
+# desligado, que é o pior desfecho possível.
 MARCADOR_FRACO = re.compile(rb"service_role")
+
+# Exceção dentro do próprio código: `env.ts` cita o termo para recusá-lo.
+FONTE_ISENTA = {"src/config/env.ts"}
 
 
 def sujeito_ao_marcador_fraco(caminho: str) -> bool:
-    if caminho.startswith("docs/") and caminho.endswith(".md"):
+    if caminho in FONTE_ISENTA:
         return False
-    if caminho in {
-        "README.md",
-        "src/config/env.ts",
-        "tests/config/env.test.ts",
-        "scripts/gerar-pacote-registro.py",
-    }:
-        return False
-    return True
+    return caminho.startswith("src/") and caminho.endswith(
+        (".ts", ".tsx", ".js", ".jsx", ".mjs")
+    )
 
 
 def git(*args: str) -> str:
@@ -124,7 +123,7 @@ def contem_segredo(caminho: str, conteudo: bytes) -> str | None:
         if rx.search(conteudo):
             return descricao
     if sujeito_ao_marcador_fraco(caminho) and MARCADOR_FRACO.search(conteudo):
-        return "referência a service_role fora de documentação"
+        return "referência a service_role no código da aplicação"
     return None
 
 
@@ -269,8 +268,9 @@ def main() -> int:
     a("segredo: chave privada, chave secreta e token de acesso do Supabase, token")
     a("do GitHub, chave de API e *client secret* do Google, e JWT. Um achado")
     a("interrompe a geração em vez de produzir um pacote comprometido. A palavra")
-    a("`service_role` é verificada à parte, fora da documentação e dos testes, onde")
-    a("ela aparece legitimamente por estar sendo proibida ou explicada.")
+    a("`service_role` é verificada à parte, apenas no código da aplicação, que")
+    a("jamais deve tocar essa chave; em documentação e em teste ela aparece")
+    a("legitimamente, por estar sendo proibida ou explicada.")
     a("")
     a("## Arquivos e resumos")
     a("")
