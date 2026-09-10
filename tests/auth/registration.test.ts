@@ -4,7 +4,7 @@ import { describeSignUpError } from "@/lib/auth/supabase-errors";
 import { completeProfileSchema } from "@/lib/validation/auth";
 
 describe("cadastro público", () => {
-  it("aceita solicitação de profissional", () => {
+  it("não permite solicitação de profissional neste software", () => {
     expect(
       completeProfileSchema.safeParse({
         fullName: "Pessoa Profissional",
@@ -12,7 +12,7 @@ describe("cadastro público", () => {
         professionalRegistration: "",
         requestedRole: "profissional",
       }).success,
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("aceita solicitação de gestão municipal", () => {
