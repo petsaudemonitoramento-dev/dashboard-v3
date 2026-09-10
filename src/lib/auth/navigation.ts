@@ -3,7 +3,7 @@ import { AccessDeniedError, type UserRole } from "./types";
 const ROLE_HOME: Record<UserRole, string> = {
   administrador: "/sistema/administracao",
   gestao_municipal: "/sistema/gestao",
-  profissional: "/sistema/profissional",
+  profissional: "/acesso-negado",
 };
 
 export function homeForRole(role: UserRole) {
