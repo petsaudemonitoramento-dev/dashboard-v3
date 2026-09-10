@@ -174,26 +174,17 @@ export function CompleteProfileForm() {
     <form action={action} className="grid gap-4">
       <Field label="Nome completo" name="fullName" />
       <Field label="Telefone (opcional)" name="phone" required={false} />
-      <label className="grid gap-2 text-sm font-bold text-slate-700">
+      <div className="grid gap-2 text-sm font-bold text-slate-700">
         Tipo de acesso solicitado
-        <select
-          className="min-h-12 rounded-xl border border-slate-200 px-4 font-normal outline-none transition focus:border-[#0d4d80] focus:ring-4 focus:ring-[#0d4d80]/10"
-          defaultValue="profissional"
-          name="requestedRole"
-          required
-        >
-          <option value="profissional">Profissional da APS</option>
-          <option value="gestao_municipal">Gestão Municipal</option>
-        </select>
-      </label>
-      <Field
-        label="Registro profissional (quando aplicável)"
-        name="professionalRegistration"
-        required={false}
-      />
+        <div className="flex min-h-12 items-center rounded-xl border border-slate-200 bg-slate-50 px-4 font-normal text-slate-700">
+          Gestão Municipal
+        </div>
+      </div>
+      <input name="requestedRole" type="hidden" value="gestao_municipal" />
+      <input name="professionalRegistration" type="hidden" value="" />
       <p className="text-xs leading-5 text-slate-500">
-        O perfil solicitado será analisado pelo Administrador. A solicitação não
-        libera acesso automaticamente e não permite solicitar perfil de Administrador.
+        O acesso à Gestão Municipal será analisado pelo Administrador. A solicitação
+        não libera acesso automaticamente.
       </p>
       <Message state={state} />
       <SubmitButton label="Enviar para aprovação" />
