@@ -1,46 +1,50 @@
-# Cuidado na Gestação na APS — V3
+# Cuidado na Gestação na APS — Gestão
 
-Nova geração da plataforma institucional de acompanhamento e análise do cuidado na gestação na Atenção Primária à Saúde.
+Software de gestão municipal para análise do cuidado na gestação e puerpério na Atenção Primária à Saúde.
 
-## Status
+## Direção atual
 
-Arquitetura V3.0 congelada. Implementação iniciada em ambiente isolado, sem alterar a V2 em produção.
+Este repositório corresponde somente ao software da Gestão. O antigo módulo dos profissionais foi separado em outro software e não faz parte deste banco, deste frontend nem dos cálculos oficiais.
 
-## Escopo inicial
+## Fonte oficial
 
-- Município inicial: Campina Grande-PB.
-- Série oficial de gestão: competências SIAPS a partir de janeiro de 2026.
-- Indicador inicial: C3 — Cuidado na Gestação e Puerpério.
-- Perfis: `administrador`, `gestao_municipal`, `profissional`.
-- Gestão: dados oficiais do SIAPS, exclusivamente por importação de Relatório Qualidade — Visão por Competência.
-- Profissional: diário clínico privado e importação PEC, sem alimentar indicadores oficiais de gestão.
-- Território: Município → Distrito → UBS → Equipe.
-- UBS entram no painel; policlínicas e âncoras são reconhecidas e excluídas do escopo analítico.
+- SIAPS — Relatório Qualidade — Visão por Competência
+- Série inicial: JAN/2026 em diante
+- Indicador inicial: C3 — Cuidado na Gestação e Puerpério
+- Município inicial: Campina Grande-PB
+- Identidade de estabelecimento: CNES
+- Identidade de equipe: INE
 
-## Stack alvo
+## Escopo
 
-- Next.js 16.x
-- React 19.x
-- TypeScript 5.x
-- Supabase Auth / PostgreSQL / Storage / RLS
-- `@supabase/ssr` e `@supabase/supabase-js`
-- PostgreSQL acessível por camada server-side quando necessário
-- SheetJS/XLSX para ingestão SIAPS
-- Vitest para testes automatizados
-- Vercel para deploy do frontend
-- Metabase institucional UFCG futuramente, consumindo apenas a camada analítica read-only
+O sistema é construído desde o início para receber todas as equipes presentes nas competências importadas.
 
-## Supabase V3
+O recorte de 14 equipes do piloto é apenas uma coorte analítica opcional para as primeiras análises. Ele não limita ingestão, banco, filtros ou interface.
 
-- Project ref: `nyexakdyxtstcyycmlng`
-- Region: `sa-east-1`
-- URL pública do projeto deve ser fornecida por variável de ambiente.
-- Nunca versionar chaves secretas/service-role.
+## Supabase
 
-## Contrato técnico
+Projeto: dashboard-v3
+Ref: nyexakdyxtstcyycmlng
 
-Ver [`docs/IMPLEMENTATION_CONTRACT.md`](docs/IMPLEMENTATION_CONTRACT.md).
+Schemas principais:
+- app
+- core
+- siaps
+- analytics
+- study
+- audit
 
-## Regra de ouro
+## Situação territorial
 
-Dados do módulo Profissional e dados oficiais da Gestão são domínios separados. Dados clínicos privados de profissionais **nunca** alimentam os indicadores oficiais de gestão.
+A relação Distrito → UBS ainda está parcial. As unidades sem distrito cadastrado permanecem válidas no sistema e aparecem como “Não informado” até que a referência territorial completa seja recebida.
+
+## Stack
+
+- Next.js 16.3.4
+- React 19.3.0
+- TypeScript
+- Supabase Auth / PostgreSQL / RLS
+- @supabase/ssr
+- Vercel
+
+A reconstrução do novo software da Gestão começa na branch gestao-rebuild.
