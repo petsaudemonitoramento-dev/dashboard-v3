@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #071d35;
+  --blue: #0d4d80;
+  --aqua: #2db4b2;
+  --ink: #13263a;
+  --surface: #f5f8fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--surface);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
