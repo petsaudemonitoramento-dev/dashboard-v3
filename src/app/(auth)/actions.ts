@@ -1,10 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getPublicEnv } from "@/config/env";
 import { requireAdministrator } from "@/lib/auth/guards";
+import { isReauthenticationRequired } from "@/lib/auth/supabase-errors";
 import { createClient } from "@/lib/supabase/server";
 import {
   adminProfileUpdateSchema,
@@ -27,19 +27,19 @@ function formValue(formData: FormData, name: string) {
   return typeof value === "string" ? value : "";
 }
 
-async function requestOrigin() {
-  const env = getPublicEnv();
-  if (env.NEXT_PUBLIC_APP_URL) {
-    return env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  }
-
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
-  if (!host) {
-    throw new Error("Configure NEXT_PUBLIC_APP_URL para autenticação.");
-  }
-  return protocol + "://" + host;
+/**
+ * Origem canônica da aplicação.
+ *
+ * Vem exclusivamente da configuração. Nenhum cabeçalho da requisição
+ * (`x-forwarded-host`, `host`, `x-forwarded-proto`) participa da decisão:
+ * eles são controlados por quem faz a chamada e permitiriam apontar o link de
+ * recuperação de senha para um domínio hostil, entregando o `code` da vítima.
+ *
+ * `getPublicEnv()` falha explicitamente no boot se a variável não estiver
+ * configurada, então aqui o valor é sempre confiável.
+ */
+function canonicalOrigin() {
+  return getPublicEnv().NEXT_PUBLIC_APP_URL;
 }
 
 export async function signInAction(
@@ -76,7 +76,7 @@ export async function signUpAction(
     return initialError(parsed.error.issues[0]?.message ?? "Dados inválidos.");
   }
 
-  const origin = await requestOrigin();
+  const origin = canonicalOrigin();
   const supabase = await createClient();
   const result = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -98,7 +98,7 @@ export async function signUpAction(
 }
 
 export async function signInWithGoogleAction() {
-  const origin = await requestOrigin();
+  const origin = canonicalOrigin();
   const supabase = await createClient();
   const result = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -125,7 +125,7 @@ export async function requestPasswordResetAction(
     return initialError(parsed.error.issues[0]?.message ?? "E-mail inválido.");
   }
 
-  const origin = await requestOrigin();
+  const origin = canonicalOrigin();
   const supabase = await createClient();
   const result = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: origin + "/auth/callback?next=/redefinir-senha",
@@ -155,6 +155,16 @@ export async function updatePasswordAction(
   const supabase = await createClient();
   const result = await supabase.auth.updateUser({ password: parsed.data.password });
   if (result.error) {
+    // Com "Secure password change" ativo, o Supabase só aceita a troca quando a
+    // sessão foi criada nas últimas 24h. O fluxo "Esqueci minha senha" sempre
+    // satisfaz isso, porque o link de recuperação cria uma sessão nova. Uma
+    // sessão antiga esquecida em dispositivo compartilhado, não — e é
+    // exatamente esse caso que passa a exigir novo login.
+    if (isReauthenticationRequired(result.error)) {
+      return initialError(
+        "Por segurança, refaça o login ou use o link de recuperação para definir uma nova senha.",
+      );
+    }
     return initialError("Não foi possível atualizar a senha.");
   }
   redirect("/sistema");
