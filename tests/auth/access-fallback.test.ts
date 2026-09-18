@@ -12,8 +12,8 @@ describe("destino de negativa de acesso (B1)", () => {
     expect(destinationForAccessError(new AccessDeniedError("FORBIDDEN", "x"))).toBe(
       "/acesso-negado",
     );
-    expect(destinationForAccessError(new AccessDeniedError("BLOCKED", "x"))).toBe(
-      "/aguardando-aprovacao?status=bloqueado",
+    expect(destinationForAccessError(new AccessDeniedError("PROFILE_MISSING", "x"))).toBe(
+      "/aguardando-aprovacao?status=sem-perfil",
     );
   });
 

@@ -6,7 +6,7 @@ export default function SignUpPage() {
     <AuthShell
       eyebrow="Novo acesso"
       title="Criar conta"
-      description="O cadastro público solicita somente o perfil Profissional e depende de aprovação administrativa."
+      description="Crie sua conta de autenticação. O acesso à Gestão é liberado separadamente pela administração institucional."
     >
       <SignUpForm />
     </AuthShell>

@@ -12,35 +12,14 @@ import {
 
 const profileRowSchema = z.object({
   user_id: z.uuid(),
-  role: z.enum(["administrador", "gestao_municipal", "profissional"]),
-  full_name: z.string().nullable(),
-  phone: z.string().nullable(),
-  professional_registration: z.string().nullable(),
-  approval_status: z.enum(["pendente", "aprovado", "rejeitado"]),
-  is_active: z.boolean(),
-  completed_at: z.string().nullable(),
-  blocked_at: z.string().nullable(),
-  deleted_at: z.string().nullable(),
+  email: z.email(),
+  role: z.enum(["admin", "gestao", "leitura"]),
+  active: z.boolean(),
 });
 
 export interface ProfileGateway {
   getAuthenticatedUser(): Promise<AuthenticatedUser | null>;
   getProfile(userId: string): Promise<Profile | null>;
-}
-
-function mapProfileRow(row: z.infer<typeof profileRowSchema>): Profile {
-  return {
-    userId: row.user_id,
-    role: row.role,
-    fullName: row.full_name,
-    phone: row.phone,
-    professionalRegistration: row.professional_registration,
-    approvalStatus: row.approval_status,
-    isActive: row.is_active,
-    completedAt: row.completed_at,
-    blockedAt: row.blocked_at,
-    deletedAt: row.deleted_at,
-  };
 }
 
 async function createSupabaseProfileGateway(): Promise<ProfileGateway> {
@@ -54,21 +33,24 @@ async function createSupabaseProfileGateway(): Promise<ProfileGateway> {
     },
     async getProfile(userId) {
       const result = await supabase
-        .schema("core")
+        .schema("app")
         .from("profiles")
-        .select(
-          "user_id, role, full_name, phone, professional_registration, approval_status, is_active, completed_at, blocked_at, deleted_at",
-        )
+        .select("user_id, email, role, active")
         .eq("user_id", userId)
         .maybeSingle();
 
       if (result.error) {
-        throw new Error("Não foi possível consultar o perfil.");
+        throw new Error("Não foi possível consultar o perfil da Gestão.");
       }
+      if (!result.data) return null;
 
-      return result.data
-        ? mapProfileRow(profileRowSchema.parse(result.data))
-        : null;
+      const row = profileRowSchema.parse(result.data);
+      return {
+        userId: row.user_id,
+        email: row.email,
+        role: row.role,
+        isActive: row.active,
+      };
     },
   };
 }
@@ -81,30 +63,11 @@ export function evaluateActiveProfile(
     throw new AccessDeniedError("UNAUTHENTICATED", "Sessão inválida.");
   }
   if (!profile) {
-    throw new AccessDeniedError("PROFILE_MISSING", "Perfil não encontrado.");
-  }
-  if (profile.deletedAt) {
-    throw new AccessDeniedError("DELETED", "Perfil removido.");
-  }
-  if (profile.blockedAt) {
-    throw new AccessDeniedError("BLOCKED", "Perfil bloqueado.");
+    throw new AccessDeniedError("PROFILE_MISSING", "Acesso ainda não provisionado.");
   }
   if (!profile.isActive) {
     throw new AccessDeniedError("INACTIVE", "Perfil inativo.");
   }
-  if (!profile.completedAt) {
-    throw new AccessDeniedError("PROFILE_INCOMPLETE", "Cadastro incompleto.");
-  }
-  if (profile.approvalStatus === "rejeitado") {
-    throw new AccessDeniedError("REJECTED", "Cadastro rejeitado.");
-  }
-  if (profile.approvalStatus !== "aprovado") {
-    throw new AccessDeniedError(
-      "PENDING_APPROVAL",
-      "Cadastro aguardando aprovação.",
-    );
-  }
-
   return { user, profile };
 }
 
@@ -122,27 +85,15 @@ export function requireRoleFromContext(
   role: UserRole,
 ): ActiveProfileContext {
   if (context.profile.role !== role) {
-    throw new AccessDeniedError(
-      "FORBIDDEN",
-      "Perfil sem permissão para esta área.",
-    );
+    throw new AccessDeniedError("FORBIDDEN", "Perfil sem permissão para esta área.");
   }
   return context;
 }
 
-async function requireRole(role: UserRole, gateway?: ProfileGateway) {
-  const context = await getActiveProfileContext(gateway);
-  return requireRoleFromContext(context, role);
+export async function requireAdministrator(gateway?: ProfileGateway) {
+  return requireRoleFromContext(await getActiveProfileContext(gateway), "admin");
 }
 
-export function requireAdministrator(gateway?: ProfileGateway) {
-  return requireRole("administrador", gateway);
-}
-
-export function requireMunicipalManagement(gateway?: ProfileGateway) {
-  return requireRole("gestao_municipal", gateway);
-}
-
-export function requireProfessional(gateway?: ProfileGateway) {
-  return requireRole("profissional", gateway);
+export function requireManagementAccess(gateway?: ProfileGateway) {
+  return getActiveProfileContext(gateway);
 }

@@ -5,27 +5,14 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { createClient } from "@/lib/supabase/server";
 
 const MESSAGES: Record<string, { title: string; description: string }> = {
-  pendente: {
-    title: "Aguardando aprovação",
+  "sem-perfil": {
+    title: "Aguardando liberação",
     description:
-      "Seu cadastro foi recebido e precisa ser aprovado por um administrador.",
-  },
-  rejeitado: {
-    title: "Cadastro não aprovado",
-    description:
-      "Seu pedido de acesso foi rejeitado. Procure a administração técnica.",
-  },
-  bloqueado: {
-    title: "Acesso bloqueado",
-    description: "Seu perfil está bloqueado. Procure a administração técnica.",
+      "Sua conta de autenticação existe, mas o acesso à Gestão ainda não foi provisionado.",
   },
   inativo: {
     title: "Perfil inativo",
-    description: "Seu perfil está inativo e não pode acessar o sistema.",
-  },
-  removido: {
-    title: "Perfil removido",
-    description: "Este perfil não está mais disponível.",
+    description: "Seu perfil de Gestão está inativo. Procure a administração técnica.",
   },
 };
 
@@ -40,8 +27,8 @@ export default async function WaitingPage({
     redirect("/entrar");
   }
 
-  const status = (await searchParams).status ?? "pendente";
-  const content = MESSAGES[status] ?? MESSAGES.pendente;
+  const status = (await searchParams).status ?? "sem-perfil";
+  const content = MESSAGES[status] ?? MESSAGES["sem-perfil"];
   return (
     <AuthShell
       eyebrow="Situação do acesso"

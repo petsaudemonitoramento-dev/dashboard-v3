@@ -5,7 +5,6 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
-  completeProfileAction,
   requestPasswordResetAction,
   signInAction,
   signInWithGoogleAction,
@@ -115,7 +114,7 @@ export function SignUpForm() {
         type="password"
       />
       <Message state={state} />
-      <SubmitButton label="Criar conta profissional" />
+      <SubmitButton label="Solicitar acesso à Gestão" />
       <Link className="text-sm font-bold text-[#0d4d80]" href="/entrar">
         Voltar para entrar
       </Link>
@@ -152,23 +151,6 @@ export function UpdatePasswordForm() {
       />
       <Message state={state} />
       <SubmitButton label="Atualizar senha" />
-    </form>
-  );
-}
-
-export function CompleteProfileForm() {
-  const [state, action] = useActionState(completeProfileAction, INITIAL_STATE);
-  return (
-    <form action={action} className="grid gap-4">
-      <Field label="Nome completo" name="fullName" />
-      <Field label="Telefone (opcional)" name="phone" required={false} />
-      <Field
-        label="Registro profissional (opcional)"
-        name="professionalRegistration"
-        required={false}
-      />
-      <Message state={state} />
-      <SubmitButton label="Enviar para aprovação" />
     </form>
   );
 }

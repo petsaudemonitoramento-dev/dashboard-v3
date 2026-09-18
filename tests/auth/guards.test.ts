@@ -3,8 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   evaluateActiveProfile,
   requireAdministrator,
-  requireMunicipalManagement,
-  requireProfessional,
+  requireManagementAccess,
   type ProfileGateway,
 } from "@/lib/auth/guards";
 import {
@@ -22,23 +21,17 @@ const user: AuthenticatedUser = {
 function profile(overrides: Partial<Profile> = {}): Profile {
   return {
     userId: user.id,
-    role: "profissional",
-    fullName: "Pessoa Teste",
-    phone: null,
-    professionalRegistration: null,
-    approvalStatus: "aprovado",
+    email: user.email!,
+    role: "leitura",
     isActive: true,
-    completedAt: "2026-09-08T12:00:00Z",
-    blockedAt: null,
-    deletedAt: null,
     ...overrides,
   };
 }
 
-function gateway(role: UserRole): ProfileGateway {
+function gateway(role: UserRole, isActive = true): ProfileGateway {
   return {
     getAuthenticatedUser: async () => user,
-    getProfile: async () => profile({ role }),
+    getProfile: async () => profile({ role, isActive }),
   };
 }
 
@@ -52,61 +45,46 @@ function expectCode(run: () => unknown, code: string) {
   }
 }
 
-describe("condição de perfil ativo", () => {
+describe("perfil app.profiles", () => {
   it("bloqueia usuário não autenticado", () => {
     expectCode(() => evaluateActiveProfile(null, null), "UNAUTHENTICATED");
   });
 
-  it("bloqueia perfil ausente", () => {
+  it("bloqueia perfil ainda não provisionado", () => {
     expectCode(() => evaluateActiveProfile(user, null), "PROFILE_MISSING");
   });
 
-  it.each([
-    ["cadastro incompleto", profile({ completedAt: null }), "PROFILE_INCOMPLETE"],
-    ["aprovação pendente", profile({ approvalStatus: "pendente" }), "PENDING_APPROVAL"],
-    ["cadastro rejeitado", profile({ approvalStatus: "rejeitado" }), "REJECTED"],
-    ["perfil inativo", profile({ isActive: false }), "INACTIVE"],
-    ["perfil bloqueado", profile({ blockedAt: "2026-09-08T12:00:00Z" }), "BLOCKED"],
-    ["perfil removido", profile({ deletedAt: "2026-09-08T12:00:00Z" }), "DELETED"],
-  ])("bloqueia %s", (_label, candidate, code) => {
-    expectCode(
-      () => evaluateActiveProfile(user, candidate as Profile),
-      code as string,
-    );
+  it("bloqueia perfil inativo", () => {
+    expectCode(() => evaluateActiveProfile(user, profile({ isActive: false })), "INACTIVE");
   });
 
-  it("aceita somente perfil completo, aprovado e ativo", () => {
-    expect(evaluateActiveProfile(user, profile())).toEqual({
-      user,
-      profile: profile(),
-    });
+  it("aceita cada papel ativo da Gestão", () => {
+    for (const role of ["admin", "gestao", "leitura"] as const) {
+      expect(evaluateActiveProfile(user, profile({ role })).profile.role).toBe(role);
+    }
   });
 });
 
-describe("guards server-side por papel", () => {
-  it("permite administrador apenas no guard administrativo", async () => {
-    await expect(requireAdministrator(gateway("administrador"))).resolves.toBeTruthy();
-    await expect(requireProfessional(gateway("administrador"))).rejects.toMatchObject({
+describe("guards server-side", () => {
+  it("reserva administração ao papel admin", async () => {
+    await expect(requireAdministrator(gateway("admin"))).resolves.toBeTruthy();
+    await expect(requireAdministrator(gateway("gestao"))).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await expect(requireAdministrator(gateway("leitura"))).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });
 
-  it("impede Profissional de acessar Gestão", async () => {
-    await expect(
-      requireMunicipalManagement(gateway("profissional")),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  it("permite a área de Gestão a todos os papéis ativos", async () => {
+    for (const role of ["admin", "gestao", "leitura"] as const) {
+      await expect(requireManagementAccess(gateway(role))).resolves.toBeTruthy();
+    }
   });
 
-  it("impede Gestão de acessar Profissional", async () => {
-    await expect(
-      requireProfessional(gateway("gestao_municipal")),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
-  });
-
-  it("permite cada perfil aprovado somente no próprio guard", async () => {
-    await expect(
-      requireMunicipalManagement(gateway("gestao_municipal")),
-    ).resolves.toBeTruthy();
-    await expect(requireProfessional(gateway("profissional"))).resolves.toBeTruthy();
+  it("nunca libera perfil inativo", async () => {
+    await expect(requireManagementAccess(gateway("gestao", false))).rejects.toMatchObject({
+      code: "INACTIVE",
+    });
   });
 });

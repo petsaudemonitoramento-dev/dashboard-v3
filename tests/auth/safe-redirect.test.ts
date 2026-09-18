@@ -42,7 +42,7 @@ describe("destino pós-autenticação", () => {
       "//evil.com",
       "/\\evil.com",
       "https://evil.com",
-      "/completar-cadastro?next=/x",
+      "/aguardando-aprovacao?next=/x",
       "/\0evil.com",
     ];
     for (const payload of payloads) {

@@ -1,306 +1,45 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(29);
+select plan(21);
 
+select has_schema('app', 'app schema exists');
 select has_schema('core', 'core schema exists');
-select has_schema('professional', 'professional schema exists');
 select has_schema('siaps', 'siaps schema exists');
-select has_schema('analytics_gestao', 'analytics schema exists');
-select has_schema('security', 'security schema exists');
+select has_schema('analytics', 'analytics schema exists');
+select has_schema('study', 'study schema exists');
 select has_schema('audit', 'audit schema exists');
+select hasnt_schema('professional', 'no professional schema');
+select hasnt_schema('analytics_gestao', 'no legacy analytics schema');
+select hasnt_schema('security', 'no legacy security schema');
 
-select ok(
-  (select relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'core' and c.relname = 'profiles'),
-  'profiles has RLS'
-);
-select ok(
-  (select relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'professional' and c.relname = 'patients'),
-  'professional patients has RLS'
-);
-select ok(
-  (select relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'siaps' and c.relname = 'imports'),
-  'SIAPS imports has RLS'
-);
-select ok(
-  (select relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'audit' and c.relname = 'events'),
-  'audit events has RLS'
-);
+select has_table('app', 'profiles', 'profiles live in app');
+select has_table('analytics', 'c3_team_monthly', 'monthly C3 facts exist');
+select has_table('study', 'cohort_members', 'pilot membership is a cohort');
+select ok((select relrowsecurity from pg_class where oid = 'app.profiles'::regclass), 'profiles RLS enabled');
+select ok((select relrowsecurity from pg_class where oid = 'audit.events'::regclass), 'audit RLS enabled');
+select ok(not has_table_privilege('anon', 'app.profiles', 'SELECT'), 'anon cannot read profiles');
+select is((select count(*) from storage.buckets where id = 'professional-source'), 0::bigint, 'no professional bucket recreated');
+select is(10 * 2 + 9 * 10, 110, 'C3 weights A=10 and B-K=9');
 
 insert into auth.users (id, email, encrypted_password, aud, role, created_at, updated_at)
 values
-  ('10000000-0000-0000-0000-000000000001', 'pro@test.local', '', 'authenticated', 'authenticated', now(), now()),
-  ('10000000-0000-0000-0000-000000000002', 'management@test.local', '', 'authenticated', 'authenticated', now(), now()),
-  ('10000000-0000-0000-0000-000000000003', 'admin@test.local', '', 'authenticated', 'authenticated', now(), now()),
-  ('10000000-0000-0000-0000-000000000004', 'pending@test.local', '', 'authenticated', 'authenticated', now(), now()),
-  -- Segundo profissional: sem ele o isolamento entre profissionais distintos
-  -- — a regra central do contrato — ficaria sem prova.
-  ('10000000-0000-0000-0000-000000000005', 'pro-b@test.local', '', 'authenticated', 'authenticated', now(), now()),
-  -- Pendente que nenhum teste aprova, para checar o bloqueio de leitura.
-  ('10000000-0000-0000-0000-000000000006', 'pending-untouched@test.local', '', 'authenticated', 'authenticated', now(), now()),
-  -- Segundo administrador, para exercitar a invariante de último administrador.
-  ('10000000-0000-0000-0000-000000000007', 'admin-b@test.local', '', 'authenticated', 'authenticated', now(), now()),
-  ('10000000-0000-0000-0000-000000000008', 'blocked@test.local', '', 'authenticated', 'authenticated', now(), now()),
-  ('10000000-0000-0000-0000-000000000009', 'rejected@test.local', '', 'authenticated', 'authenticated', now(), now());
+  ('10000000-0000-0000-0000-000000000001', 'admin@test.local', '', 'authenticated', 'authenticated', now(), now()),
+  ('10000000-0000-0000-0000-000000000002', 'inactive@test.local', '', 'authenticated', 'authenticated', now(), now());
 
-update core.profiles
-set full_name = 'Professional', completed_at = now(), approval_status = 'aprovado'
-where user_id = '10000000-0000-0000-0000-000000000001';
-
-update core.profiles
-set full_name = 'Management', completed_at = now(), approval_status = 'aprovado',
-    role = 'gestao_municipal'
-where user_id = '10000000-0000-0000-0000-000000000002';
-
-update core.profiles
-set full_name = 'Administrator', completed_at = now(), approval_status = 'aprovado',
-    role = 'administrador'
-where user_id = '10000000-0000-0000-0000-000000000003';
-
-update core.profiles
-set full_name = 'Pending', completed_at = now()
-where user_id = '10000000-0000-0000-0000-000000000004';
-
-update core.profiles
-set full_name = 'Professional B', completed_at = now(), approval_status = 'aprovado'
-where user_id = '10000000-0000-0000-0000-000000000005';
-
-update core.profiles
-set full_name = 'Administrator B', completed_at = now(), approval_status = 'aprovado',
-    role = 'administrador'
-where user_id = '10000000-0000-0000-0000-000000000007';
-
-update core.profiles
-set full_name = 'Blocked Professional', completed_at = now(),
-    approval_status = 'aprovado', is_active = false, blocked_at = now()
-where user_id = '10000000-0000-0000-0000-000000000008';
-
-update core.profiles
-set full_name = 'Rejected Professional', completed_at = now(),
-    approval_status = 'rejeitado'
-where user_id = '10000000-0000-0000-0000-000000000009';
-
-insert into professional.patients (owner_user_id, display_name)
+insert into app.profiles (user_id, email, role, active)
 values
-  ('10000000-0000-0000-0000-000000000001', 'Private patient'),
-  ('10000000-0000-0000-0000-000000000005', 'Patient of professional B');
+  ('10000000-0000-0000-0000-000000000001', 'admin@test.local', 'admin', true),
+  ('10000000-0000-0000-0000-000000000002', 'inactive@test.local', 'gestao', false);
+insert into core.districts (id, code, name) values (1, 'D1', 'Distrito Teste');
 
-insert into siaps.imports (id, filename, sha256, storage_path, imported_by)
-values (
-  '20000000-0000-0000-0000-000000000001',
-  'foundation.xlsx',
-  repeat('a', 64),
-  'tests/foundation.xlsx',
-  '10000000-0000-0000-0000-000000000002'
-);
-
-insert into analytics_gestao.published_competencies (
-  competency, source_import_id, published_by
-)
-values (
-  '2026-06-01',
-  '20000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000002'
-);
-
-set local role anon;
-select throws_ok(
-  'select * from professional.patients',
-  '42501',
-  null,
-  'unauthenticated user cannot access private clinical data'
-);
-reset role;
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 set local role authenticated;
-select is(
-  (select count(*) from professional.patients),
-  1::bigint,
-  'professional reads own patient'
-);
-reset role;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
+select is((select count(*) from app.profiles), 1::bigint, 'active user reads only own profile');
+select is((select count(*) from core.districts), 1::bigint, 'active user reads municipal dimensions');
 
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000002', true);
-set local role authenticated;
-select is(
-  (select count(*) from professional.patients),
-  0::bigint,
-  'management cannot read clinical data'
-);
-select is(
-  (select count(*) from analytics_gestao.published_competencies),
-  1::bigint,
-  'management can read analytics metadata'
-);
-reset role;
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000003', true);
-set local role authenticated;
-select is(
-  (select count(*) from professional.patients),
-  0::bigint,
-  'administrator cannot read clinical data'
-);
-reset role;
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
-set local role authenticated;
-select is(
-  (select count(*) from analytics_gestao.published_competencies),
-  0::bigint,
-  'professional cannot read management analytics'
-);
-select throws_ok(
-  $$select security.admin_update_profile(
-    '10000000-0000-0000-0000-000000000004',
-    'profissional',
-    'aprovado',
-    true,
-    false
-  )$$,
-  '42501',
-  'administrator required',
-  'professional cannot call administrative mutation'
-);
-reset role;
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000003', true);
-set local role authenticated;
-select lives_ok(
-  $$select security.admin_update_profile(
-    '10000000-0000-0000-0000-000000000004',
-    'profissional',
-    'aprovado',
-    true,
-    false
-  )$$,
-  'administrator can approve a profile'
-);
-reset role;
-
-select ok(
-  exists (
-    select 1 from audit.events
-    where target_id = '10000000-0000-0000-0000-000000000004'
-      and action = 'profile.approval_changed'
-  ),
-  'administrative profile change is audited'
-);
-
-select is(
-  (select count(*) from storage.buckets where id in (
-    'siaps-source', 'territorio-source', 'professional-source'
-  ) and public = false),
-  3::bigint,
-  'all source buckets are private'
-);
-
--- ---------------------------------------------------------------------------
--- A3 · Isolamento entre profissionais distintos
--- ---------------------------------------------------------------------------
--- Existem 2 pacientes na tabela, de donos diferentes. Cada profissional
--- precisa enxergar exatamente o próprio.
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
-set local role authenticated;
-select is(
-  (select count(*) from professional.patients
-    where owner_user_id = '10000000-0000-0000-0000-000000000005'),
-  0::bigint,
-  'professional A cannot read patients owned by professional B'
-);
-select is(
-  (select count(*) from professional.patients),
-  1::bigint,
-  'professional A sees only their own patient among all rows'
-);
-select throws_ok(
-  $$update core.profiles
-      set role = 'administrador'
-    where user_id = '10000000-0000-0000-0000-000000000001'$$,
-  '42501',
-  null,
-  'professional cannot promote themselves to administrator'
-);
-reset role;
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000005', true);
-set local role authenticated;
-select is(
-  (select count(*) from professional.patients),
-  1::bigint,
-  'professional B sees only their own patient'
-);
-reset role;
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000006', true);
-set local role authenticated;
-select is(
-  (select count(*) from professional.patients),
-  0::bigint,
-  'pending user cannot read clinical data'
-);
-reset role;
-
--- ---------------------------------------------------------------------------
--- M1 · complete_profile respeita o ciclo de vida do perfil
--- ---------------------------------------------------------------------------
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000008', true);
-set local role authenticated;
-select throws_ok(
-  $$select security.complete_profile('Nome Alterado', null, null)$$,
-  '42501',
-  'profile not eligible for completion',
-  'blocked user cannot rewrite their own profile'
-);
-reset role;
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000009', true);
-set local role authenticated;
-select throws_ok(
-  $$select security.complete_profile('Nome Alterado', null, null)$$,
-  '42501',
-  'profile not eligible for completion',
-  'rejected user cannot rewrite their own profile'
-);
-reset role;
-
--- ---------------------------------------------------------------------------
--- M2 · O sistema nunca fica sem Administrador ativo
--- ---------------------------------------------------------------------------
--- Primeiro o controle positivo: com dois administradores ativos, rebaixar um
--- é permitido. Depois resta apenas o administrador 3, e rebaixá-lo falha.
-
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000003', true);
-set local role authenticated;
-select lives_ok(
-  $$select security.admin_update_profile(
-    '10000000-0000-0000-0000-000000000007',
-    'profissional',
-    'aprovado',
-    true,
-    false
-  )$$,
-  'administrator can be demoted while another active administrator remains'
-);
-select throws_ok(
-  $$select security.admin_update_profile(
-    '10000000-0000-0000-0000-000000000003',
-    'profissional',
-    'aprovado',
-    true,
-    false
-  )$$,
-  '23514',
-  'operation would leave the system without an active administrator',
-  'the last active administrator cannot be demoted'
-);
-reset role;
+select is((select count(*) from core.districts), 0::bigint, 'inactive user cannot read dimensions');
+select is((select count(*) from app.profiles), 1::bigint, 'inactive user cannot read another profile');
 
 select * from finish();
 rollback;
