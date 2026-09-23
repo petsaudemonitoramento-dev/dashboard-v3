@@ -10,6 +10,7 @@ const files = [
   "src/app/(sistema)/sistema/gestao/page.tsx",
   "src/app/(sistema)/sistema/territorio/actions.ts",
   "supabase/migrations/20260923002658_mae_aps_v1_operations.sql",
+  "supabase/migrations/20260923054500_admin_establishment_identity.sql",
 ];
 const output = resolve("docs/registro/trechos-codigo-v1.txt");
 const sections = [];

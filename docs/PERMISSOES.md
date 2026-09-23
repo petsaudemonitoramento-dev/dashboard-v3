@@ -4,7 +4,7 @@
 | --- | :---: | :---: | :---: |
 | Dashboard C3 | — | ✓ | ✓ |
 | Importar SIAPS | — | ✓ | — |
-| Consultar/alterar território | ✓ | — | — |
+| Consultar/alterar território e corrigir nome/CNES da UBS | ✓ | — | — |
 | Gerenciar perfis | ✓ | — | — |
 
 O menu e as rotas seguem a mesma separação. `admin` é um perfil técnico/administrativo e não acessa o Dashboard; `gestao` trabalha somente com Dashboard e importação; `leitura` consulta somente o Dashboard.

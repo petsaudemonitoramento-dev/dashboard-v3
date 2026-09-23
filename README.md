@@ -19,7 +19,7 @@ O navegador recebe apenas `NEXT_PUBLIC_SUPABASE_URL`, a chave publicável e a UR
 ## Módulos V1.0
 
 - **Gestão:** Dashboard municipal reativo, com filtros, agregação por razão das somas, A–K e drill-down Município → Distrito → UBS → Equipe; e importação XLSX SIAPS com validação, pré-visualização, SHA-256, duplicidade, publicação e histórico.
-- **Administrador:** Gestão territorial com vigência histórica e auditoria; e administração de perfis.
+- **Administrador:** Gestão territorial com vigência histórica e auditoria; ajuste fino e auditado de nome/CNES das UBS mediante dupla confirmação; e administração de perfis.
 - **Leitura:** acesso somente ao Dashboard.
 
 Não existe módulo específico de piloto. O recorte analisado pelo Dashboard é determinado pelos dados oficiais efetivamente importados. Na implantação inicial, a base pode começar apenas com as UBS selecionadas para a primeira etapa e ser ampliada posteriormente sem mudança de código.
