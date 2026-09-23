@@ -2,9 +2,6 @@ name: MAE APS - Validacao V1
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - codex/bootstrap-v3
 
 permissions:
   contents: read
