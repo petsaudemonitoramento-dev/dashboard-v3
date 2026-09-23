@@ -108,9 +108,17 @@ export function requireManagementAccess(gateway?: ProfileGateway) {
   return getActiveProfileContext(gateway);
 }
 
-export async function requireDataManager(gateway?: ProfileGateway) {
+export async function requireDashboardAccess(gateway?: ProfileGateway) {
   return requireAnyRoleFromContext(
     await getActiveProfileContext(gateway),
-    ["admin", "gestao"],
+    ["gestao", "leitura"],
   );
+}
+
+export async function requireDataManager(gateway?: ProfileGateway) {
+  return requireRoleFromContext(await getActiveProfileContext(gateway), "gestao");
+}
+
+export async function requireTerritoryAdministrator(gateway?: ProfileGateway) {
+  return requireRoleFromContext(await getActiveProfileContext(gateway), "admin");
 }

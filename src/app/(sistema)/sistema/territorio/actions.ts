@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { requireDataManager } from "@/lib/auth/guards";
+import { requireTerritoryAdministrator } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
 const territorySchema = z.object({
@@ -13,7 +13,7 @@ const territorySchema = z.object({
 });
 
 export async function updateTerritoryAction(formData: FormData) {
-  await requireDataManager();
+  await requireTerritoryAdministrator();
   const input = territorySchema.parse(Object.fromEntries(formData));
   const supabase = await createClient();
   const result = await supabase.rpc("update_establishment_territory", {

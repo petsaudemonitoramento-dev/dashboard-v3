@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   evaluateActiveProfile,
   requireAdministrator,
+  requireDashboardAccess,
   requireDataManager,
   requireManagementAccess,
+  requireTerritoryAdministrator,
   type ProfileGateway,
 } from "@/lib/auth/guards";
 import {
@@ -59,7 +61,7 @@ describe("perfil app.profiles", () => {
     expectCode(() => evaluateActiveProfile(user, profile({ isActive: false })), "INACTIVE");
   });
 
-  it("aceita cada papel ativo da Gestão", () => {
+  it("aceita cada papel ativo do MAE APS", () => {
     for (const role of ["admin", "gestao", "leitura"] as const) {
       expect(evaluateActiveProfile(user, profile({ role })).profile.role).toBe(role);
     }
@@ -69,29 +71,40 @@ describe("perfil app.profiles", () => {
 describe("guards server-side", () => {
   it("reserva administração ao papel admin", async () => {
     await expect(requireAdministrator(gateway("admin"))).resolves.toBeTruthy();
-    await expect(requireAdministrator(gateway("gestao"))).rejects.toMatchObject({
-      code: "FORBIDDEN",
-    });
-    await expect(requireAdministrator(gateway("leitura"))).rejects.toMatchObject({
-      code: "FORBIDDEN",
-    });
+    await expect(requireAdministrator(gateway("gestao"))).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(requireAdministrator(gateway("leitura"))).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
-  it("permite a área de Gestão a todos os papéis ativos", async () => {
+  it("mantém o contexto autenticado genérico para layouts internos", async () => {
     for (const role of ["admin", "gestao", "leitura"] as const) {
       await expect(requireManagementAccess(gateway(role))).resolves.toBeTruthy();
     }
   });
 
-  it("nunca libera perfil inativo", async () => {
-    await expect(requireManagementAccess(gateway("gestao", false))).rejects.toMatchObject({
-      code: "INACTIVE",
-    });
+  it("dashboard é acessível somente por gestao e leitura", async () => {
+    await expect(requireDashboardAccess(gateway("gestao"))).resolves.toBeTruthy();
+    await expect(requireDashboardAccess(gateway("leitura"))).resolves.toBeTruthy();
+    await expect(requireDashboardAccess(gateway("admin"))).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
-  it("permite importação e território apenas a admin e gestao", async () => {
-    await expect(requireDataManager(gateway("admin"))).resolves.toBeTruthy();
+  it("importação SIAPS é exclusiva da gestao", async () => {
     await expect(requireDataManager(gateway("gestao"))).resolves.toBeTruthy();
+    await expect(requireDataManager(gateway("admin"))).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(requireDataManager(gateway("leitura"))).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("território é exclusivo do administrador", async () => {
+    await expect(requireTerritoryAdministrator(gateway("admin"))).resolves.toBeTruthy();
+    await expect(requireTerritoryAdministrator(gateway("gestao"))).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(requireTerritoryAdministrator(gateway("leitura"))).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("nunca libera perfil inativo", async () => {
+    await expect(requireDashboardAccess(gateway("gestao", false))).rejects.toMatchObject({
+      code: "INACTIVE",
+    });
+    await expect(requireTerritoryAdministrator(gateway("admin", false))).rejects.toMatchObject({
+      code: "INACTIVE",
+    });
   });
 });

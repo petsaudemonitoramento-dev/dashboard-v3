@@ -8,7 +8,7 @@ const files = [
   "src/lib/http/import-errors.ts",
   "src/app/api/importacoes/route.ts",
   "src/app/(sistema)/sistema/gestao/page.tsx",
-  "src/app/(sistema)/sistema/piloto/page.tsx",
+  "src/app/(sistema)/sistema/territorio/actions.ts",
   "supabase/migrations/20260923002658_mae_aps_v1_operations.sql",
 ];
 const output = resolve("docs/registro/trechos-codigo-v1.txt");

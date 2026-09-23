@@ -2,7 +2,7 @@
 
 **Monitoramento, Atenção e Estratégia na APS** é o software da Gestão municipal para monitorar o indicador C3 — Cuidado na Gestação e Puerpério — com dados oficiais SIAPS.
 
-O Supabase oficial é o projeto `dashboard-v3` (`nyexakdyxtstcyycmlng`). O remoto contém dados reais e nunca deve receber reset destrutivo. A Data API remota já está configurada para os schemas atuais: `app`, `core`, `siaps`, `analytics`, `study` e `audit` conforme a necessidade de exposição.
+O Supabase oficial é o projeto `dashboard-v3` (`nyexakdyxtstcyycmlng`). O remoto contém dados reais e nunca deve receber reset destrutivo.
 
 ## Desenvolvimento
 
@@ -18,11 +18,11 @@ O navegador recebe apenas `NEXT_PUBLIC_SUPABASE_URL`, a chave publicável e a UR
 
 ## Módulos V1.0
 
-- Dashboard municipal reativo, com filtros, agregação por razão das somas, A–K e drill-down Município → Distrito → UBS → Equipe.
-- Importação XLSX SIAPS com validação, pré-visualização, SHA-256, duplicidade, publicação e histórico.
-- Gestão territorial com vigência histórica e auditoria.
-- Coorte `piloto_2026_c3` como filtro analítico, nunca como limite de ingestão.
-- Administração de perfis `admin`, `gestao` e `leitura`.
+- **Gestão:** Dashboard municipal reativo, com filtros, agregação por razão das somas, A–K e drill-down Município → Distrito → UBS → Equipe; e importação XLSX SIAPS com validação, pré-visualização, SHA-256, duplicidade, publicação e histórico.
+- **Administrador:** Gestão territorial com vigência histórica e auditoria; e administração de perfis.
+- **Leitura:** acesso somente ao Dashboard.
+
+Não existe módulo específico de piloto. O recorte analisado pelo Dashboard é determinado pelos dados oficiais efetivamente importados. Na implantação inicial, a base pode começar apenas com as UBS selecionadas para a primeira etapa e ser ampliada posteriormente sem mudança de código.
 
 O Metabase pode ser usado como ferramenta analítica complementar, mas não substitui os módulos oficiais do MAE APS. O software dos profissionais é um produto separado e não faz parte deste repositório.
 
@@ -32,4 +32,4 @@ Após CI verde e congelamento da versão, execute `npm run registro:codigo`, cri
 
 Documentos operacionais: [deploy](docs/DEPLOY.md), [importação](docs/IMPORTACAO_SIAPS.md), [permissões](docs/PERMISSOES.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
 
-Créditos: Desenvolvimento — Lucca Nunes dos Santos Pereira de Araújo · Design — Kethilly Nayara Felix de Souza · PET SAÚDE UFCG.
+Créditos: Desenvolvimento — Lucca Araújo · Design — Kethilly Nayara · PET SAÚDE UFCG.

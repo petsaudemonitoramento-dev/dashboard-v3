@@ -47,8 +47,8 @@ export function AuthShell({
             protegidas e auditadas.
           </p>
           <div className="mt-4 flex flex-wrap justify-between gap-2 text-xs text-slate-400">
-            <span>Desenvolvido por Lucca Araújo</span>
-            <span>Versão 3.0 | Desing by: Kethilly Nayara</span>
+            <span>Desenvolvimento: Lucca Araújo</span>
+            <span>Versão 1.0.0 | Design: Kethilly Nayara</span>
           </div>
         </div>
       </section>

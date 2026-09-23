@@ -100,7 +100,7 @@ export async function signInWithGoogleAction() {
   const result = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: origin + "/auth/callback?next=/aguardando-aprovacao",
+      redirectTo: origin + "/auth/callback?next=/sistema",
       skipBrowserRedirect: true,
     },
   });

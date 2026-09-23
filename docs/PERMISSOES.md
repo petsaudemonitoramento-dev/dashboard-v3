@@ -2,10 +2,12 @@
 
 | Operação | admin | gestao | leitura |
 | --- | :---: | :---: | :---: |
-| Dashboard, território e piloto (leitura) | ✓ | ✓ | ✓ |
-| Importar SIAPS | ✓ | ✓ | — |
-| Alterar território | ✓ | ✓ | — |
+| Dashboard C3 | — | ✓ | ✓ |
+| Importar SIAPS | — | ✓ | — |
+| Consultar/alterar território | ✓ | — | — |
 | Gerenciar perfis | ✓ | — | — |
+
+O menu e as rotas seguem a mesma separação. `admin` é um perfil técnico/administrativo e não acessa o Dashboard; `gestao` trabalha somente com Dashboard e importação; `leitura` consulta somente o Dashboard.
 
 Usuário autenticado sem linha ativa em `app.profiles` permanece bloqueado. Guards server-side usam `auth.getUser()` e consultam apenas o perfil próprio. RLS permanece ativa; `TO authenticated` nunca é a única condição de autorização de dados ou mutações. As RPCs privilegiadas verificam `auth.uid()`, perfil ativo e papel, têm `search_path` fixo e registram `audit.events`.
 

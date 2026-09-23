@@ -23,8 +23,8 @@ begin
   where user_id = v_actor and active
   for share;
 
-  if v_role is null or v_role not in ('admin'::app.user_role, 'gestao'::app.user_role) then
-    raise exception 'Perfil sem permissão para alterar território' using errcode = '42501';
+  if v_role is null or v_role <> 'admin'::app.user_role then
+    raise exception 'Apenas administradores ativos podem alterar território' using errcode = '42501';
   end if;
   if p_valid_from is null then
     raise exception 'Data inicial de validade obrigatória';
@@ -166,3 +166,8 @@ grant execute on function public.update_establishment_territory(uuid, smallint, 
 
 revoke all on function public.manage_profile(uuid, app.user_role, boolean) from public, anon;
 grant execute on function public.manage_profile(uuid, app.user_role, boolean) to authenticated;
+
+-- O cliente privilegiado server-side da Administração precisa consultar
+-- app.profiles para cruzar usuários do Auth com papéis do MAE APS.
+grant usage on schema app to service_role;
+grant select on table app.profiles to service_role;

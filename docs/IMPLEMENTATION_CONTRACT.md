@@ -12,14 +12,14 @@ O projeto Supabase V3 `nyexakdyxtstcyycmlng` e seus dados publicados são a refe
 - `core`: distritos, estabelecimentos por CNES, equipes por INE e históricos de vínculo.
 - `siaps`: importações, linhas normalizadas, metadados e proveniência.
 - `analytics`: C3 mensal por equipe e componentes A–K.
-- `study`: coortes analíticas e membros. O piloto 2026 é apenas uma coorte.
+- `study`: estrutura técnica legada para recortes analíticos, sem módulo próprio na interface V1.
 - `audit`: eventos privilegiados, sem acesso direto de usuários comuns.
 
-Não criar `core.profiles`, `professional`, `analytics_gestao` ou o antigo schema `security`. Não embutir os 14 INEs do piloto em componente, API, importador ou cálculo. Toda equipe importada deve permanecer elegível a análise municipal.
+Não criar `core.profiles`, `professional`, `analytics_gestao` ou o antigo schema `security`. Não embutir lista fixa de UBS/equipes em componente, API, importador ou cálculo. O recorte inicial é determinado exclusivamente pelos dados oficiais importados e pode ser ampliado posteriormente.
 
 ## Acesso
 
-Login, Google OAuth e recuperação de senha usam Supabase Auth e `@supabase/ssr`. Guards server-side chamam `auth.getUser()` e só autorizam perfil próprio em `app.profiles` com `active=true`. `admin` acessa a área administrativa; `gestao` e `leitura` acessam a área de Gestão. A autenticação pública não autoatribui papel nem ativa perfil. As mutações de território e perfil revalidam sessão, perfil ativo e papel no banco e registram auditoria. A importação usa rota server-side autorizada e cliente privilegiado exclusivo do servidor. Nenhum segredo chega ao navegador.
+Login, Google OAuth e recuperação de senha usam Supabase Auth e `@supabase/ssr`. Guards server-side chamam `auth.getUser()` e só autorizam perfil próprio em `app.profiles` com `active=true`. `admin` acessa somente Território e Administração; `gestao` acessa Dashboard e Importar dados; `leitura` acessa somente o Dashboard. A autenticação pública não autoatribui papel nem ativa perfil. As mutações de território e perfil revalidam sessão, perfil ativo e papel no banco e registram auditoria. A importação usa rota server-side autorizada e cliente privilegiado exclusivo do servidor. Nenhum segredo chega ao navegador.
 
 `NEXT_PUBLIC_APP_URL` é obrigatória como origem canônica dos links de autenticação: HTTPS fora de loopback, sem inferência de `Host` ou `X-Forwarded-Host`. `.env.local` nunca é versionado.
 
