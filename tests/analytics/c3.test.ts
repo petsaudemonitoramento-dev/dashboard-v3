@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { aggregateC3, districtLabel, pointsFromComponents } from "@/lib/analytics/c3";
+import { aggregateC3, classifyC3, districtLabel, pointsFromComponents } from "@/lib/analytics/c3";
 
 describe("C3 da Gestão", () => {
   it("pesa A por 10 e B–K por 9", () => {
@@ -48,4 +48,14 @@ describe("C3 da Gestão", () => {
     });
     expect(districtLabel(null)).toBe("Não informado");
   });
+
+  it("trata denominador zero como sem população elegível", () => {
+    const result = aggregateC3([{ pointsTotal: 0, denominator: 0, districtId: null }]);
+    expect(result.c3).toBeNull();
+    expect(classifyC3(result.c3)).toBe("Sem população elegível");
+  });
+
+  it.each([[76, "Ótimo"], [75, "Bom"], [50, "Suficiente"], [25, "Regular"]])(
+    "classifica %s na faixa %s", (value, expected) => expect(classifyC3(value)).toBe(expected),
+  );
 });

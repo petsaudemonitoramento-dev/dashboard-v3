@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Cuidado na Gestação na APS",
-  description: "Plataforma institucional de cuidado na gestação na APS.",
+  title: "MAE APS",
+  description: "Monitoramento, Atenção e Estratégia na APS — indicador C3.",
 };
 
 export default function RootLayout({

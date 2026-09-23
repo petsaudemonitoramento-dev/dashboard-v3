@@ -1,0 +1,784 @@
+// origem: src/lib/siaps/parser.ts | linhas: 1-159
+import * as XLSX from "xlsx";
+
+import { pointsFromComponents, type C3Components } from "@/lib/analytics/c3";
+
+export const SIAPS_PARSER_VERSION = "mae-aps-c3/1.0.0";
+export const COMPONENT_CODES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"] as const;
+
+export type SiapsC3Row = {
+  fileRow: number;
+  cnes: string;
+  establishmentName: string;
+  establishmentType: string;
+  ine: string;
+  teamName: string;
+  teamType: string;
+  components: C3Components;
+  pointsTotal: number;
+  denominator: number;
+  officialRatio: number | null;
+};
+
+export type SiapsParseResult = {
+  competency: string | null;
+  rows: SiapsC3Row[];
+  errors: string[];
+  warnings: string[];
+  headerRow: number | null;
+};
+
+function normalize(value: unknown) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
+function digits(value: unknown) {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+function numberValue(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const raw = String(value ?? "").trim().replace(/\s/g, "");
+  if (!raw) return null;
+  const normalized = raw.includes(",")
+    ? raw.replace(/\./g, "").replace(",", ".")
+    : raw;
+  const parsed = Number(normalized.replace("%", ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function findColumn(headers: string[], aliases: string[]) {
+  return headers.findIndex((header) => aliases.some((alias) => header === alias || header.startsWith(`${alias} `)));
+}
+
+function detectCompetency(matrix: unknown[][], filename: string): string | null {
+  const text = matrix.slice(0, 18).flat().map(String).join(" ");
+  const source = `${text} ${filename}`;
+  const iso = source.match(/\b(20\d{2})[-_/](0?[1-9]|1[0-2])\b/);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-01`;
+  const brazilian = source.match(/\b(0?[1-9]|1[0-2])[\/_-](20\d{2})\b/);
+  if (brazilian) return `${brazilian[2]}-${brazilian[1].padStart(2, "0")}-01`;
+  return null;
+}
+
+export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx"): SiapsParseResult {
+  const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(firstSheet, { header: 1, defval: "", raw: false });
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const headerIndex = matrix.findIndex((row) => {
+    const cells = row.map(normalize);
+    return cells.some((cell) => cell === "CNES") && cells.some((cell) => cell === "INE");
+  });
+
+  if (headerIndex < 0) {
+    return { competency: detectCompetency(matrix, filename), rows: [], errors: ["Cabeçalho SIAPS com CNES e INE não encontrado."], warnings, headerRow: null };
+  }
+
+  const headers = matrix[headerIndex].map(normalize);
+  const indexes = {
+    cnes: findColumn(headers, ["CNES"]),
+    establishment: findColumn(headers, ["ESTABELECIMENTO", "UNIDADE", "UBS"]),
+    establishmentType: findColumn(headers, ["TIPO ESTABELECIMENTO", "TIPO DE ESTABELECIMENTO"]),
+    ine: findColumn(headers, ["INE"]),
+    team: findColumn(headers, ["EQUIPE", "NOME DA EQUIPE"]),
+    teamType: findColumn(headers, ["TIPO EQUIPE", "TIPO DE EQUIPE"]),
+    points: findColumn(headers, ["PONTOS TOTAL", "PONTUACAO TOTAL", "TOTAL DE PONTOS", "PONTOS"]),
+    denominator: findColumn(headers, ["DENOMINADOR", "POPULACAO ELEGIVEL"]),
+    ratio: findColumn(headers, ["RAZAO OFICIAL", "RESULTADO", "INDICADOR", "C3"]),
+    components: Object.fromEntries(COMPONENT_CODES.map((code) => [code, findColumn(headers, [code])])) as Record<(typeof COMPONENT_CODES)[number], number>,
+  };
+
+  const required = [indexes.cnes, indexes.ine, indexes.points, indexes.denominator, ...Object.values(indexes.components)];
+  if (required.some((index) => index < 0)) {
+    errors.push("O cabeçalho não contém todas as colunas obrigatórias: CNES, INE, A–K, pontos e denominador.");
+    return { competency: detectCompetency(matrix, filename), rows: [], errors, warnings, headerRow: headerIndex + 1 };
+  }
+
+  const rows: SiapsC3Row[] = [];
+  matrix.slice(headerIndex + 1).forEach((source, offset) => {
+    if (source.every((cell) => String(cell).trim() === "")) return;
+    const fileRow = headerIndex + offset + 2;
+    const cnes = digits(source[indexes.cnes]).padStart(7, "0");
+    const ine = digits(source[indexes.ine]).padStart(10, "0");
+    const denominator = numberValue(source[indexes.denominator]);
+    const pointsTotal = numberValue(source[indexes.points]);
+    const componentValues = Object.fromEntries(COMPONENT_CODES.map((code) => [code, numberValue(source[indexes.components[code]])])) as Record<string, number | null>;
+    const rowErrors: string[] = [];
+    if (!/^\d{7}$/.test(cnes)) rowErrors.push("CNES inválido");
+    if (!/^\d{10}$/.test(ine)) rowErrors.push("INE inválido");
+    if (denominator === null || !Number.isInteger(denominator) || denominator < 0) rowErrors.push("denominador inválido");
+    if (pointsTotal === null || pointsTotal < 0) rowErrors.push("pontos inválidos");
+    if (Object.values(componentValues).some((value) => value === null || !Number.isInteger(value) || value < 0)) rowErrors.push("A–K devem ser contagens inteiras não negativas");
+    if (rowErrors.length) {
+      errors.push(`Linha ${fileRow}: ${rowErrors.join("; ")}.`);
+      return;
+    }
+    const components = componentValues as C3Components;
+    if (pointsFromComponents(components) !== pointsTotal) {
+      warnings.push(`Linha ${fileRow}: pontos informados divergem do cálculo 10×A + 9×(B–K); o valor oficial da planilha será preservado.`);
+    }
+    rows.push({
+      fileRow,
+      cnes,
+      establishmentName: String(source[indexes.establishment] ?? "").trim() || `CNES ${cnes}`,
+      establishmentType: indexes.establishmentType >= 0 ? String(source[indexes.establishmentType] ?? "").trim() : "",
+      ine,
+      teamName: indexes.team >= 0 ? String(source[indexes.team] ?? "").trim() : "",
+      teamType: indexes.teamType >= 0 ? String(source[indexes.teamType] ?? "").trim() : "",
+      components,
+      pointsTotal: pointsTotal as number,
+      denominator: denominator as number,
+      officialRatio: indexes.ratio >= 0 ? numberValue(source[indexes.ratio]) : null,
+    });
+  });
+
+  const competency = detectCompetency(matrix, filename);
+  if (!competency) warnings.push("Competência não detectada automaticamente; informe-a antes de publicar.");
+  if (!rows.length && !errors.length) errors.push("Nenhum registro C3 válido foi encontrado.");
+  return { competency, rows, errors, warnings, headerRow: headerIndex + 1 };
+}
+
+export async function sha256Hex(buffer: ArrayBuffer) {
+  const digest = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function compactSiapsRow(row: SiapsC3Row) {
+  return [
+    row.fileRow, row.cnes, row.establishmentName, row.establishmentType,
+    row.ine, row.teamName, row.teamType,
+    ...COMPONENT_CODES.map((code) => row.components[code]),
+    row.pointsTotal, row.denominator, row.officialRatio,
+  ];
+}
+
+// origem: src/lib/analytics/c3.ts | linhas: 1-73
+export type C3Components = Record<
+  "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K",
+  number
+>;
+
+export type C3Fact = {
+  pointsTotal: number;
+  denominator: number;
+  districtId: number | null;
+};
+
+export type TerritoryFilter = number | "all" | "unknown";
+
+export function pointsFromComponents(components: C3Components) {
+  return (
+    10 * components.A +
+    9 * (components.B + components.C + components.D + components.E +
+      components.F + components.G + components.H + components.I +
+      components.J + components.K)
+  );
+}
+
+export function districtLabel(name: string | null | undefined) {
+  return name?.trim() || "Não informado";
+}
+
+export type C3Classification =
+  | "Ótimo"
+  | "Bom"
+  | "Suficiente"
+  | "Regular"
+  | "Sem população elegível";
+
+export function classifyC3(value: number | null): C3Classification {
+  if (value === null) return "Sem população elegível";
+  if (value > 75) return "Ótimo";
+  if (value > 50) return "Bom";
+  if (value > 25) return "Suficiente";
+  return "Regular";
+}
+
+export const C3_COMPONENTS = {
+  A: "Primeira consulta presencial ou remota com médica(o) ou enfermeira(o) até a 12ª semana de gestação.",
+  B: "Pelo menos sete consultas presenciais ou remotas com médica(o) ou enfermeira(o) durante a gestação.",
+  C: "Pelo menos sete registros de aferição de pressão arterial durante a gestação.",
+  D: "Pelo menos sete registros simultâneos de peso e altura durante a gestação.",
+  E: "Pelo menos três visitas domiciliares por ACS/TACS após a primeira consulta de pré-natal.",
+  F: "Registro da vacina dTpa a partir da 20ª semana de cada gestação.",
+  G: "Testes rápidos ou exames de sífilis, HIV e hepatites B e C no primeiro trimestre.",
+  H: "Testes rápidos ou exames de sífilis e HIV no terceiro trimestre.",
+  I: "Pelo menos uma consulta presencial ou remota com médica(o) ou enfermeira(o) durante o puerpério.",
+  J: "Pelo menos uma visita domiciliar por ACS/TACS durante o puerpério.",
+  K: "Pelo menos uma atividade de saúde bucal com dentista ou técnica(o) de saúde bucal durante a gestação.",
+} satisfies Record<keyof C3Components, string>;
+
+export function aggregateC3(facts: C3Fact[], territory: TerritoryFilter = "all") {
+  let teams = 0;
+  let pointsTotal = 0;
+  let denominator = 0;
+  for (const fact of facts) {
+    if (territory !== "all" &&
+      (territory === "unknown" ? fact.districtId !== null : fact.districtId !== territory)) continue;
+    teams += 1;
+    pointsTotal += fact.pointsTotal;
+    denominator += fact.denominator;
+  }
+  return {
+    teams,
+    pointsTotal,
+    denominator,
+    c3: denominator > 0 ? pointsTotal / denominator : null,
+  };
+}
+
+// origem: src/lib/auth/guards.ts | linhas: 1-116
+import { z } from "zod";
+
+import { createClient } from "@/lib/supabase/server";
+
+import {
+  AccessDeniedError,
+  type ActiveProfileContext,
+  type AuthenticatedUser,
+  type Profile,
+  type UserRole,
+} from "./types";
+
+const profileRowSchema = z.object({
+  user_id: z.uuid(),
+  email: z.email(),
+  role: z.enum(["admin", "gestao", "leitura"]),
+  active: z.boolean(),
+});
+
+export interface ProfileGateway {
+  getAuthenticatedUser(): Promise<AuthenticatedUser | null>;
+  getProfile(userId: string): Promise<Profile | null>;
+}
+
+async function createSupabaseProfileGateway(): Promise<ProfileGateway> {
+  const supabase = await createClient();
+
+  return {
+    async getAuthenticatedUser() {
+      const result = await supabase.auth.getUser();
+      const user = result.data.user;
+      return user ? { id: user.id, email: user.email ?? null } : null;
+    },
+    async getProfile(userId) {
+      const result = await supabase
+        .schema("app")
+        .from("profiles")
+        .select("user_id, email, role, active")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (result.error) {
+        throw new Error("Não foi possível consultar o perfil da Gestão.");
+      }
+      if (!result.data) return null;
+
+      const row = profileRowSchema.parse(result.data);
+      return {
+        userId: row.user_id,
+        email: row.email,
+        role: row.role,
+        isActive: row.active,
+      };
+    },
+  };
+}
+
+export function evaluateActiveProfile(
+  user: AuthenticatedUser | null,
+  profile: Profile | null,
+): ActiveProfileContext {
+  if (!user) {
+    throw new AccessDeniedError("UNAUTHENTICATED", "Sessão inválida.");
+  }
+  if (!profile) {
+    throw new AccessDeniedError("PROFILE_MISSING", "Acesso ainda não provisionado.");
+  }
+  if (!profile.isActive) {
+    throw new AccessDeniedError("INACTIVE", "Perfil inativo.");
+  }
+  return { user, profile };
+}
+
+export async function getActiveProfileContext(
+  gateway?: ProfileGateway,
+): Promise<ActiveProfileContext> {
+  const resolvedGateway = gateway ?? (await createSupabaseProfileGateway());
+  const user = await resolvedGateway.getAuthenticatedUser();
+  const profile = user ? await resolvedGateway.getProfile(user.id) : null;
+  return evaluateActiveProfile(user, profile);
+}
+
+export function requireRoleFromContext(
+  context: ActiveProfileContext,
+  role: UserRole,
+): ActiveProfileContext {
+  if (context.profile.role !== role) {
+    throw new AccessDeniedError("FORBIDDEN", "Perfil sem permissão para esta área.");
+  }
+  return context;
+}
+
+export function requireAnyRoleFromContext(
+  context: ActiveProfileContext,
+  roles: readonly UserRole[],
+): ActiveProfileContext {
+  if (!roles.includes(context.profile.role)) {
+    throw new AccessDeniedError("FORBIDDEN", "Perfil sem permissão para esta operação.");
+  }
+  return context;
+}
+
+export async function requireAdministrator(gateway?: ProfileGateway) {
+  return requireRoleFromContext(await getActiveProfileContext(gateway), "admin");
+}
+
+export function requireManagementAccess(gateway?: ProfileGateway) {
+  return getActiveProfileContext(gateway);
+}
+
+export async function requireDataManager(gateway?: ProfileGateway) {
+  return requireAnyRoleFromContext(
+    await getActiveProfileContext(gateway),
+    ["admin", "gestao"],
+  );
+}
+
+// origem: src/app/api/importacoes/route.ts | linhas: 1-62
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+import { requireDataManager } from "@/lib/auth/guards";
+import { createPrivilegedClient } from "@/lib/supabase/privileged";
+import { createClient } from "@/lib/supabase/server";
+
+export const runtime = "nodejs";
+
+const payloadSchema = z.object({
+  mode: z.enum(["check", "publish"]),
+  filename: z.string().min(1).max(255),
+  fileSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  competency: z.string().regex(/^20\d{2}-(0[1-9]|1[0-2])-01$/),
+  rows: z.array(z.array(z.union([z.string(), z.number(), z.null()])).length(21)).max(10000).default([]),
+});
+
+export async function POST(request: Request) {
+  try {
+    const context = await requireDataManager();
+    const payload = payloadSchema.parse(await request.json());
+    const userClient = await createClient();
+    const duplicate = await userClient.schema("siaps").from("imports")
+      .select("id, filename, competency, status, rows_total, uploaded_at")
+      .eq("file_sha256", payload.fileSha256).maybeSingle();
+    if (duplicate.error) throw new Error("Não foi possível verificar duplicidade.");
+    if (payload.mode === "check") return NextResponse.json({ duplicate: duplicate.data });
+    if (duplicate.data) return NextResponse.json({ error: "Arquivo já importado.", duplicate: duplicate.data }, { status: 409 });
+    if (!payload.rows.length) return NextResponse.json({ error: "Nenhum registro válido para publicar." }, { status: 400 });
+
+    const privileged = createPrivilegedClient();
+    const metadata = {
+      filename: payload.filename,
+      file_sha256: payload.fileSha256,
+      competency: payload.competency,
+      indicator_code: "C3",
+      indicator_name: "Cuidado na Gestação e Puerpério",
+      municipality_ibge: "250400",
+      municipality_name: "CAMPINA GRANDE",
+      uf: "PB",
+      source_status: "preliminar",
+      parser_version: "mae-aps-c3/1.0.0",
+      rows_total: payload.rows.length,
+      uploaded_by: context.user.id,
+    };
+    let importId: string | null = null;
+    for (let index = 0; index < payload.rows.length; index += 250) {
+      const isLast = index + 250 >= payload.rows.length;
+      const result = await privileged.rpc("stage_siaps_c3_compact", {
+        p_metadata: metadata,
+        p_rows: payload.rows.slice(index, index + 250),
+        p_finalize: isLast,
+      });
+      if (result.error) throw new Error(`Falha ao publicar o bloco SIAPS: ${result.error.message}`);
+      importId = result.data as string;
+    }
+    return NextResponse.json({ importId, status: "publicado", rows: payload.rows.length });
+  } catch (error) {
+    const status = error instanceof z.ZodError ? 400 : 403;
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Falha na importação." }, { status });
+  }
+}
+
+// origem: src/app/(sistema)/sistema/gestao/page.tsx | linhas: 1-142
+import Link from "next/link";
+import type { EChartsOption } from "echarts";
+
+import { MaeChart } from "@/components/charts/mae-chart";
+import { aggregateC3, C3_COMPONENTS, classifyC3, districtLabel, type C3Fact } from "@/lib/analytics/c3";
+import { requireManagementAccess } from "@/lib/auth/guards";
+import { enforceRouteGuard } from "@/lib/auth/route-guard";
+import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+type FactRow = { id: number; competency: string; team_id: string; establishment_id: string; district_id: number | null; denominator: number; points_total: number | string };
+
+async function fetchFacts(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const rows: FactRow[] = [];
+  for (let offset = 0; ; offset += 500) {
+    const result = await supabase.schema("analytics").from("c3_team_monthly")
+      .select("id, competency, team_id, establishment_id, district_id, denominator, points_total")
+      .eq("is_current", true).order("id").range(offset, offset + 499);
+    if (result.error) throw new Error("Não foi possível consultar os fatos C3.");
+    rows.push(...((result.data ?? []) as FactRow[]));
+    if ((result.data?.length ?? 0) < 500) break;
+  }
+  return rows;
+}
+
+function ratio(facts: FactRow[]) {
+  return aggregateC3(facts.map((fact): C3Fact => ({ pointsTotal: Number(fact.points_total), denominator: fact.denominator, districtId: fact.district_id })));
+}
+
+function monthLabel(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" })
+    .format(new Date(`${value.slice(0, 10)}T00:00:00Z`)).replace(" de ", "/").toUpperCase();
+}
+
+function formatC3(value: number | null) {
+  return value === null ? "—" : value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function dashboardHref(params: Record<string, string | undefined>) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => value && search.set(key, value));
+  return `/sistema/gestao?${search}`;
+}
+
+export default async function ManagementDashboard({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  await enforceRouteGuard(() => requireManagementAccess());
+  const params = await searchParams;
+  const supabase = await createClient();
+  const [facts, districtsResult, establishmentsResult, teamsResult] = await Promise.all([
+    fetchFacts(supabase),
+    supabase.schema("core").from("districts").select("id, name").eq("active", true).order("name"),
+    supabase.schema("core").from("establishments").select("id, cnes, name").eq("active", true).order("name"),
+    supabase.schema("core").from("teams").select("id, ine, name").eq("active", true).order("name"),
+  ]);
+  if (districtsResult.error || establishmentsResult.error || teamsResult.error) throw new Error("Não foi possível carregar as dimensões territoriais.");
+
+  const competencies = [...new Set(facts.map((fact) => fact.competency.slice(0, 7)))].sort();
+  const competency = /^\d{4}-\d{2}$/.test(params.competencia ?? "") && competencies.includes(params.competencia!) ? params.competencia! : competencies.at(-1) ?? "";
+  const district = params.distrito ?? "all";
+  const establishmentId = params.ubs ?? "all";
+  const teamId = params.equipe ?? "all";
+  const districts = districtsResult.data ?? [];
+  const establishments = establishmentsResult.data ?? [];
+  const teams = teamsResult.data ?? [];
+  const districtNames = new Map(districts.map((item) => [item.id, item.name]));
+  const establishmentNames = new Map(establishments.map((item) => [item.id, item.name]));
+  const teamNames = new Map(teams.map((item) => [item.id, item.name || item.ine]));
+
+  const matchesScope = (fact: FactRow) => {
+    if (district === "unknown" && fact.district_id !== null) return false;
+    if (district !== "all" && district !== "unknown" && fact.district_id !== Number(district)) return false;
+    if (establishmentId !== "all" && fact.establishment_id !== establishmentId) return false;
+    return teamId === "all" || fact.team_id === teamId;
+  };
+  const selectedFacts = facts.filter((fact) => fact.competency.startsWith(competency) && matchesScope(fact));
+  const summary = ratio(selectedFacts);
+  const ubsCount = new Set(selectedFacts.map((fact) => fact.establishment_id)).size;
+  const evolution = competencies.map((month) => ({ month, value: ratio(facts.filter((fact) => fact.competency.startsWith(month) && matchesScope(fact))).c3 }));
+
+  const componentTotals = Object.fromEntries(Object.keys(C3_COMPONENTS).map((code) => [code, 0])) as Record<string, number>;
+  for (let index = 0; index < selectedFacts.length; index += 100) {
+    const ids = selectedFacts.slice(index, index + 100).map((fact) => fact.id);
+    const practices = await supabase.schema("analytics").from("c3_practice_counts").select("practice_code, fulfilled").in("fact_id", ids);
+    if (practices.error) throw new Error("Não foi possível consultar os componentes A–K.");
+    for (const practice of practices.data ?? []) componentTotals[practice.practice_code] += practice.fulfilled;
+  }
+
+  const groupMode = establishmentId !== "all" || teamId !== "all" ? "team" : district !== "all" ? "ubs" : "district";
+  const grouped = new Map<string, FactRow[]>();
+  for (const fact of selectedFacts) {
+    const key = groupMode === "team" ? (teamNames.get(fact.team_id) ?? "Equipe")
+      : groupMode === "ubs" ? (establishmentNames.get(fact.establishment_id) ?? "UBS")
+        : districtLabel(fact.district_id === null ? null : districtNames.get(fact.district_id));
+    grouped.set(key, [...(grouped.get(key) ?? []), fact]);
+  }
+  const comparison = [...grouped.entries()].map(([name, group]) => ({ name, value: ratio(group).c3 ?? 0 })).sort((a, b) => b.value - a.value).slice(0, 18);
+  const drilldown = groupMode === "district"
+    ? Object.fromEntries(districts.map((item) => [item.name, dashboardHref({ competencia: competency, distrito: String(item.id) })]))
+    : groupMode === "ubs"
+      ? Object.fromEntries(establishments.map((item) => [item.name, dashboardHref({ competencia: competency, distrito: district, ubs: item.id })]))
+      : {};
+
+  const baseAxis = { axisLine: { lineStyle: { color: "#cbd5e1" } }, axisLabel: { color: "#526477" } };
+  const evolutionOption: EChartsOption = {
+    tooltip: { trigger: "axis" }, grid: { left: 48, right: 24, top: 30, bottom: 44 },
+    xAxis: { type: "category", data: evolution.map((item) => monthLabel(item.month)), ...baseAxis }, yAxis: { type: "value", min: 0, max: 100, ...baseAxis },
+    series: [{ type: "line", smooth: true, symbolSize: 9, data: evolution.map((item) => item.value), lineStyle: { width: 4, color: "#0b72e7" }, itemStyle: { color: "#17b6b2" }, areaStyle: { color: "rgba(11,114,231,.10)" }, animationDuration: 650 }],
+  };
+  const componentsOption: EChartsOption = {
+    grid: { left: 48, right: 24, top: 28, bottom: 38 }, xAxis: { type: "category", data: Object.keys(C3_COMPONENTS), ...baseAxis }, yAxis: { type: "value", ...baseAxis },
+    series: [{ type: "bar", data: Object.values(componentTotals), itemStyle: { color: "#16a6a1", borderRadius: [6, 6, 0, 0] }, animationDuration: 650 }],
+  };
+  const comparisonOption: EChartsOption = {
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } }, grid: { left: 150, right: 28, top: 16, bottom: 28 },
+    xAxis: { type: "value", min: 0, max: 100, ...baseAxis }, yAxis: { type: "category", data: comparison.map((item) => item.name), axisLabel: { width: 130, overflow: "truncate", color: "#526477" } },
+    series: [{ type: "bar", data: comparison.map((item) => item.value), itemStyle: { color: "#ff9f43", borderRadius: [0, 6, 6, 0] }, animationDuration: 650 }],
+  };
+
+  return <div className="space-y-6">
+    <section className="hero-panel"><div><span className="eyebrow">Monitoramento C3</span><h1>Dashboard institucional</h1><p>Visão consolidada da Gestação e Puerpério com dados oficiais SIAPS.</p></div><div className="rounded-2xl bg-white/10 px-5 py-4 text-right"><span className="block text-xs text-white/70">Competência mais recente</span><strong className="text-xl">{competency ? monthLabel(`${competency}-01`) : "Sem dados"}</strong></div></section>
+    <form className="filter-bar" method="get">
+      <label>Período<select name="competencia" defaultValue={competency}>{competencies.map((item) => <option key={item} value={item}>{monthLabel(`${item}-01`)}</option>)}</select></label>
+      <label>Distrito<select name="distrito" defaultValue={district}><option value="all">Município inteiro</option><option value="unknown">Não informado</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+      <label>UBS<select name="ubs" defaultValue={establishmentId}><option value="all">Todas as UBS</option>{establishments.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.cnes}</option>)}</select></label>
+      <label>Equipe<select name="equipe" defaultValue={teamId}><option value="all">Todas as equipes</option>{teams.map((item) => <option key={item.id} value={item.id}>{item.name || item.ine}</option>)}</select></label>
+      <button className="primary-button" type="submit">Aplicar</button>
+    </form>
+    <nav className="breadcrumbs" aria-label="Drill-down territorial"><Link href={dashboardHref({ competencia: competency })}>Município</Link><span>›</span><span>{district === "all" ? "Todos os distritos" : district === "unknown" ? "Não informado" : districtNames.get(Number(district))}</span>{establishmentId !== "all" && <><span>›</span><span>{establishmentNames.get(establishmentId)}</span></>}{teamId !== "all" && <><span>›</span><span>{teamNames.get(teamId)}</span></>}</nav>
+    <section className="metric-grid">
+      <article className="metric-card accent-blue"><span>C3 consolidado</span><strong>{formatC3(summary.c3)}</strong><small>razão das somas</small></article>
+      <article className="metric-card accent-aqua"><span>Classificação</span><strong className="text-2xl">{classifyC3(summary.c3)}</strong><small>faixa oficial</small></article>
+      <article className="metric-card accent-orange"><span>Denominador</span><strong>{summary.denominator.toLocaleString("pt-BR")}</strong><small>população elegível</small></article>
+      <article className="metric-card accent-green"><span>Equipes</span><strong>{summary.teams}</strong><small>{ubsCount} UBS</small></article>
+    </section>
+    <section className="chart-grid">
+      <article className="panel lg:col-span-2"><div className="panel-heading"><div><span className="eyebrow">Série histórica</span><h2>Evolução mensal do C3</h2></div></div><MaeChart option={evolutionOption} ariaLabel="Evolução mensal do C3" /></article>
+      <article className="panel"><div className="panel-heading"><div><span className="eyebrow">Práticas</span><h2>Componentes A–K</h2></div></div><MaeChart option={componentsOption} ariaLabel="Contagens dos componentes A a K" componentDescriptions={C3_COMPONENTS} /></article>
+      <article className="panel lg:col-span-3"><div className="panel-heading"><div><span className="eyebrow">Comparação</span><h2>Distribuição territorial</h2><p>Clique nas barras para aprofundar quando houver outro nível territorial.</p></div></div>{comparison.length ? <MaeChart option={comparisonOption} ariaLabel="Comparação do C3 entre recortes territoriais" drilldown={drilldown} /> : <p className="empty-state">Não há dados para o recorte selecionado.</p>}</article>
+    </section>
+  </div>;
+}
+
+// origem: src/app/(sistema)/sistema/piloto/page.tsx | linhas: 1-64
+import type { EChartsOption } from "echarts";
+
+import { MaeChart } from "@/components/charts/mae-chart";
+import { aggregateC3, C3_COMPONENTS, type C3Fact } from "@/lib/analytics/c3";
+import { requireManagementAccess } from "@/lib/auth/guards";
+import { enforceRouteGuard } from "@/lib/auth/route-guard";
+import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+type Fact = { id: number; competency: string; team_id: string; district_id: number | null; denominator: number; points_total: number | string };
+
+function monthLabel(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" }).format(new Date(`${value.slice(0, 10)}T00:00:00Z`)).replace(" de ", "/").toUpperCase();
+}
+
+export default async function PilotPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  await enforceRouteGuard(() => requireManagementAccess());
+  const params = await searchParams;
+  const supabase = await createClient();
+  const cohortResult = await supabase.schema("study").from("cohorts").select("id, name, description").eq("code", "piloto_2026_c3").eq("active", true).maybeSingle();
+  if (cohortResult.error || !cohortResult.data) throw new Error("A coorte piloto_2026_c3 não foi encontrada.");
+  const [membersResult, teamsResult, districtsResult] = await Promise.all([
+    supabase.schema("study").from("cohort_members").select("team_id, district_id, stratum, notes").eq("cohort_id", cohortResult.data.id),
+    supabase.schema("core").from("teams").select("id, ine, name").eq("active", true),
+    supabase.schema("core").from("districts").select("id, name").eq("active", true).order("name"),
+  ]);
+  if (membersResult.error || teamsResult.error || districtsResult.error) throw new Error("Não foi possível carregar a coorte piloto.");
+  const members = membersResult.data ?? [];
+  const memberIds = members.map((item) => item.team_id);
+  const factsResult = memberIds.length ? await supabase.schema("analytics").from("c3_team_monthly").select("id, competency, team_id, district_id, denominator, points_total").eq("is_current", true).in("team_id", memberIds).order("competency") : { data: [], error: null };
+  if (factsResult.error) throw new Error("Não foi possível carregar os fatos do piloto.");
+  const facts = (factsResult.data ?? []) as Fact[];
+  const competencies = [...new Set(facts.map((fact) => fact.competency.slice(0, 7)))].sort();
+  const competency = competencies.includes(params.competencia ?? "") ? params.competencia! : competencies.at(-1) ?? "";
+  const district = params.distrito ?? "all";
+  const team = params.equipe ?? "all";
+  const teams = new Map((teamsResult.data ?? []).map((item) => [item.id, item]));
+  const districts = districtsResult.data ?? [];
+  const districtNames = new Map(districts.map((item) => [item.id, item.name]));
+  const selectedMembers = members.filter((member) => (district === "all" || String(member.district_id ?? "unknown") === district) && (team === "all" || member.team_id === team));
+  const selectedIds = new Set(selectedMembers.map((item) => item.team_id));
+  const selectedFacts = facts.filter((fact) => fact.competency.startsWith(competency) && selectedIds.has(fact.team_id));
+  const asAggregate = (rows: Fact[]) => aggregateC3(rows.map((fact): C3Fact => ({ pointsTotal: Number(fact.points_total), denominator: fact.denominator, districtId: fact.district_id })));
+  const summary = asAggregate(selectedFacts);
+  const evolution = competencies.map((month) => asAggregate(facts.filter((fact) => fact.competency.startsWith(month) && selectedIds.has(fact.team_id))).c3);
+  const totals = Object.fromEntries(Object.keys(C3_COMPONENTS).map((code) => [code, 0])) as Record<string, number>;
+  const ids = selectedFacts.map((fact) => fact.id);
+  if (ids.length) {
+    const practices = await supabase.schema("analytics").from("c3_practice_counts").select("practice_code, fulfilled").in("fact_id", ids);
+    if (practices.error) throw new Error("Não foi possível carregar A–K do piloto.");
+    for (const item of practices.data ?? []) totals[item.practice_code] += item.fulfilled;
+  }
+  const lineOption: EChartsOption = { tooltip: { trigger: "axis" }, grid: { left: 48, right: 25, top: 24, bottom: 42 }, xAxis: { type: "category", data: competencies.map((item) => monthLabel(`${item}-01`)) }, yAxis: { type: "value", min: 0, max: 100 }, series: [{ type: "line", smooth: true, data: evolution, lineStyle: { color: "#0b72e7", width: 4 }, itemStyle: { color: "#16b8b1" }, areaStyle: { color: "rgba(22,184,177,.10)" } }] };
+  const barOption: EChartsOption = { grid: { left: 48, right: 25, top: 24, bottom: 36 }, xAxis: { type: "category", data: Object.keys(totals) }, yAxis: { type: "value" }, series: [{ type: "bar", data: Object.values(totals), itemStyle: { color: "#ff9f43", borderRadius: [6, 6, 0, 0] } }] };
+
+  return <div className="space-y-6"><section className="hero-panel"><div><span className="eyebrow">Coorte analítica</span><h1>Piloto 2026 · C3</h1><p>{cohortResult.data.description || "Acompanhamento da coorte metodológica sem limitar a ingestão municipal."}</p></div><div className="rounded-2xl bg-white/10 p-4 text-center"><strong className="block text-3xl">{members.length}</strong><span className="text-xs text-white/70">equipes na coorte</span></div></section>
+    <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"><strong>Nota metodológica:</strong> os rótulos “boa” e “ruim” são estratos metodológicos externos recebidos com a coorte. Não representam avaliação, ranking ou classificação calculada pelo C3.</div>
+    <form className="filter-bar" method="get"><label>Período<select name="competencia" defaultValue={competency}>{competencies.map((item) => <option key={item} value={item}>{monthLabel(`${item}-01`)}</option>)}</select></label><label>Distrito<select name="distrito" defaultValue={district}><option value="all">Todos</option><option value="unknown">Não informado</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="md:col-span-2">Equipe<select name="equipe" defaultValue={team}><option value="all">Todas as equipes</option>{members.map((item) => { const value = teams.get(item.team_id); return <option key={item.team_id} value={item.team_id}>{value?.name || value?.ine}</option>; })}</select></label><button className="primary-button" type="submit">Aplicar</button></form>
+    <section className="metric-grid"><article className="metric-card accent-blue"><span>C3 consolidado</span><strong>{summary.c3 === null ? "—" : summary.c3.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></article><article className="metric-card accent-green"><span>Equipes no recorte</span><strong>{summary.teams}</strong></article><article className="metric-card accent-orange"><span>Denominador</span><strong>{summary.denominator.toLocaleString("pt-BR")}</strong></article><article className="metric-card accent-aqua"><span>Competência</span><strong className="text-2xl">{competency ? monthLabel(`${competency}-01`) : "—"}</strong></article></section>
+    <section className="chart-grid"><article className="panel lg:col-span-2"><div className="panel-heading"><span className="eyebrow">Série histórica</span><h2>Evolução C3 da coorte</h2></div><MaeChart option={lineOption} ariaLabel="Evolução C3 das equipes do piloto" /></article><article className="panel"><div className="panel-heading"><span className="eyebrow">Práticas</span><h2>Componentes A–K</h2></div><MaeChart option={barOption} componentDescriptions={C3_COMPONENTS} ariaLabel="Componentes A a K do piloto" /></article></section>
+    <section className="panel"><div className="panel-heading"><span className="eyebrow">{selectedMembers.length} equipes</span><h2>Composição da coorte</h2></div><div className="table-scroll"><table className="data-table"><thead><tr><th>Equipe</th><th>INE</th><th>Distrito</th><th>Estrato metodológico externo</th></tr></thead><tbody>{selectedMembers.map((member) => { const item = teams.get(member.team_id); return <tr key={member.team_id}><td><strong>{item?.name || "Equipe sem nome"}</strong></td><td>{item?.ine}</td><td>{member.district_id ? districtNames.get(member.district_id) : "Não informado"}</td><td>{member.stratum ? <span className="badge">{member.stratum}</span> : "—"}</td></tr>; })}</tbody></table></div></section>
+  </div>;
+}
+
+// origem: supabase/migrations/20260923002658_mae_aps_v1_operations.sql | linhas: 1-155
+-- Operações incrementais da V1.0 do MAE APS.
+-- Não altera nem recria dados SIAPS existentes.
+
+create or replace function public.update_establishment_territory(
+  p_establishment_id uuid,
+  p_district_id smallint,
+  p_valid_from date
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = pg_catalog, public, app, core, analytics, audit
+as $function$
+declare
+  v_actor uuid := auth.uid();
+  v_role app.user_role;
+  v_previous core.establishment_district_history%rowtype;
+  v_history_id bigint;
+begin
+  select role into v_role
+  from app.profiles
+  where user_id = v_actor and active
+  for share;
+
+  if v_role is null or v_role not in ('admin'::app.user_role, 'gestao'::app.user_role) then
+    raise exception 'Perfil sem permissão para alterar território' using errcode = '42501';
+  end if;
+  if p_valid_from is null then
+    raise exception 'Data inicial de validade obrigatória';
+  end if;
+  if not exists (select 1 from core.establishments where id = p_establishment_id) then
+    raise exception 'Estabelecimento não encontrado';
+  end if;
+  if p_district_id is not null and not exists (
+    select 1 from core.districts where id = p_district_id and active
+  ) then
+    raise exception 'Distrito ativo não encontrado';
+  end if;
+
+  select * into v_previous
+  from core.establishment_district_history
+  where establishment_id = p_establishment_id and valid_to is null
+  order by valid_from desc
+  limit 1
+  for update;
+
+  if v_previous.id is not null and v_previous.valid_from >= p_valid_from then
+    raise exception 'A nova vigência deve começar depois de %', v_previous.valid_from;
+  end if;
+
+  if v_previous.id is not null and v_previous.district_id is not distinct from p_district_id then
+    return v_previous.id;
+  end if;
+
+  if v_previous.id is not null then
+    update core.establishment_district_history
+    set valid_to = p_valid_from - 1
+    where id = v_previous.id;
+  end if;
+
+  if p_district_id is not null then
+    insert into core.establishment_district_history(
+      establishment_id, district_id, valid_from, source, notes
+    ) values (
+      p_establishment_id, p_district_id, p_valid_from, 'manual',
+      'Atualização realizada pela Gestão no MAE APS'
+    ) returning id into v_history_id;
+  end if;
+
+  -- O fato guarda o recorte territorial da competência. Só competências dentro
+  -- da nova vigência são atualizadas; meses anteriores permanecem intactos.
+  update analytics.c3_team_monthly
+  set district_id = p_district_id
+  where establishment_id = p_establishment_id
+    and competency >= date_trunc('month', p_valid_from)::date;
+
+  insert into audit.events(actor_user_id, event_type, entity_type, entity_id, metadata)
+  values (
+    v_actor,
+    'territory_assignment_changed',
+    'core.establishments',
+    p_establishment_id::text,
+    jsonb_build_object(
+      'previous_district_id', v_previous.district_id,
+      'district_id', p_district_id,
+      'valid_from', p_valid_from,
+      'history_id', v_history_id
+    )
+  );
+
+  return coalesce(v_history_id, v_previous.id);
+end;
+$function$;
+
+create or replace function public.manage_profile(
+  p_user_id uuid,
+  p_role app.user_role,
+  p_active boolean
+)
+returns app.profiles
+language plpgsql
+security definer
+set search_path = pg_catalog, public, auth, app, audit
+as $function$
+declare
+  v_actor uuid := auth.uid();
+  v_email text;
+  v_previous app.profiles%rowtype;
+  v_result app.profiles%rowtype;
+begin
+  if not exists (
+    select 1 from app.profiles
+    where user_id = v_actor and active and role = 'admin'::app.user_role
+  ) then
+    raise exception 'Apenas administradores ativos podem gerenciar perfis' using errcode = '42501';
+  end if;
+
+  select email into v_email from auth.users where id = p_user_id;
+  if v_email is null then
+    raise exception 'Usuário autenticado não encontrado';
+  end if;
+
+  select * into v_previous from app.profiles where user_id = p_user_id;
+  insert into app.profiles(user_id, email, role, active)
+  values (p_user_id, v_email, p_role, p_active)
+  on conflict (user_id) do update
+  set email = excluded.email,
+      role = excluded.role,
+      active = excluded.active,
+      updated_at = now()
+  returning * into v_result;
+
+  insert into audit.events(actor_user_id, event_type, entity_type, entity_id, metadata)
+  values (
+    v_actor,
+    'profile_access_changed',
+    'app.profiles',
+    p_user_id::text,
+    jsonb_build_object(
+      'previous_role', v_previous.role,
+      'previous_active', v_previous.active,
+      'role', v_result.role,
+      'active', v_result.active
+    )
+  );
+
+  return v_result;
+end;
+$function$;
+
+revoke all on function public.update_establishment_territory(uuid, smallint, date) from public, anon;
+grant execute on function public.update_establishment_territory(uuid, smallint, date) to authenticated;
+
+revoke all on function public.manage_profile(uuid, app.user_role, boolean) from public, anon;
+grant execute on function public.manage_profile(uuid, app.user_role, boolean) to authenticated;

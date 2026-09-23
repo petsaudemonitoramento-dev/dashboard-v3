@@ -90,10 +90,27 @@ export function requireRoleFromContext(
   return context;
 }
 
+export function requireAnyRoleFromContext(
+  context: ActiveProfileContext,
+  roles: readonly UserRole[],
+): ActiveProfileContext {
+  if (!roles.includes(context.profile.role)) {
+    throw new AccessDeniedError("FORBIDDEN", "Perfil sem permissão para esta operação.");
+  }
+  return context;
+}
+
 export async function requireAdministrator(gateway?: ProfileGateway) {
   return requireRoleFromContext(await getActiveProfileContext(gateway), "admin");
 }
 
 export function requireManagementAccess(gateway?: ProfileGateway) {
   return getActiveProfileContext(gateway);
+}
+
+export async function requireDataManager(gateway?: ProfileGateway) {
+  return requireAnyRoleFromContext(
+    await getActiveProfileContext(gateway),
+    ["admin", "gestao"],
+  );
 }

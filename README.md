@@ -1,18 +1,27 @@
-# Dashboard V3 — Gestão
+# MAE APS
 
-Software exclusivo da Gestão municipal para dados SIAPS e análises C3. A arquitetura vigente está em [docs/IMPLEMENTATION_CONTRACT.md](docs/IMPLEMENTATION_CONTRACT.md).
+**Monitoramento, Atenção e Estratégia na APS** é o software da Gestão municipal para monitorar o indicador C3 — Cuidado na Gestação e Puerpério — com dados oficiais SIAPS.
+
+O Supabase oficial é o projeto `dashboard-v3` (`nyexakdyxtstcyycmlng`). O remoto contém dados reais e nunca deve receber reset destrutivo. A Data API remota já está configurada para os schemas atuais: `app`, `core`, `siaps`, `analytics`, `study` e `audit` conforme a necessidade de exposição.
 
 ## Desenvolvimento
 
-1. `npm install`
-2. Configure `.env.local` a partir de `.env.example`, somente com URL/chave publicável do V3 e `NEXT_PUBLIC_APP_URL`.
-3. `npx supabase start` e `npx supabase db reset` **sem `--linked`**, apenas com Docker local.
-4. `npx supabase test db`, `npm test`, `npm run lint` e `npm run build`.
+1. Use Node.js 22 ou superior e execute `npm install`.
+2. Configure `.env.local` a partir de `.env.example`.
+3. Execute `npm run dev`.
+4. Valide com `npm test`, `npm run typecheck`, `npm run lint` e `npm run build`.
+5. Com Docker disponível, execute uma vez `npm run db:reset` e `npm run test:db`, sempre sem `--linked`.
 
-Nunca versione `.env.local`, use service-role no navegador ou credenciais V2. O projeto Supabase remoto contém dados reais JAN–JUN/2026 e não pode ser resetado.
+O navegador recebe apenas `NEXT_PUBLIC_SUPABASE_URL`, a chave publicável e a URL canônica do app. `SUPABASE_SECRET_KEY` é exclusiva do servidor e necessária para ingestão e consulta administrativa de `auth.users`.
 
-As migrations em `supabase/migrations/` reproduzem somente a arquitetura de Gestão em banco vazio. As migrations antigas da PR #2 foram preservadas em `supabase/archive/phase1/`, fora da cadeia executável. O snapshot estrutural local não deve ser enviado automaticamente ao V3 remoto, cuja história já avançou.
+## Módulos V1.0
 
-O acesso de uma conta autenticada depende de uma linha ativa em `app.profiles`. A arquitetura remota atual permite apenas leitura do próprio perfil pelo usuário: o provisionamento de acessos ainda é uma operação institucional controlada, não uma mutação do navegador.
+- Dashboard municipal reativo, com filtros, agregação por razão das somas, A–K e drill-down Município → Distrito → UBS → Equipe.
+- Importação XLSX SIAPS com validação, pré-visualização, SHA-256, duplicidade, publicação e histórico.
+- Gestão territorial com vigência histórica e auditoria.
+- Coorte `piloto_2026_c3` como filtro analítico, nunca como limite de ingestão.
+- Administração de perfis `admin`, `gestao` e `leitura`.
 
-Antes do deploy, confirme a configuração da Data API remota: a configuração observada no role `authenticator` ainda cita schemas legados e não inclui `app`, `analytics` e `study`. A configuração local já usa os schemas atuais; nenhuma mudança de exposição foi feita no V3 remoto.
+Documentos operacionais: [deploy](docs/DEPLOY.md), [importação](docs/IMPORTACAO_SIAPS.md), [permissões](docs/PERMISSOES.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
+
+Créditos: Desenvolvimento — Lucca Nunes dos Santos Pereira de Araújo · Design — Kethilly Nayara Felix de Souza · PET SAÚDE UFCG.

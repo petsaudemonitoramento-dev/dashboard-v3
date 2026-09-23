@@ -22,7 +22,7 @@ export function AuthShell({
         </div>
         <div>
           <h1 className="max-w-[9ch] text-5xl font-semibold leading-[0.96] tracking-[-0.055em] xl:text-7xl">
-            Cuidado na Gestação na APS
+            MAE APS
           </h1>
           <p className="mt-6 max-w-lg leading-7 text-white/75">
             Informação segura para fortalecer o cuidado longitudinal e a gestão

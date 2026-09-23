@@ -1,0 +1,48 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import type { EChartsOption } from "echarts";
+
+const ReactECharts = dynamic(() => import("echarts-for-react"), {
+  ssr: false,
+  loading: () => <div className="h-72 animate-pulse rounded-xl bg-slate-100" aria-label="Carregando gráfico" />,
+});
+
+type ChartClick = { name?: string };
+
+export function MaeChart({ option, ariaLabel, drilldown, componentDescriptions }: {
+  option: EChartsOption;
+  ariaLabel: string;
+  drilldown?: Record<string, string>;
+  componentDescriptions?: Record<string, string>;
+}) {
+  const router = useRouter();
+  const resolved: EChartsOption = componentDescriptions ? {
+    ...option,
+    tooltip: {
+      trigger: "axis",
+      confine: true,
+      formatter(params: unknown) {
+        const item = Array.isArray(params) ? params[0] as { axisValue?: string; value?: number } : null;
+        const code = item?.axisValue ?? "";
+        return `<strong>${code}</strong><br/>${componentDescriptions[code] ?? ""}<br/><strong>${Number(item?.value ?? 0).toLocaleString("pt-BR")}</strong> registros`;
+      },
+    },
+  } : option;
+
+  return (
+    <div role="img" aria-label={ariaLabel}>
+      <ReactECharts
+        option={resolved}
+        notMerge
+        lazyUpdate
+        style={{ height: 310, width: "100%" }}
+        onEvents={drilldown ? { click: (event: ChartClick) => {
+          const href = event.name ? drilldown[event.name] : undefined;
+          if (href) router.push(href);
+        } } : undefined}
+      />
+    </div>
+  );
+}

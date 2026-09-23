@@ -1,6 +1,6 @@
-# Contrato de implementação — Dashboard V3 da Gestão
+# Contrato de implementação — MAE APS V1.0
 
-Esta versão substitui o contrato anterior da Fase 1. O Dashboard V3 é um software **exclusivo da Gestão**. O futuro software dos profissionais terá outro repositório e infraestrutura própria. Não há módulo Profissional, prontuário, importação PEC nem dados clínicos privados neste projeto.
+O **MAE APS — Monitoramento, Atenção e Estratégia na APS** é um software **exclusivo da Gestão**. O futuro software dos profissionais terá outro repositório e infraestrutura própria. Não há módulo Profissional, prontuário, importação PEC nem dados clínicos privados neste projeto.
 
 ## Fonte de verdade
 
@@ -19,7 +19,7 @@ Não criar `core.profiles`, `professional`, `analytics_gestao` ou o antigo schem
 
 ## Acesso
 
-Login, Google OAuth e recuperação de senha usam Supabase Auth e `@supabase/ssr`. Guards server-side chamam `auth.getUser()` e só autorizam perfil próprio em `app.profiles` com `active=true`. `admin` acessa a área administrativa; `gestao` e `leitura` acessam a área de Gestão. A autenticação pública não autoatribui papel nem ativa perfil. A arquitetura atual não oferece RPC de mutação administrativa: o navegador não deve tentar atualização direta nem usar chave service-role. Uma futura API de provisionamento exige autorização e auditoria próprias.
+Login, Google OAuth e recuperação de senha usam Supabase Auth e `@supabase/ssr`. Guards server-side chamam `auth.getUser()` e só autorizam perfil próprio em `app.profiles` com `active=true`. `admin` acessa a área administrativa; `gestao` e `leitura` acessam a área de Gestão. A autenticação pública não autoatribui papel nem ativa perfil. As mutações de território e perfil revalidam sessão, perfil ativo e papel no banco e registram auditoria. A importação usa rota server-side autorizada e cliente privilegiado exclusivo do servidor. Nenhum segredo chega ao navegador.
 
 `NEXT_PUBLIC_APP_URL` é obrigatória como origem canônica dos links de autenticação: HTTPS fora de loopback, sem inferência de `Host` ou `X-Forwarded-Host`. `.env.local` nunca é versionado.
 

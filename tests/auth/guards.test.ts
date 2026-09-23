@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   evaluateActiveProfile,
   requireAdministrator,
+  requireDataManager,
   requireManagementAccess,
   type ProfileGateway,
 } from "@/lib/auth/guards";
@@ -86,5 +87,11 @@ describe("guards server-side", () => {
     await expect(requireManagementAccess(gateway("gestao", false))).rejects.toMatchObject({
       code: "INACTIVE",
     });
+  });
+
+  it("permite importação e território apenas a admin e gestao", async () => {
+    await expect(requireDataManager(gateway("admin"))).resolves.toBeTruthy();
+    await expect(requireDataManager(gateway("gestao"))).resolves.toBeTruthy();
+    await expect(requireDataManager(gateway("leitura"))).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
