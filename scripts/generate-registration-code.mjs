@@ -5,6 +5,7 @@ const files = [
   "src/lib/siaps/parser.ts",
   "src/lib/analytics/c3.ts",
   "src/lib/auth/guards.ts",
+  "src/lib/http/import-errors.ts",
   "src/app/api/importacoes/route.ts",
   "src/app/(sistema)/sistema/gestao/page.tsx",
   "src/app/(sistema)/sistema/piloto/page.tsx",

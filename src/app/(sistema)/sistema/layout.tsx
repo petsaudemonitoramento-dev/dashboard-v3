@@ -23,6 +23,6 @@ export default async function SystemLayout({ children }: { children: React.React
       <details className="user-menu"><summary aria-label="Abrir menu do usuário">{profile.email.slice(0, 1).toUpperCase()}</summary><div className="user-popover"><strong>{profile.role.toUpperCase()}</strong><p>{profile.email}</p><form action={signOutAction}><button type="submit">Sair</button></form></div></details>
     </header>
     <main className="app-main">{children}</main>
-    <footer className="app-footer"><strong>PET SAÚDE UFCG</strong><span>Desenvolvimento: Lucca Nunes dos Santos Pereira de Araújo</span><span>Design: Kethilly Nayara Felix de Souza</span></footer>
+    <footer className="app-footer"><strong>PET SAÚDE UFCG</strong><span>Desenvolvimento: Lucca Araújo</span><span>Design: Kethilly Nayara Felix de Souza</span></footer>
   </div>;
 }

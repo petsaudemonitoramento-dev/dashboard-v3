@@ -352,11 +352,35 @@ export async function requireDataManager(gateway?: ProfileGateway) {
   );
 }
 
-// origem: src/app/api/importacoes/route.ts | linhas: 1-62
+// origem: src/lib/http/import-errors.ts | linhas: 1-21
+import { ZodError } from "zod";
+
+import { AccessDeniedError } from "@/lib/auth/types";
+
+export type ImportErrorResponse = {
+  status: 400 | 401 | 403 | 500;
+  message: string;
+};
+
+export function importErrorResponse(error: unknown): ImportErrorResponse {
+  if (error instanceof ZodError || error instanceof SyntaxError) {
+    return { status: 400, message: "Dados de importação inválidos." };
+  }
+  if (error instanceof AccessDeniedError) {
+    if (error.code === "UNAUTHENTICATED") {
+      return { status: 401, message: "Autenticação obrigatória." };
+    }
+    return { status: 403, message: "Perfil sem permissão para importar." };
+  }
+  return { status: 500, message: "Falha interna ao processar a importação." };
+}
+
+// origem: src/app/api/importacoes/route.ts | linhas: 1-64
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireDataManager } from "@/lib/auth/guards";
+import { importErrorResponse } from "@/lib/http/import-errors";
 import { createPrivilegedClient } from "@/lib/supabase/privileged";
 import { createClient } from "@/lib/supabase/server";
 
@@ -411,8 +435,9 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ importId, status: "publicado", rows: payload.rows.length });
   } catch (error) {
-    const status = error instanceof z.ZodError ? 400 : 403;
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Falha na importação." }, { status });
+    const response = importErrorResponse(error);
+    if (response.status === 500) console.error("Falha interna na importação SIAPS", error);
+    return NextResponse.json({ error: response.message }, { status: response.status });
   }
 }
 
@@ -626,7 +651,7 @@ export default async function PilotPage({ searchParams }: { searchParams: Promis
   </div>;
 }
 
-// origem: supabase/migrations/20260923002658_mae_aps_v1_operations.sql | linhas: 1-155
+// origem: supabase/migrations/20260923002658_mae_aps_v1_operations.sql | linhas: 1-168
 -- Operações incrementais da V1.0 do MAE APS.
 -- Não altera nem recria dados SIAPS existentes.
 
@@ -645,6 +670,7 @@ declare
   v_role app.user_role;
   v_previous core.establishment_district_history%rowtype;
   v_history_id bigint;
+  v_latest_valid_from date;
 begin
   select role into v_role
   from app.profiles
@@ -673,8 +699,20 @@ begin
   limit 1
   for update;
 
-  if v_previous.id is not null and v_previous.valid_from >= p_valid_from then
-    raise exception 'A nova vigência deve começar depois de %', v_previous.valid_from;
+  select max(valid_from) into v_latest_valid_from
+  from core.establishment_district_history
+  where establishment_id = p_establishment_id;
+
+  if v_latest_valid_from is not null and v_latest_valid_from >= p_valid_from then
+    raise exception 'A nova vigência deve começar depois de %', v_latest_valid_from;
+  end if;
+  if v_previous.id is null and exists (
+    select 1 from core.establishment_district_history
+    where establishment_id = p_establishment_id
+      and valid_to is not null
+      and valid_to >= p_valid_from
+  ) then
+    raise exception 'A nova vigência não pode sobrepor período territorial existente';
   end if;
 
   if v_previous.id is not null and v_previous.district_id is not distinct from p_district_id then

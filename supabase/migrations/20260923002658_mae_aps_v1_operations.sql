@@ -16,6 +16,7 @@ declare
   v_role app.user_role;
   v_previous core.establishment_district_history%rowtype;
   v_history_id bigint;
+  v_latest_valid_from date;
 begin
   select role into v_role
   from app.profiles
@@ -44,8 +45,20 @@ begin
   limit 1
   for update;
 
-  if v_previous.id is not null and v_previous.valid_from >= p_valid_from then
-    raise exception 'A nova vigência deve começar depois de %', v_previous.valid_from;
+  select max(valid_from) into v_latest_valid_from
+  from core.establishment_district_history
+  where establishment_id = p_establishment_id;
+
+  if v_latest_valid_from is not null and v_latest_valid_from >= p_valid_from then
+    raise exception 'A nova vigência deve começar depois de %', v_latest_valid_from;
+  end if;
+  if v_previous.id is null and exists (
+    select 1 from core.establishment_district_history
+    where establishment_id = p_establishment_id
+      and valid_to is not null
+      and valid_to >= p_valid_from
+  ) then
+    raise exception 'A nova vigência não pode sobrepor período territorial existente';
   end if;
 
   if v_previous.id is not null and v_previous.district_id is not distinct from p_district_id then

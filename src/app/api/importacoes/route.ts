@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireDataManager } from "@/lib/auth/guards";
+import { importErrorResponse } from "@/lib/http/import-errors";
 import { createPrivilegedClient } from "@/lib/supabase/privileged";
 import { createClient } from "@/lib/supabase/server";
 
@@ -56,7 +57,8 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ importId, status: "publicado", rows: payload.rows.length });
   } catch (error) {
-    const status = error instanceof z.ZodError ? 400 : 403;
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Falha na importação." }, { status });
+    const response = importErrorResponse(error);
+    if (response.status === 500) console.error("Falha interna na importação SIAPS", error);
+    return NextResponse.json({ error: response.message }, { status: response.status });
   }
 }
