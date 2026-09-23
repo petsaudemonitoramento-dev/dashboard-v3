@@ -395,7 +395,7 @@ export default async function ManagementDashboard({
 
   const evolutionOption: EChartsOption = {
     color: ["#1479e8", "#18a66a", "#7357e8"],
-    tooltip: { trigger: "axis", confine: true, valueFormatter: (value) => `${Number(value).toFixed(1)}%` },
+    tooltip: { trigger: "axis", confine: true },
     legend: { top: 0, textStyle: { color: "#53657c", fontSize: 11 } },
     grid: { left: 42, right: 18, top: 42, bottom: 34 },
     xAxis: { type: "category", data: evolution.map((item) => monthLabel(item.month)), ...baseAxis },
@@ -409,7 +409,7 @@ export default async function ManagementDashboard({
 
   const comparisonOption: EChartsOption = {
     color: ["#1682ed"],
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, confine: true, valueFormatter: (value) => Number(value).toFixed(2) },
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, confine: true },
     grid: { left: 46, right: 14, top: 20, bottom: 72 },
     xAxis: {
       type: "category",
@@ -469,11 +469,6 @@ export default async function ManagementDashboard({
       trigger: "axis",
       axisPointer: { type: "shadow" },
       confine: true,
-      formatter(params: unknown) {
-        const item = Array.isArray(params) ? params[0] as { axisValue?: string; value?: number } : null;
-        const code = item?.axisValue ?? "";
-        return `<strong>${code} · ${PRACTICE_SHORT[code] ?? ""}</strong><br/>${Number(item?.value ?? 0).toFixed(1)}% de cobertura no recorte`;
-      },
     },
     grid: { left: 42, right: 18, top: 20, bottom: 40 },
     xAxis: { type: "category", data: Object.keys(C3_COMPONENTS), ...baseAxis },
@@ -610,7 +605,7 @@ export default async function ManagementDashboard({
           </div>
           <span className="dashboard-card-pill">A–K</span>
         </div>
-        <MaeChart option={componentsOption} ariaLabel="Cobertura percentual das práticas A a K" height={280} />
+        <MaeChart option={componentsOption} ariaLabel="Cobertura percentual das práticas A a K" componentDescriptions={C3_COMPONENTS} height={280} />
         <div className="practice-legend">
           {Object.keys(C3_COMPONENTS).map((code) => <span key={code}><strong>{code}</strong>{PRACTICE_SHORT[code]}</span>)}
         </div>
