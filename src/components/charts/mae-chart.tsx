@@ -11,11 +11,12 @@ const ReactECharts = dynamic(() => import("echarts-for-react"), {
 
 type ChartClick = { name?: string };
 
-export function MaeChart({ option, ariaLabel, drilldown, componentDescriptions }: {
+export function MaeChart({ option, ariaLabel, drilldown, componentDescriptions, height = 310 }: {
   option: EChartsOption;
   ariaLabel: string;
   drilldown?: Record<string, string>;
   componentDescriptions?: Record<string, string>;
+  height?: number;
 }) {
   const router = useRouter();
   const resolved: EChartsOption = componentDescriptions ? {
@@ -26,18 +27,23 @@ export function MaeChart({ option, ariaLabel, drilldown, componentDescriptions }
       formatter(params: unknown) {
         const item = Array.isArray(params) ? params[0] as { axisValue?: string; value?: number } : null;
         const code = item?.axisValue ?? "";
-        return `<strong>${code}</strong><br/>${componentDescriptions[code] ?? ""}<br/><strong>${Number(item?.value ?? 0).toLocaleString("pt-BR")}</strong> registros`;
+        return `<strong>${code}</strong><br/>${componentDescriptions[code] ?? ""}<br/><strong>${Number(item?.value ?? 0).toLocaleString("pt-BR")}</strong>`;
       },
     },
   } : option;
 
   return (
-    <div role="img" aria-label={ariaLabel}>
+    <div role="img" aria-label={ariaLabel} className="mae-chart">
       <ReactECharts
-        option={resolved}
+        option={{
+          animationDuration: 750,
+          animationDurationUpdate: 500,
+          animationEasing: "cubicOut",
+          ...resolved,
+        }}
         notMerge
         lazyUpdate
-        style={{ height: 310, width: "100%" }}
+        style={{ height, width: "100%" }}
         onEvents={drilldown ? { click: (event: ChartClick) => {
           const href = event.name ? drilldown[event.name] : undefined;
           if (href) router.push(href);
