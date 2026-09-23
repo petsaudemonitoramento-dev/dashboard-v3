@@ -322,7 +322,8 @@ export default async function ManagementDashboard({
     const name = comparisonMode === "team"
       ? (teamMap.get(id)?.name || teamMap.get(id)?.ine || "Equipe")
       : (establishmentMap.get(id)?.name || "UBS");
-    const current = comparisonGroups.get(id) ?? { name, facts: [], id };
+    const current: { name: string; facts: FactRow[]; id: string } =
+      comparisonGroups.get(id) ?? { name, facts: [] as FactRow[], id };
     current.facts.push(fact);
     comparisonGroups.set(id, current);
   }
@@ -454,7 +455,7 @@ export default async function ManagementDashboard({
       top: "46%",
       style: {
         text: `${teamCount}\nequipes`,
-        textAlign: "center",
+        align: "center",
         fill: "#143154",
         fontSize: 18,
         fontWeight: 800,
