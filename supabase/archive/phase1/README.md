@@ -1,0 +1,1 @@
+Migrations históricas da arquitetura anterior da PR #2, já aplicadas no passado ao V3. Preservadas para rastreabilidade, mas excluídas da cadeia de `supabase db reset` local. Não reexecutar nem usar para reconstruir o domínio de Gestão atual.

@@ -1,46 +1,35 @@
-# Cuidado na Gestação na APS — V3
+# MAE APS
 
-Nova geração da plataforma institucional de acompanhamento e análise do cuidado na gestação na Atenção Primária à Saúde.
+**Monitoramento, Atenção e Estratégia na APS** é o software da Gestão municipal para monitorar o indicador C3 — Cuidado na Gestação e Puerpério — com dados oficiais SIAPS.
 
-## Status
+O Supabase oficial é o projeto `dashboard-v3` (`nyexakdyxtstcyycmlng`). O remoto contém dados reais e nunca deve receber reset destrutivo.
 
-Arquitetura V3.0 congelada. Implementação iniciada em ambiente isolado, sem alterar a V2 em produção.
+## Desenvolvimento
 
-## Escopo inicial
+1. Use Node.js 22 ou superior e execute `npm ci`.
+2. Configure `.env.local` a partir de `.env.example`.
+3. Execute `npm run dev`.
+4. Valide com `npm test`, `npm run typecheck`, `npm run lint` e `npm run build`.
+5. Com Docker disponível, execute `npm run db:start`, `npm run db:reset` e `npm run test:db`, sempre sem `--linked`.
 
-- Município inicial: Campina Grande-PB.
-- Série oficial de gestão: competências SIAPS a partir de janeiro de 2026.
-- Indicador inicial: C3 — Cuidado na Gestação e Puerpério.
-- Perfis: `administrador`, `gestao_municipal`, `profissional`.
-- Gestão: dados oficiais do SIAPS, exclusivamente por importação de Relatório Qualidade — Visão por Competência.
-- Profissional: diário clínico privado e importação PEC, sem alimentar indicadores oficiais de gestão.
-- Território: Município → Distrito → UBS → Equipe.
-- UBS entram no painel; policlínicas e âncoras são reconhecidas e excluídas do escopo analítico.
+O workflow manual **MAE APS - Validacao V1** (`.github/workflows/validate-v1.yml`) reproduz esses checks no GitHub Actions, incluindo reconstrução completa do Supabase local e testes SQL/RLS, sem acessar o projeto remoto.
 
-## Stack alvo
+O navegador recebe apenas `NEXT_PUBLIC_SUPABASE_URL`, a chave publicável e a URL canônica do app. `SUPABASE_SECRET_KEY` é exclusiva do servidor e necessária para ingestão e consulta administrativa de `auth.users`.
 
-- Next.js 16.x
-- React 19.x
-- TypeScript 5.x
-- Supabase Auth / PostgreSQL / Storage / RLS
-- `@supabase/ssr` e `@supabase/supabase-js`
-- PostgreSQL acessível por camada server-side quando necessário
-- SheetJS/XLSX para ingestão SIAPS
-- Vitest para testes automatizados
-- Vercel para deploy do frontend
-- Metabase institucional UFCG futuramente, consumindo apenas a camada analítica read-only
+## Módulos V1.0
 
-## Supabase V3
+- **Gestão:** Dashboard municipal reativo em formato executivo, com período inicial/final, filtros territoriais e por classificação C3, busca por CNES/INE, KPIs, série histórica, práticas A–K, comparativos por UBS/equipe, distribuição por classificação, rastreabilidade das importações e resumo consolidado; e importação XLSX SIAPS com validação, pré-visualização, SHA-256, duplicidade, publicação e histórico.
+- **Administrador:** Gestão territorial com vigência histórica e auditoria; ajuste fino e auditado de nome/CNES das UBS mediante dupla confirmação; e administração de perfis.
+- **Leitura:** acesso somente ao Dashboard.
 
-- Project ref: `nyexakdyxtstcyycmlng`
-- Region: `sa-east-1`
-- URL pública do projeto deve ser fornecida por variável de ambiente.
-- Nunca versionar chaves secretas/service-role.
+Não existe módulo específico de piloto. O recorte analisado pelo Dashboard é determinado pelos dados oficiais efetivamente importados. Na implantação inicial, a base pode começar apenas com as UBS selecionadas para a primeira etapa e ser ampliada posteriormente sem mudança de código.
 
-## Contrato técnico
+O Metabase pode ser usado como ferramenta analítica complementar, mas não substitui os módulos oficiais do MAE APS. O software dos profissionais é um produto separado e não faz parte deste repositório.
 
-Ver [`docs/IMPLEMENTATION_CONTRACT.md`](docs/IMPLEMENTATION_CONTRACT.md).
+## Release e registro
 
-## Regra de ouro
+Após CI verde e congelamento da versão, execute `npm run registro:codigo`, crie a tag da release e somente então rode `npm run registro:hash -- --tag <tag>`. Pendências administrativas permanecem em `docs/registro/PENDENCIAS_NITT.md`.
 
-Dados do módulo Profissional e dados oficiais da Gestão são domínios separados. Dados clínicos privados de profissionais **nunca** alimentam os indicadores oficiais de gestão.
+Documentos operacionais: [deploy](docs/DEPLOY.md), [importação](docs/IMPORTACAO_SIAPS.md), [permissões](docs/PERMISSOES.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
+
+Créditos: Desenvolvimento — Lucca Araújo · Design — Kethilly Nayara · PET SAÚDE UFCG.
