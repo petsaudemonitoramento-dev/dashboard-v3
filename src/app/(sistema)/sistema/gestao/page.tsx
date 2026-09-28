@@ -433,11 +433,31 @@ export default async function ManagementDashboard({
 
   const classificationOption: EChartsOption = {
     tooltip: { trigger: "item", formatter: "{b}: {c} equipes ({d}%)" },
-    legend: { orient: "vertical", right: 0, top: "middle", textStyle: { color: "#526477", fontSize: 11 } },
+    title: {
+      text: `${teamCount}\nequipes`,
+      left: "50%",
+      top: "34%",
+      textAlign: "center",
+      textStyle: {
+        color: "#143154",
+        fontSize: 18,
+        fontWeight: 800,
+        lineHeight: 23,
+      },
+    },
+    legend: {
+      orient: "horizontal",
+      left: "center",
+      bottom: 4,
+      itemWidth: 13,
+      itemHeight: 13,
+      itemGap: 18,
+      textStyle: { color: "#526477", fontSize: 11 },
+    },
     series: [{
       type: "pie",
-      radius: ["50%", "76%"],
-      center: ["34%", "52%"],
+      radius: ["39%", "66%"],
+      center: ["50%", "44%"],
       avoidLabelOverlap: true,
       label: { show: false },
       emphasis: { scale: true, scaleSize: 6 },
@@ -448,19 +468,6 @@ export default async function ManagementDashboard({
         { name: "Regular", value: classificationCounts["Regular"], itemStyle: { color: "#ef5350" } },
         { name: "Sem elegíveis", value: classificationCounts["Sem população elegível"], itemStyle: { color: "#a9b5c5" } },
       ],
-    }],
-    graphic: [{
-      type: "text",
-      left: "26%",
-      top: "46%",
-      style: {
-        text: `${teamCount}\nequipes`,
-        align: "center",
-        fill: "#143154",
-        fontSize: 18,
-        fontWeight: 800,
-        lineHeight: 22,
-      },
     }],
   };
 
