@@ -161,6 +161,9 @@ input {
 .management-footer strong { color: #24537d; }
 
 .management-dashboard { width: min(100%, 1500px); margin: 0 auto; }
+.management-dashboard section[id] { scroll-margin-top: 112px; }
+.management-sidebar nav a.active { outline: 1px solid rgba(255,255,255,.92); outline-offset: -1px; }
+
 .dashboard-welcome {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; margin-bottom: 1rem;
   animation: dashboard-rise .45s ease both;
