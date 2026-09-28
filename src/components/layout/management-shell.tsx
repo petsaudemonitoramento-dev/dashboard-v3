@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState, type MouseEvent } from "react";
 import {
   BarChart3,
   Building2,
@@ -23,16 +24,61 @@ type Props = {
 };
 
 const dashboardSections = [
-  { href: "/sistema/gestao", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/sistema/gestao#indicadores", label: "Indicadores", icon: BarChart3 },
-  { href: "/sistema/gestao#ubs-equipes", label: "UBS e equipes", icon: Building2 },
-  { href: "/sistema/gestao#comparativos", label: "Comparativos", icon: GitCompareArrows },
-  { href: "/sistema/gestao#resumo", label: "Resumo", icon: ListChecks },
+  { id: "indicadores", href: "/sistema/gestao#indicadores", label: "Indicadores", icon: BarChart3 },
+  { id: "ubs-equipes", href: "/sistema/gestao#ubs-equipes", label: "UBS e equipes", icon: Building2 },
+  { id: "comparativos", href: "/sistema/gestao#comparativos", label: "Comparativos", icon: GitCompareArrows },
+  { id: "resumo", href: "/sistema/gestao#resumo", label: "Resumo", icon: ListChecks },
 ];
 
 export function ManagementShell({ children, email, role }: Props) {
   const pathname = usePathname();
   const isImport = pathname.startsWith("/sistema/importar");
+  const isDashboard = pathname.startsWith("/sistema/gestao");
+  const [activeSection, setActiveSection] = useState("dashboard");
+
+  useEffect(() => {
+    if (isImport) {
+      setActiveSection("importar");
+      return;
+    }
+
+    if (!isDashboard) return;
+
+    const syncFromHash = () => {
+      const id = window.location.hash.replace("#", "");
+      setActiveSection(id || "dashboard");
+
+      if (id) {
+        window.requestAnimationFrame(() => {
+          document.getElementById(id)?.scrollIntoView({ block: "start" });
+        });
+      }
+    };
+
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
+  }, [isDashboard, isImport, pathname]);
+
+  function goToDashboard(event: MouseEvent<HTMLAnchorElement>) {
+    if (!isDashboard) return;
+    event.preventDefault();
+    window.history.pushState(null, "", `${window.location.pathname}${window.location.search}`);
+    setActiveSection("dashboard");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function goToSection(event: MouseEvent<HTMLAnchorElement>, id: string) {
+    if (!isDashboard) return;
+    event.preventDefault();
+    window.history.pushState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}#${id}`,
+    );
+    setActiveSection(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <div className="management-shell">
@@ -74,18 +120,27 @@ export function ManagementShell({ children, email, role }: Props) {
 
       <aside className="management-sidebar">
         <nav aria-label="Navegação da Gestão">
-          {dashboardSections.slice(0, 1).map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={!isImport && pathname.startsWith("/sistema/gestao") ? "active" : ""}>
-              <Icon className="size-5" /><span>{label}</span>
-            </Link>
-          ))}
+          <Link
+            href="/sistema/gestao"
+            onClick={goToDashboard}
+            className={!isImport && activeSection === "dashboard" ? "active" : ""}
+          >
+            <LayoutDashboard className="size-5" /><span>Dashboard</span>
+          </Link>
+
           {role === "gestao" && (
             <Link href="/sistema/importar" className={isImport ? "active" : ""}>
               <DatabaseZap className="size-5" /><span>Importar dados</span>
             </Link>
           )}
-          {dashboardSections.slice(1).map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href}>
+
+          {dashboardSections.map(({ id, href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={(event) => goToSection(event, id)}
+              className={!isImport && activeSection === id ? "active" : ""}
+            >
               <Icon className="size-5" /><span>{label}</span>
             </Link>
           ))}
