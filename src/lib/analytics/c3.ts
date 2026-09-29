@@ -29,10 +29,12 @@ export type C3Classification =
   | "Bom"
   | "Suficiente"
   | "Regular"
+  | "Valor inválido"
   | "Sem população elegível";
 
 export function classifyC3(value: number | null): C3Classification {
   if (value === null) return "Sem população elegível";
+  if (value < 0 || value > 100) return "Valor inválido";
   if (value > 75) return "Ótimo";
   if (value > 50) return "Bom";
   if (value > 25) return "Suficiente";
