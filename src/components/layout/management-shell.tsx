@@ -57,7 +57,11 @@ export function ManagementShell({ children, email, role }: Props) {
 
     syncFromHash();
     window.addEventListener("hashchange", syncFromHash);
-    return () => window.removeEventListener("hashchange", syncFromHash);
+    window.addEventListener("popstate", syncFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("popstate", syncFromHash);
+    };
   }, [isDashboard, isImport, pathname]);
 
   function goToDashboard(event: MouseEvent<HTMLAnchorElement>) {
@@ -124,12 +128,13 @@ export function ManagementShell({ children, email, role }: Props) {
             href="/sistema/gestao"
             onClick={goToDashboard}
             className={!isImport && activeSection === "dashboard" ? "active" : ""}
+            aria-current={!isImport && activeSection === "dashboard" ? "page" : undefined}
           >
             <LayoutDashboard className="size-5" /><span>Dashboard</span>
           </Link>
 
           {role === "gestao" && (
-            <Link href="/sistema/importar" className={isImport ? "active" : ""}>
+            <Link href="/sistema/importar" className={isImport ? "active" : ""} aria-current={isImport ? "page" : undefined}>
               <DatabaseZap className="size-5" /><span>Importar dados</span>
             </Link>
           )}
@@ -140,6 +145,7 @@ export function ManagementShell({ children, email, role }: Props) {
               href={href}
               onClick={(event) => goToSection(event, id)}
               className={!isImport && activeSection === id ? "active" : ""}
+              aria-current={!isImport && activeSection === id ? "page" : undefined}
             >
               <Icon className="size-5" /><span>{label}</span>
             </Link>
