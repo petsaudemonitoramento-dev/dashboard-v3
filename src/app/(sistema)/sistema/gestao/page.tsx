@@ -210,7 +210,6 @@ export default async function ManagementDashboard({
   const teams = teamsResult.data ?? [];
   const recentImports = (importsResult.data ?? []) as ImportRow[];
 
-  const districtNames = new Map(districts.map((item) => [item.id, item.name]));
   const establishmentMap = new Map(establishments.map((item) => [item.id, item]));
   const teamMap = new Map(teams.map((item) => [item.id, item]));
 
