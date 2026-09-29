@@ -2,7 +2,25 @@
 
 import { useFormStatus } from "react-dom";
 
-export function SubmitButton({ label }: { label: string }) {
+export function SubmitButton({
+  label,
+  pendingLabel = "Salvando...",
+  className = "primary-button",
+}: {
+  label: string;
+  pendingLabel?: string;
+  className?: string;
+}) {
   const { pending } = useFormStatus();
-  return <button className="primary-button" disabled={pending} type="submit">{pending ? "Salvando..." : label}</button>;
+
+  return (
+    <button
+      aria-disabled={pending}
+      className={className}
+      disabled={pending}
+      type="submit"
+    >
+      {pending ? pendingLabel : label}
+    </button>
+  );
 }
