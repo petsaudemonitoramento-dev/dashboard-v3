@@ -47,7 +47,7 @@ $$,'valid C3 workbook is published atomically');
 reset role;
 
 select is((select points_total from analytics.dashboard_competencies where competency='2026-01-01'),210::numeric,'competency exposes additive points');
-select is((select denominator from analytics.dashboard_competencies where competency='2026-01-01'),3::numeric,'competency exposes additive denominator');
+select is((select denominator from analytics.dashboard_competencies where competency='2026-01-01'),3::bigint,'competency exposes additive denominator');
 select is((select round(c3,2) from analytics.dashboard_competencies where competency='2026-01-01'),70.00::numeric,'competency C3 uses ratio of sums');
 select is((select count(*) from analytics.dashboard_c3_team_monthly where classification in ('Bom','Ótimo')),2::bigint,'classification boundaries are available per team');
 
