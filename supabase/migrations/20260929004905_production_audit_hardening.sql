@@ -1,6 +1,5 @@
 -- Hardening incremental da V1.0.0 do MAE APS.
--- Preserva as RPCs administrativas existentes, incluindo a dupla confirmação
--- para ajuste de nome/CNES da UBS. Não remove dados nem recria estruturas-base.
+-- Preserva dados, UUIDs e histórico. Não recria estruturas-base.
 
 -- Publicação SIAPS atômica: único ponto privilegiado de escrita usado pela API.
 create or replace function public.publish_siaps_c3_v1(
@@ -135,11 +134,15 @@ begin
   end if;
 
   if exists (
-    select 1 from jsonb_array_elements(p_rows) r
-    group by r->>0 having count(*) > 1
+    select 1
+    from jsonb_array_elements(p_rows) r
+    group by r->>0
+    having count(*) > 1
   ) or exists (
-    select 1 from jsonb_array_elements(p_rows) r
-    group by r->>4 having count(*) > 1
+    select 1
+    from jsonb_array_elements(p_rows) r
+    group by r->>4
+    having count(*) > 1
   ) then
     raise exception 'Linha ou INE duplicado no arquivo' using errcode = '22023';
   end if;
@@ -148,17 +151,23 @@ begin
 end;
 $function$;
 
-revoke all on function public.publish_siaps_c3_v1(jsonb, jsonb) from public, anon, authenticated;
-grant execute on function public.publish_siaps_c3_v1(jsonb, jsonb) to service_role;
+revoke all on function public.publish_siaps_c3_v1(jsonb, jsonb)
+from public, anon, authenticated;
+grant execute on function public.publish_siaps_c3_v1(jsonb, jsonb)
+to service_role;
 
--- Fecha os pontos legados de ingestão direta ao service_role. A função acima,
--- executada pelo proprietário, continua podendo reutilizar a rotina interna.
-revoke execute on function public.ingest_siaps_c3(jsonb, jsonb) from service_role;
-revoke execute on function public.stage_siaps_c3_compact(jsonb, jsonb, boolean) from service_role;
-revoke execute on function public.ingest_siaps_c3_compact(jsonb, jsonb) from service_role;
+-- Fecha os pontos legados de ingestão direta ao service_role.
+-- publish_siaps_c3_v1, como SECURITY DEFINER, continua reutilizando a rotina
+-- interna como proprietário sem reabrir os endpoints antigos.
+revoke execute on function public.ingest_siaps_c3(jsonb, jsonb)
+from service_role;
+revoke execute on function public.stage_siaps_c3_compact(jsonb, jsonb, boolean)
+from service_role;
+revoke execute on function public.ingest_siaps_c3_compact(jsonb, jsonb)
+from service_role;
 
--- Mantém a RPC cadastral existente, corrigindo a normalização de espaços
--- sem enfraquecer a dupla confirmação, a auditoria ou o controle de papel.
+-- Mantém a RPC cadastral existente e corrige a normalização de espaços,
+-- preservando as duas confirmações, UUID interno e auditoria.
 create or replace function public.update_establishment_identity(
   p_establishment_id uuid,
   p_cnes text,
@@ -189,206 +198,13 @@ begin
       using errcode = '42501';
   end if;
 
-  if p_confirm_official is distinct from true or p_confirm_impact is distinct from true then
+  if p_confirm_official is distinct from true
+     or p_confirm_impact is distinct from true then
     raise exception 'As duas confirmações de segurança são obrigatórias'
       using errcode = '22023';
   end if;
 
-  if v_cnes !~ '^[0-9]{7}
-drop policy if exists c3_practices_active_users_read on analytics.c3_practice_counts;
-drop policy if exists c3_practices_dashboard_read on analytics.c3_practice_counts;
-create policy c3_practices_dashboard_read
-on analytics.c3_practice_counts
-for select to authenticated
-using (
-  exists (
-    select 1 from app.profiles p
-    where p.user_id = (select auth.uid())
-      and p.active
-      and p.role in ('gestao'::app.user_role, 'leitura'::app.user_role)
-  )
-);
-
-drop policy if exists c3_monthly_active_users_read on analytics.c3_team_monthly;
-drop policy if exists c3_monthly_dashboard_read on analytics.c3_team_monthly;
-create policy c3_monthly_dashboard_read
-on analytics.c3_team_monthly
-for select to authenticated
-using (
-  exists (
-    select 1 from app.profiles p
-    where p.user_id = (select auth.uid())
-      and p.active
-      and p.role in ('gestao'::app.user_role, 'leitura'::app.user_role)
-  )
-);
-
-drop policy if exists imports_active_users_read on siaps.imports;
-drop policy if exists imports_gestao_read on siaps.imports;
-create policy imports_gestao_read
-on siaps.imports
-for select to authenticated
-using (
-  exists (
-    select 1 from app.profiles p
-    where p.user_id = (select auth.uid())
-      and p.active
-      and p.role = 'gestao'::app.user_role
-  )
-);
-
--- O schema study é legado técnico e não integra a interface da V1.
-drop policy if exists cohort_members_active_users_read on study.cohort_members;
-drop policy if exists cohorts_active_users_read on study.cohorts;
-revoke select on study.cohort_members, study.cohorts from authenticated;
-revoke usage on schema study from authenticated;
-
--- Camada analítica estável para Dashboard e futura conexão read-only do Metabase.
-create or replace view analytics.dashboard_team_directory
-with (security_invoker = true)
-as
-select
-  t.id as team_id,
-  t.ine,
-  t.name as team_name,
-  t.team_type,
-  e.id as establishment_id,
-  e.cnes,
-  e.name as establishment_name,
-  d.id as district_id,
-  d.name as district_name
-from core.teams t
-left join core.team_establishment_history teh
-  on teh.team_id = t.id and teh.valid_to is null
-left join core.establishments e
-  on e.id = teh.establishment_id
-left join core.establishment_district_history edh
-  on edh.establishment_id = e.id and edh.valid_to is null
-left join core.districts d
-  on d.id = edh.district_id
-where t.active;
-
-create or replace view analytics.dashboard_c3_team_monthly
-with (security_invoker = true)
-as
-select
-  f.id as fact_id,
-  f.competency,
-  f.district_id,
-  d.name as district_name,
-  f.establishment_id,
-  e.cnes,
-  e.name as establishment_name,
-  f.team_id,
-  t.ine,
-  t.name as team_name,
-  f.denominator,
-  f.points_total,
-  f.points_total / nullif(f.denominator, 0) as c3,
-  case
-    when f.denominator = 0 then 'Sem população elegível'
-    when f.points_total / nullif(f.denominator, 0) < 0
-      or f.points_total / nullif(f.denominator, 0) > 100 then 'Valor inválido'
-    when f.points_total / nullif(f.denominator, 0) > 75 then 'Ótimo'
-    when f.points_total / nullif(f.denominator, 0) > 50 then 'Bom'
-    when f.points_total / nullif(f.denominator, 0) > 25 then 'Suficiente'
-    else 'Regular'
-  end as classification
-from analytics.c3_team_monthly f
-join core.teams t on t.id = f.team_id
-join core.establishments e on e.id = f.establishment_id
-left join core.districts d on d.id = f.district_id
-where f.is_current;
-
-create or replace view analytics.dashboard_c3_practices
-with (security_invoker = true)
-as
-select
-  f.competency,
-  f.district_id,
-  f.district_name,
-  f.establishment_id,
-  f.cnes,
-  f.establishment_name,
-  f.team_id,
-  f.ine,
-  f.team_name,
-  p.practice_code,
-  p.fulfilled,
-  f.denominator
-from analytics.dashboard_c3_team_monthly f
-join analytics.c3_practice_counts p on p.fact_id = f.fact_id;
-
-create or replace view analytics.dashboard_competencies
-with (security_invoker = true)
-as
-select
-  competency,
-  sum(points_total) as points_total,
-  sum(denominator) as denominator,
-  sum(points_total) / nullif(sum(denominator), 0) as c3
-from analytics.c3_team_monthly
-where is_current
-group by competency;
-
-create or replace view analytics.dashboard_c3_establishment_monthly
-with (security_invoker = true)
-as
-select
-  competency,
-  district_id,
-  district_name,
-  establishment_id,
-  cnes,
-  establishment_name,
-  sum(points_total) as points_total,
-  sum(denominator) as denominator,
-  sum(points_total) / nullif(sum(denominator), 0) as c3,
-  count(*) as teams
-from analytics.dashboard_c3_team_monthly
-group by competency, district_id, district_name, establishment_id, cnes, establishment_name;
-
-create or replace view analytics.dashboard_c3_district_monthly
-with (security_invoker = true)
-as
-select
-  competency,
-  district_id,
-  district_name,
-  sum(points_total) as points_total,
-  sum(denominator) as denominator,
-  sum(points_total) / nullif(sum(denominator), 0) as c3,
-  count(distinct establishment_id) as establishments,
-  count(*) as teams
-from analytics.dashboard_c3_team_monthly
-group by competency, district_id, district_name;
-
-create or replace view analytics.dashboard_c3_practice_summary
-with (security_invoker = true)
-as
-select
-  competency,
-  district_id,
-  district_name,
-  establishment_id,
-  cnes,
-  establishment_name,
-  practice_code,
-  sum(fulfilled) as fulfilled,
-  sum(denominator) as denominator
-from analytics.dashboard_c3_practices
-group by competency, district_id, district_name, establishment_id, cnes, establishment_name, practice_code;
-
-grant select on
-  analytics.dashboard_team_directory,
-  analytics.dashboard_c3_team_monthly,
-  analytics.dashboard_c3_practices,
-  analytics.dashboard_competencies,
-  analytics.dashboard_c3_establishment_monthly,
-  analytics.dashboard_c3_district_monthly,
-  analytics.dashboard_c3_practice_summary
-to authenticated;
- then
+  if v_cnes !~ '^[0-9]{7}$' then
     raise exception 'CNES deve conter exatamente 7 dígitos'
       using errcode = '22023';
   end if;
@@ -429,7 +245,13 @@ to authenticated;
   where id = p_establishment_id
   returning * into v_result;
 
-  insert into audit.events(actor_user_id, event_type, entity_type, entity_id, metadata)
+  insert into audit.events(
+    actor_user_id,
+    event_type,
+    entity_type,
+    entity_id,
+    metadata
+  )
   values (
     v_actor,
     'establishment_identity_changed',
@@ -449,46 +271,59 @@ to authenticated;
 end;
 $function$;
 
-revoke all on function public.update_establishment_identity(uuid, text, text, boolean, boolean) from public, anon;
-grant execute on function public.update_establishment_identity(uuid, text, text, boolean, boolean) to authenticated;
+revoke all on function public.update_establishment_identity(
+  uuid, text, text, boolean, boolean
+) from public, anon;
+grant execute on function public.update_establishment_identity(
+  uuid, text, text, boolean, boolean
+) to authenticated;
 
 -- RLS por responsabilidade institucional.
-drop policy if exists c3_practices_active_users_read on analytics.c3_practice_counts;
-drop policy if exists c3_practices_dashboard_read on analytics.c3_practice_counts;
+drop policy if exists c3_practices_active_users_read
+on analytics.c3_practice_counts;
+drop policy if exists c3_practices_dashboard_read
+on analytics.c3_practice_counts;
 create policy c3_practices_dashboard_read
 on analytics.c3_practice_counts
 for select to authenticated
 using (
   exists (
-    select 1 from app.profiles p
+    select 1
+    from app.profiles p
     where p.user_id = (select auth.uid())
       and p.active
       and p.role in ('gestao'::app.user_role, 'leitura'::app.user_role)
   )
 );
 
-drop policy if exists c3_monthly_active_users_read on analytics.c3_team_monthly;
-drop policy if exists c3_monthly_dashboard_read on analytics.c3_team_monthly;
+drop policy if exists c3_monthly_active_users_read
+on analytics.c3_team_monthly;
+drop policy if exists c3_monthly_dashboard_read
+on analytics.c3_team_monthly;
 create policy c3_monthly_dashboard_read
 on analytics.c3_team_monthly
 for select to authenticated
 using (
   exists (
-    select 1 from app.profiles p
+    select 1
+    from app.profiles p
     where p.user_id = (select auth.uid())
       and p.active
       and p.role in ('gestao'::app.user_role, 'leitura'::app.user_role)
   )
 );
 
-drop policy if exists imports_active_users_read on siaps.imports;
-drop policy if exists imports_gestao_read on siaps.imports;
+drop policy if exists imports_active_users_read
+on siaps.imports;
+drop policy if exists imports_gestao_read
+on siaps.imports;
 create policy imports_gestao_read
 on siaps.imports
 for select to authenticated
 using (
   exists (
-    select 1 from app.profiles p
+    select 1
+    from app.profiles p
     where p.user_id = (select auth.uid())
       and p.active
       and p.role = 'gestao'::app.user_role
@@ -517,11 +352,13 @@ select
   d.name as district_name
 from core.teams t
 left join core.team_establishment_history teh
-  on teh.team_id = t.id and teh.valid_to is null
+  on teh.team_id = t.id
+ and teh.valid_to is null
 left join core.establishments e
   on e.id = teh.establishment_id
 left join core.establishment_district_history edh
-  on edh.establishment_id = e.id and edh.valid_to is null
+  on edh.establishment_id = e.id
+ and edh.valid_to is null
 left join core.districts d
   on d.id = edh.district_id
 where t.active;
@@ -553,9 +390,12 @@ select
     else 'Regular'
   end as classification
 from analytics.c3_team_monthly f
-join core.teams t on t.id = f.team_id
-join core.establishments e on e.id = f.establishment_id
-left join core.districts d on d.id = f.district_id
+join core.teams t
+  on t.id = f.team_id
+join core.establishments e
+  on e.id = f.establishment_id
+left join core.districts d
+  on d.id = f.district_id
 where f.is_current;
 
 create or replace view analytics.dashboard_c3_practices
@@ -575,7 +415,8 @@ select
   p.fulfilled,
   f.denominator
 from analytics.dashboard_c3_team_monthly f
-join analytics.c3_practice_counts p on p.fact_id = f.fact_id;
+join analytics.c3_practice_counts p
+  on p.fact_id = f.fact_id;
 
 create or replace view analytics.dashboard_competencies
 with (security_invoker = true)
@@ -604,7 +445,13 @@ select
   sum(points_total) / nullif(sum(denominator), 0) as c3,
   count(*) as teams
 from analytics.dashboard_c3_team_monthly
-group by competency, district_id, district_name, establishment_id, cnes, establishment_name;
+group by
+  competency,
+  district_id,
+  district_name,
+  establishment_id,
+  cnes,
+  establishment_name;
 
 create or replace view analytics.dashboard_c3_district_monthly
 with (security_invoker = true)
@@ -635,7 +482,14 @@ select
   sum(fulfilled) as fulfilled,
   sum(denominator) as denominator
 from analytics.dashboard_c3_practices
-group by competency, district_id, district_name, establishment_id, cnes, establishment_name, practice_code;
+group by
+  competency,
+  district_id,
+  district_name,
+  establishment_id,
+  cnes,
+  establishment_name,
+  practice_code;
 
 grant select on
   analytics.dashboard_team_directory,
