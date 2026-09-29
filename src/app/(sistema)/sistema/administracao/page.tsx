@@ -61,11 +61,9 @@ export default async function AdministrationPage({
       createdAt: user.created_at,
       profile: profiles.get(user.id) ?? null,
     }));
-  } catch (error) {
-    configurationError =
-      error instanceof Error
-        ? error.message
-        : "Cliente administrativo indisponível.";
+  } catch {
+    console.error("Falha ao carregar a área administrativa.");
+    configurationError = "O serviço administrativo está indisponível no momento.";
   }
 
   const savedRow = params.salvo
