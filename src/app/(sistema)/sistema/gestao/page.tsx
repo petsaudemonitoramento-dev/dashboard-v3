@@ -72,6 +72,7 @@ const CLASSIFICATION_CODES = {
   bom: "Bom",
   suficiente: "Suficiente",
   regular: "Regular",
+  invalido: "Valor inválido",
   sem: "Sem população elegível",
 } as const;
 
@@ -140,6 +141,7 @@ function codeForClassification(value: ReturnType<typeof classifyC3>) {
   if (value === "Bom") return "bom";
   if (value === "Suficiente") return "suficiente";
   if (value === "Regular") return "regular";
+  if (value === "Valor inválido") return "invalido";
   return "sem";
 }
 
@@ -309,6 +311,7 @@ export default async function ManagementDashboard({
     "Bom": 0,
     "Suficiente": 0,
     "Regular": 0,
+    "Valor inválido": 0,
     "Sem população elegível": 0,
   };
   for (const group of teamClassificationGroups.values()) {
@@ -466,6 +469,7 @@ export default async function ManagementDashboard({
         { name: "Bom", value: classificationCounts["Bom"], itemStyle: { color: "#1682ed" } },
         { name: "Suficiente", value: classificationCounts["Suficiente"], itemStyle: { color: "#f4a62a" } },
         { name: "Regular", value: classificationCounts["Regular"], itemStyle: { color: "#ef5350" } },
+        { name: "Valor inválido", value: classificationCounts["Valor inválido"], itemStyle: { color: "#7f1d1d" } },
         { name: "Sem elegíveis", value: classificationCounts["Sem população elegível"], itemStyle: { color: "#a9b5c5" } },
       ],
     }],
