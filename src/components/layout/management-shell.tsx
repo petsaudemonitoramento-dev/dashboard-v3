@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type MouseEvent } from "react";
 import {
   BarChart3,
   Building2,
@@ -23,97 +22,17 @@ type Props = {
   role: "gestao" | "leitura";
 };
 
-const dashboardSections = [
-  { id: "indicadores", href: "/sistema/gestao#indicadores", label: "Indicadores", icon: BarChart3 },
-  { id: "ubs-equipes", href: "/sistema/gestao#ubs-equipes", label: "UBS e equipes", icon: Building2 },
-  { id: "comparativos", href: "/sistema/gestao#comparativos", label: "Comparativos", icon: GitCompareArrows },
-  { id: "resumo", href: "/sistema/gestao#resumo", label: "Resumo", icon: ListChecks },
+const analysisItems = [
+  { href: "/sistema/gestao/indicadores", label: "Indicadores", icon: BarChart3 },
+  { href: "/sistema/gestao/ubs-equipes", label: "UBS e equipes", icon: Building2 },
+  { href: "/sistema/gestao/comparativos", label: "Comparativos", icon: GitCompareArrows },
+  { href: "/sistema/gestao/resumo", label: "Resumo", icon: ListChecks },
 ];
 
 export function ManagementShell({ children, email, role }: Props) {
   const pathname = usePathname();
   const isImport = pathname.startsWith("/sistema/importar");
-  const isDashboard = pathname.startsWith("/sistema/gestao");
-  const [activeSection, setActiveSection] = useState("dashboard");
-
-  useEffect(() => {
-    if (!isDashboard) return;
-
-    const ids = dashboardSections.map(({ id }) => id);
-    let frame = 0;
-
-    const syncFromHash = () => {
-      const id = window.location.hash.replace("#", "");
-      if (id && ids.includes(id)) {
-        setActiveSection(id);
-        window.requestAnimationFrame(() => {
-          document.getElementById(id)?.scrollIntoView({ block: "start" });
-        });
-      }
-    };
-
-    const syncFromScroll = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        const activationLine = 190;
-        let current = "dashboard";
-
-        for (const id of ids) {
-          const section = document.getElementById(id);
-          if (!section) continue;
-          if (section.getBoundingClientRect().top <= activationLine) current = id;
-        }
-
-        if (
-          window.innerHeight + window.scrollY >=
-          document.documentElement.scrollHeight - 24
-        ) {
-          current = ids.at(-1) ?? current;
-        }
-
-        setActiveSection((previous) => previous === current ? previous : current);
-      });
-    };
-
-    const initialFrame = window.requestAnimationFrame(() => {
-      if (window.location.hash) syncFromHash();
-      else syncFromScroll();
-    });
-
-    window.addEventListener("scroll", syncFromScroll, { passive: true });
-    window.addEventListener("resize", syncFromScroll);
-    window.addEventListener("hashchange", syncFromHash);
-    window.addEventListener("popstate", syncFromHash);
-
-    return () => {
-      window.cancelAnimationFrame(initialFrame);
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", syncFromScroll);
-      window.removeEventListener("resize", syncFromScroll);
-      window.removeEventListener("hashchange", syncFromHash);
-      window.removeEventListener("popstate", syncFromHash);
-    };
-  }, [isDashboard, pathname]);
-
-  function goToDashboard(event: MouseEvent<HTMLAnchorElement>) {
-    if (!isDashboard) return;
-    event.preventDefault();
-    window.history.pushState(null, "", `${window.location.pathname}${window.location.search}`);
-    setActiveSection("dashboard");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function goToSection(event: MouseEvent<HTMLAnchorElement>, id: string) {
-    if (!isDashboard) return;
-    event.preventDefault();
-    window.history.pushState(
-      null,
-      "",
-      `${window.location.pathname}${window.location.search}#${id}`,
-    );
-    setActiveSection(id);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  const isDashboardHome = pathname === "/sistema/gestao";
 
   return (
     <div className="management-shell">
@@ -157,30 +76,37 @@ export function ManagementShell({ children, email, role }: Props) {
         <nav aria-label="Navegação da Gestão">
           <Link
             href="/sistema/gestao"
-            onClick={goToDashboard}
-            className={!isImport && activeSection === "dashboard" ? "active" : ""}
-            aria-current={!isImport && activeSection === "dashboard" ? "page" : undefined}
+            className={isDashboardHome ? "active" : ""}
+            aria-current={isDashboardHome ? "page" : undefined}
           >
             <LayoutDashboard className="size-5" /><span>Dashboard</span>
           </Link>
 
           {role === "gestao" && (
-            <Link href="/sistema/importar" className={isImport ? "active" : ""} aria-current={isImport ? "page" : undefined}>
+            <Link
+              href="/sistema/importar"
+              className={isImport ? "active" : ""}
+              aria-current={isImport ? "page" : undefined}
+            >
               <DatabaseZap className="size-5" /><span>Importar dados</span>
             </Link>
           )}
 
-          {dashboardSections.map(({ id, href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={(event) => goToSection(event, id)}
-              className={!isImport && activeSection === id ? "active" : ""}
-              aria-current={!isImport && activeSection === id ? "page" : undefined}
-            >
-              <Icon className="size-5" /><span>{label}</span>
-            </Link>
-          ))}
+          <span className="management-nav-label">Análises</span>
+
+          {analysisItems.map(({ href, label, icon: Icon }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={active ? "active" : ""}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon className="size-5" /><span>{label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="management-sidebar-note">
