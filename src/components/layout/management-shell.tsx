@@ -37,11 +37,6 @@ export function ManagementShell({ children, email, role }: Props) {
   const [activeSection, setActiveSection] = useState("dashboard");
 
   useEffect(() => {
-    if (isImport) {
-      setActiveSection("importar");
-      return;
-    }
-
     if (!isDashboard) return;
 
     const syncFromHash = () => {
@@ -55,14 +50,15 @@ export function ManagementShell({ children, email, role }: Props) {
       }
     };
 
-    syncFromHash();
+    const frame = window.requestAnimationFrame(syncFromHash);
     window.addEventListener("hashchange", syncFromHash);
     window.addEventListener("popstate", syncFromHash);
     return () => {
+      window.cancelAnimationFrame(frame);
       window.removeEventListener("hashchange", syncFromHash);
       window.removeEventListener("popstate", syncFromHash);
     };
-  }, [isDashboard, isImport, pathname]);
+  }, [isDashboard, pathname]);
 
   function goToDashboard(event: MouseEvent<HTMLAnchorElement>) {
     if (!isDashboard) return;
