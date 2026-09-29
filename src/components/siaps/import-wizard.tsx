@@ -1,25 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, FileSpreadsheet, LoaderCircle, UploadCloud } from "lucide-react";
 
-import { compactSiapsRow, parseSiapsWorkbook, sha256Hex, type SiapsParseResult } from "@/lib/siaps/parser";
+import { compactSiapsRow, MAX_SIAPS_FILE_BYTES, parseSiapsWorkbook, sha256Hex, type SiapsParseResult } from "@/lib/siaps/parser";
 
 type Duplicate = { id: string; filename: string; competency: string; status: string; rows_total: number } | null;
 
 export function ImportWizard() {
+  const router = useRouter();
   const [filename, setFilename] = useState("");
   const [hash, setHash] = useState("");
   const [parsed, setParsed] = useState<SiapsParseResult | null>(null);
   const [competency, setCompetency] = useState("");
   const [duplicate, setDuplicate] = useState<Duplicate>(null);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<{ message: string; ok: boolean } | null>(null);
 
   async function selectFile(file: File | undefined) {
     if (!file) return;
     setBusy(true); setResult(null); setDuplicate(null);
     try {
+      if (!/\.xlsx$/i.test(file.name)) throw new Error("Selecione um arquivo com extensão .xlsx.");
+      if (file.type && file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") throw new Error("O tipo do arquivo não corresponde a XLSX.");
+      if (file.size === 0) throw new Error("O arquivo está vazio.");
+      if (file.size > MAX_SIAPS_FILE_BYTES) throw new Error("O arquivo excede o limite de 10 MB.");
       const buffer = await file.arrayBuffer();
       const [nextParsed, nextHash] = await Promise.all([Promise.resolve(parseSiapsWorkbook(buffer, file.name)), sha256Hex(buffer)]);
       setFilename(file.name); setHash(nextHash); setParsed(nextParsed); setCompetency(nextParsed.competency ?? "");
@@ -35,10 +41,11 @@ export function ImportWizard() {
     setBusy(true); setResult(null);
     try {
       const response = await fetch("/api/importacoes", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode: "publish", filename, fileSha256: hash, competency, rows: parsed.rows.map(compactSiapsRow) }) });
-      const body = await response.json();
+      const body: { error?: string; rows?: number } = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Falha ao publicar.");
-      setResult(`Importação publicada: ${body.rows} registros válidos.`);
-    } catch (error) { setResult(error instanceof Error ? error.message : "Falha ao publicar."); }
+      setResult({ message: `Importação publicada: ${body.rows ?? 0} registros válidos.`, ok: true });
+      router.refresh();
+    } catch (error) { setResult({ message: error instanceof Error ? error.message : "Falha ao publicar.", ok: false }); }
     finally { setBusy(false); }
   }
 
@@ -61,7 +68,7 @@ export function ImportWizard() {
       {!!parsed.warnings.length && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900"><strong>Advertências</strong><ul className="mt-2 list-disc pl-5">{parsed.warnings.slice(0, 20).map((item) => <li key={item}>{item}</li>)}</ul></div>}
       {!!parsed.rows.length && <div className="table-scroll"><table className="data-table"><thead><tr><th>Linha</th><th>CNES / UBS</th><th>INE / Equipe</th><th>A–K</th><th>Pontos</th><th>Denominador</th><th>Razão oficial</th></tr></thead><tbody>{parsed.rows.slice(0, 8).map((row) => <tr key={row.fileRow}><td>{row.fileRow}</td><td>{row.cnes}<br/><small>{row.establishmentName}</small></td><td>{row.ine}<br/><small>{row.teamName}</small></td><td>{Object.values(row.components).join(" · ")}</td><td>{row.pointsTotal}</td><td>{row.denominator}</td><td>{row.officialRatio ?? "—"}</td></tr>)}</tbody></table></div>}
       <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-slate-500">SHA-256: <code>{hash}</code></span><button className="primary-button" disabled={busy || !!duplicate || !!parsed.errors.length || !competency} onClick={() => void publish()} type="button">Confirmar e publicar</button></div>
-      {result && <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800"><CheckCircle2 className="mr-2 inline size-5" />{result}</div>}
+      {result && <div className={`rounded-xl border p-4 ${result.ok ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"}`} role={result.ok ? "status" : "alert"}>{result.ok ? <CheckCircle2 className="mr-2 inline size-5" /> : <AlertCircle className="mr-2 inline size-5" />}{result.message}</div>}
     </>}
   </section>;
 }
