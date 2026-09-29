@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 import { AccessDeniedError } from "@/lib/auth/types";
 
 export type ImportErrorResponse = {
-  status: 400 | 401 | 403 | 500;
+  status: 400 | 401 | 403 | 413 | 500;
   message: string;
 };
 
