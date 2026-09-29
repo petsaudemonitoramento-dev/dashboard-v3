@@ -25,8 +25,15 @@ export default async function TerritoryPage({ searchParams }: { searchParams: Pr
   const districtNames = new Map(districts.map((item) => [item.id, item.name]));
   const histories = new Map((historiesResult.data ?? []).map((item) => [item.establishment_id, item]));
   const teams = new Map((teamsResult.data ?? []).map((item) => [item.id, item]));
-  const teamsByEstablishment = new Map<string, typeof teamsResult.data>();
-  for (const link of linksResult.data ?? []) teamsByEstablishment.set(link.establishment_id, [...(teamsByEstablishment.get(link.establishment_id) ?? []), teams.get(link.team_id)!]);
+  const teamsByEstablishment = new Map<string, NonNullable<typeof teamsResult.data>>();
+  for (const link of linksResult.data ?? []) {
+    const team = teams.get(link.team_id);
+    if (!team) continue;
+    teamsByEstablishment.set(
+      link.establishment_id,
+      [...(teamsByEstablishment.get(link.establishment_id) ?? []), team],
+    );
+  }
   const query = (params.busca ?? "").trim().toLocaleLowerCase("pt-BR");
   const districtFilter = params.distrito ?? "all";
   const rows = (establishmentsResult.data ?? []).filter((item) => {
