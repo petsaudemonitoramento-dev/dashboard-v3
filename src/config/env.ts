@@ -39,6 +39,10 @@ export const publicEnvSchema = z.object({
       (value) => !value.endsWith("/"),
       "NEXT_PUBLIC_APP_URL não deve terminar com barra.",
     )
+    .refine((value) => {
+      const url = new URL(value);
+      return !url.username && !url.password && url.pathname === "/" && !url.search && !url.hash;
+    }, "NEXT_PUBLIC_APP_URL deve conter somente a origem da aplicação.")
     .refine(
       (value) =>
         value.startsWith("https://") || isLoopbackOrigin(value),
