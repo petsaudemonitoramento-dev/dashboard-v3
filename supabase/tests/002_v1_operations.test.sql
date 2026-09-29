@@ -57,12 +57,12 @@ select throws_ok(
 );
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
 select throws_ok(
-  $select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$,
+  $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$$,
   '42501', 'Apenas administradores ativos podem alterar território', 'gestao cannot change territory'
 );
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000003',true);
 select throws_ok(
-  $select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,null::date)$,
+  $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,null::date)$$,
   'P0001', 'Data inicial de validade obrigatória', 'null validity date is rejected'
 );
 select throws_ok(
@@ -74,7 +74,7 @@ select throws_ok(
   'P0001', 'Distrito ativo não encontrado', 'unknown district is rejected'
 );
 select lives_ok(
-  $select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$,
+  $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$$,
   'admin can create territory period'
 );
 select lives_ok(
@@ -82,7 +82,7 @@ select lives_ok(
   'admin can change territory with a new period'
 );
 select lives_ok(
-  $select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,null::smallint,'2026-07-01'::date)$,
+  $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,null::smallint,'2026-07-01'::date)$$,
   'admin can end a territory assignment as unknown'
 );
 reset role;
@@ -101,7 +101,7 @@ select is((select count(*) from audit.events where event_type='territory_assignm
 set local role authenticated;
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000003',true);
 select throws_ok(
-  $select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-05-01'::date)$,
+  $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-05-01'::date)$$,
   'P0001', 'A nova vigência não pode sobrepor período territorial existente', 'past assignment cannot overlap preserved history'
 );
 reset role;
