@@ -76,10 +76,6 @@ export function SignInForm() {
       <form action={action} className="grid gap-4">
         <Field label="E-mail" name="email" type="email" />
         <Field label="Senha" name="password" type="password" />
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input name="remember" type="checkbox" />
-          Lembrar de mim
-        </label>
         <Message state={state} />
         <SubmitButton label="Entrar" />
       </form>
