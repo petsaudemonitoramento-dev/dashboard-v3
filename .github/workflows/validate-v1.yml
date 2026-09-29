@@ -50,7 +50,20 @@ jobs:
         run: npx supabase --version
 
       - name: Start local Supabase
-        run: npx supabase start
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4; do
+            if npx supabase start; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 4 ]; then
+              echo "Supabase local não iniciou após 4 tentativas."
+              exit 1
+            fi
+            wait_seconds=$((attempt * 15))
+            echo "Falha transitória ao iniciar Supabase; nova tentativa em ${wait_seconds}s..."
+            sleep "$wait_seconds"
+          done
 
       - name: Rebuild database from migrations
         run: npx supabase db reset
@@ -60,7 +73,7 @@ jobs:
 
       - name: Supabase status
         if: always()
-        run: npx supabase status
+        run: npx supabase status || true
 
       - name: Stop local Supabase
         if: always()
