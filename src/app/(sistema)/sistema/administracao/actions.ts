@@ -14,23 +14,29 @@ const schema = z.object({
 
 export async function manageProfileAction(formData: FormData) {
   await requireAdministrator();
-  const input = schema.parse({
+
+  const parsed = schema.safeParse({
     userId: formData.get("userId"),
     role: formData.get("role"),
   });
+  if (!parsed.success) {
+    redirect("/sistema/administracao?erro=1");
+  }
 
-  const supabase = await createClient();
   const active = formData.get("active") === "true";
+  const supabase = await createClient();
   const result = await supabase.rpc("manage_profile", {
-    p_user_id: input.userId,
-    p_role: input.role,
+    p_user_id: parsed.data.userId,
+    p_role: parsed.data.role,
     p_active: active,
   });
 
-  if (result.error) throw new Error(result.error.message);
+  if (result.error) {
+    redirect("/sistema/administracao?erro=1");
+  }
 
   revalidatePath("/sistema/administracao");
   redirect(
-    `/sistema/administracao?salvo=${encodeURIComponent(input.userId)}&papel=${encodeURIComponent(input.role)}&ativo=${active ? "1" : "0"}`,
+    `/sistema/administracao?salvo=${encodeURIComponent(parsed.data.userId)}&papel=${encodeURIComponent(parsed.data.role)}&ativo=${active ? "1" : "0"}`,
   );
 }
