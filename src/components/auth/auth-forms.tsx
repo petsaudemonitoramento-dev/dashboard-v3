@@ -19,7 +19,7 @@ function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
     <button
-      className="min-h-12 rounded-xl bg-[#0d4d80] px-5 font-bold text-white transition hover:bg-[#071d35] disabled:opacity-60"
+      className="auth-primary-button"
       disabled={pending}
       type="submit"
     >
@@ -57,10 +57,10 @@ function Field({
   required?: boolean;
 }) {
   return (
-    <label className="grid gap-2 text-sm font-bold text-slate-700">
+    <label className="auth-field">
       {label}
       <input
-        className="min-h-12 rounded-xl border border-slate-200 px-4 font-normal outline-none transition focus:border-[#0d4d80] focus:ring-4 focus:ring-[#0d4d80]/10"
+        className="auth-input"
         name={name}
         required={required}
         type={type}
@@ -72,25 +72,24 @@ function Field({
 export function SignInForm() {
   const [state, action] = useActionState(signInAction, INITIAL_STATE);
   return (
-    <div className="grid gap-5">
-      <form action={action} className="grid gap-4">
+    <div className="auth-signin-stack">
+      <form action={action} className="auth-form">
         <Field label="E-mail" name="email" type="email" />
         <Field label="Senha" name="password" type="password" />
         <Message state={state} />
         <SubmitButton label="Entrar" />
       </form>
-      <div className="flex items-center gap-3 text-xs uppercase text-slate-400 before:h-px before:flex-1 before:bg-slate-200 after:h-px after:flex-1 after:bg-slate-200">
-        ou
-      </div>
+      <div className="auth-divider"><span>ou</span></div>
       <form action={signInWithGoogleAction}>
         <button
-          className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-800 transition hover:bg-slate-50"
+          className="auth-google-button"
           type="submit"
         >
+          <span className="auth-google-mark" aria-hidden="true">G</span>
           Continuar com Google
         </button>
       </form>
-      <div className="flex justify-between gap-4 text-sm font-bold text-[#0d4d80]">
+      <div className="auth-secondary-links">
         <Link href="/recuperar-senha">Esqueci minha senha</Link>
         <Link href="/cadastro">Criar conta</Link>
       </div>
@@ -101,7 +100,7 @@ export function SignInForm() {
 export function SignUpForm() {
   const [state, action] = useActionState(signUpAction, INITIAL_STATE);
   return (
-    <form action={action} className="grid gap-4">
+    <form action={action} className="auth-form">
       <Field label="E-mail" name="email" type="email" />
       <Field label="Senha" name="password" type="password" />
       <Field
@@ -111,7 +110,7 @@ export function SignUpForm() {
       />
       <Message state={state} />
       <SubmitButton label="Solicitar acesso à Gestão" />
-      <Link className="text-sm font-bold text-[#0d4d80]" href="/entrar">
+      <Link className="auth-back-link" href="/entrar">
         Voltar para entrar
       </Link>
     </form>
@@ -124,11 +123,11 @@ export function PasswordRecoveryForm() {
     INITIAL_STATE,
   );
   return (
-    <form action={action} className="grid gap-4">
+    <form action={action} className="auth-form">
       <Field label="E-mail" name="email" type="email" />
       <Message state={state} />
       <SubmitButton label="Enviar instruções" />
-      <Link className="text-sm font-bold text-[#0d4d80]" href="/entrar">
+      <Link className="auth-back-link" href="/entrar">
         Voltar para entrar
       </Link>
     </form>
@@ -138,7 +137,7 @@ export function PasswordRecoveryForm() {
 export function UpdatePasswordForm() {
   const [state, action] = useActionState(updatePasswordAction, INITIAL_STATE);
   return (
-    <form action={action} className="grid gap-4">
+    <form action={action} className="auth-form">
       <Field label="Nova senha" name="password" type="password" />
       <Field
         label="Confirme a nova senha"
