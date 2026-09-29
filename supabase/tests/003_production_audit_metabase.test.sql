@@ -71,11 +71,11 @@ select is((select count(*) from analytics.c3_team_monthly),3::bigint,'leitura re
 select is((select count(*) from siaps.imports),0::bigint,'leitura cannot read import history');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000001',true);
 select throws_ok(
-  $select public.update_establishment_identity((select id from core.establishments where cnes='7654321'),'7654329','UBS Alterada',true,true)$,
+  $$select public.update_establishment_identity((select id from core.establishments where cnes='7654321'),'7654329','UBS Alterada',true,true)$$,
   '42501','Apenas administradores ativos podem ajustar nome e CNES','gestao cannot change UBS identity');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000003',true);
 select lives_ok(
-  $select public.update_establishment_identity((select id from core.establishments where cnes='7654321'),'7654329','UBS Alterada',true,true)$,
+  $$select public.update_establishment_identity((select id from core.establishments where cnes='7654321'),'7654329','UBS Alterada',true,true)$$,
   'admin changes UBS identity');
 reset role;
 select is((select cnes from core.establishments where name='UBS Alterada'),'7654329','CNES is persisted without changing internal UUID');
