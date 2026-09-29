@@ -12,7 +12,7 @@ O projeto Supabase V3 `nyexakdyxtstcyycmlng` e seus dados publicados são a refe
 - `core`: distritos, estabelecimentos por CNES, equipes por INE e históricos de vínculo.
 - `siaps`: importações, linhas normalizadas, metadados e proveniência.
 - `analytics`: C3 mensal por equipe e componentes A–K.
-- `study`: estrutura técnica legada para recortes analíticos, sem módulo próprio na interface V1.
+- `study`: estrutura técnica legada, sem módulo próprio na interface V1 e sem exposição normal aos usuários.
 - `audit`: eventos privilegiados, sem acesso direto de usuários comuns.
 
 Não criar `core.profiles`, `professional`, `analytics_gestao` ou o antigo schema `security`. Não embutir lista fixa de UBS/equipes em componente, API, importador ou cálculo. O recorte inicial é determinado exclusivamente pelos dados oficiais importados e pode ser ampliado posteriormente.
@@ -29,15 +29,12 @@ Vínculo distrito → UBS não confirmado permanece ausente. A UBS/equipe segue 
 
 `pontos_total = 10*A + 9*(B+C+D+E+F+G+H+I+J+K)`. C3 de uma agregação é `SUM(pontos_total) / SUM(denominador)`, nunca média dos percentuais das equipes.
 
-| Competência | Equipes | Denominador | C3 |
-| --- | ---: | ---: | ---: |
-| JAN/26 | 203 | 2.595 | 36,33 |
-| FEV/26 | 203 | 2.540 | 36,24 |
-| MAR/26 | 187 | 2.492 | 37,23 |
-| ABR/26 | 153 | 2.423 | 37,51 |
-| MAI/26 | 157 | 2.467 | 37,49 |
-| JUN/26 | 156 | 2.443 | 36,83 |
+O repositório não fixa totais municipais, quantidade de UBS ou equipes. Todos os valores exibidos derivam dos dados publicados e dos filtros selecionados.
+
+## Metabase
+
+O Metabase será complementar ao Dashboard e deverá usar conta PostgreSQL read-only própria, consumindo apenas a camada analítica documentada. Não deve receber acesso a `auth.users`, `app.profiles`, `audit`, dados brutos de `siaps` ou `study`.
 
 ## Validação
 
-Executar `npm run build`, `npm run lint`, `npm test`, `supabase db reset` local e testes SQL/RLS. Nunca usar `supabase db reset --linked` no V3. Sem Docker ou outra dependência local, registrar essa validação como pendente sem compensá-la com alterações remotas.
+Executar `npm test`, `npm run typecheck`, `npm run lint` e `npm run build`. A reconstrução do Supabase e os testes SQL/RLS devem rodar no GitHub Actions quando a máquina local estiver com armazenamento restrito. Nunca usar `supabase db reset --linked` no V3 remoto.
