@@ -14,10 +14,10 @@ select is((select count(*) from pg_class c join pg_namespace n on n.oid=c.relnam
     and not ('security_invoker=true'=any(coalesce(c.reloptions,array[]::text[])))),0::bigint,
   'all analytics views use security_invoker');
 
-select has_function('public','update_establishment_identity',array['uuid','text','text'],'identity RPC exists');
+select has_function('public','update_establishment_identity',array['uuid','text','text','boolean','boolean'],'identity RPC exists');
 select has_function('public','publish_siaps_c3_v1',array['jsonb','jsonb'],'atomic import RPC exists');
-select ok(has_function_privilege('authenticated','public.update_establishment_identity(uuid,text,text)','EXECUTE'),'authenticated may invoke guarded identity RPC');
-select ok(not has_function_privilege('anon','public.update_establishment_identity(uuid,text,text)','EXECUTE'),'anon cannot invoke identity RPC');
+select ok(has_function_privilege('authenticated','public.update_establishment_identity(uuid,text,text,boolean,boolean)','EXECUTE'),'authenticated may invoke guarded identity RPC');
+select ok(not has_function_privilege('anon','public.update_establishment_identity(uuid,text,text,boolean,boolean)','EXECUTE'),'anon cannot invoke identity RPC');
 select ok(has_function_privilege('service_role','public.publish_siaps_c3_v1(jsonb,jsonb)','EXECUTE'),'service role may invoke atomic import RPC');
 select ok(not has_function_privilege('authenticated','public.publish_siaps_c3_v1(jsonb,jsonb)','EXECUTE'),'authenticated cannot invoke privileged import RPC');
 select ok(not has_function_privilege('service_role','public.ingest_siaps_c3(jsonb,jsonb)','EXECUTE'),'legacy ingest is closed to service role');
@@ -71,11 +71,11 @@ select is((select count(*) from analytics.c3_team_monthly),3::bigint,'leitura re
 select is((select count(*) from siaps.imports),0::bigint,'leitura cannot read import history');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000001',true);
 select throws_ok(
-  $$select public.update_establishment_identity((select id from core.establishments where cnes='7654321'),'UBS Alterada','7654329')$$,
-  '42501','Apenas administradores ativos podem alterar a identidade da UBS','gestao cannot change UBS identity');
+  $select public.update_establishment_identity((select id from core.establishments where cnes='7654321'),'7654329','UBS Alterada',true,true)$,
+  '42501','Apenas administradores ativos podem ajustar nome e CNES','gestao cannot change UBS identity');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000003',true);
 select lives_ok(
-  $$select public.update_establishment_identity((select id from core.establishments where cnes='7654321'),'UBS Alterada','7654329')$$,
+  $select public.update_establishment_identity((select id from core.establishments where cnes='7654321'),'7654329','UBS Alterada',true,true)$,
   'admin changes UBS identity');
 reset role;
 select is((select cnes from core.establishments where name='UBS Alterada'),'7654329','CNES is persisted without changing internal UUID');
