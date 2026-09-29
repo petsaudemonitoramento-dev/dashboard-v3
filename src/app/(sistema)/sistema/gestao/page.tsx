@@ -66,6 +66,8 @@ const PRACTICE_SHORT: Record<string, string> = {
   K: "Saúde bucal",
 };
 
+const PRACTICE_FACTS_PER_REQUEST = 90;
+
 const CLASSIFICATION_CODES = {
   all: "Todas",
   otimo: "Ótimo",
@@ -184,7 +186,9 @@ export default async function ManagementDashboard({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  await enforceRouteGuard(() => requireDashboardAccess());
+  const { profile } = await enforceRouteGuard(() => requireDashboardAccess());
+  // Somente a Gestão importa dados e lê o histórico de importações (RLS).
+  const canImport = profile.role === "gestao";
   const params = await searchParams;
   const supabase = await createClient();
 
@@ -263,17 +267,24 @@ export default async function ManagementDashboard({
   const teamCount = new Set(selectedFacts.map((fact) => fact.team_id)).size;
   const ubsCount = new Set(selectedFacts.map((fact) => fact.establishment_id)).size;
 
+  // Cada fato tem no máximo 11 práticas (PK fact_id + practice_code A–K).
+  // 90 fatos geram até 990 linhas, abaixo do max_rows padrão (1000) do PostgREST,
+  // que trunca respostas maiores sem erro. A contagem exata impede exibir parcial.
   const practiceRows: PracticeRow[] = [];
-  for (let index = 0; index < selectedFacts.length; index += 100) {
-    const ids = selectedFacts.slice(index, index + 100).map((fact) => fact.id);
+  for (let index = 0; index < selectedFacts.length; index += PRACTICE_FACTS_PER_REQUEST) {
+    const ids = selectedFacts.slice(index, index + PRACTICE_FACTS_PER_REQUEST).map((fact) => fact.id);
     if (!ids.length) continue;
     const result = await supabase
       .schema("analytics")
       .from("c3_practice_counts")
-      .select("fact_id, practice_code, fulfilled")
-      .in("fact_id", ids);
+      .select("fact_id, practice_code, fulfilled", { count: "exact" })
+      .in("fact_id", ids)
+      .order("fact_id")
+      .order("practice_code");
     if (result.error) throw new Error("Não foi possível consultar as práticas A–K.");
-    practiceRows.push(...((result.data ?? []) as PracticeRow[]));
+    const rows = (result.data ?? []) as PracticeRow[];
+    if (result.count !== rows.length) throw new Error("Consulta parcial das práticas A–K.");
+    practiceRows.push(...rows);
   }
 
   const practicesByFact = new Map<number, Record<string, number>>();
@@ -518,12 +529,16 @@ export default async function ManagementDashboard({
         </div>
         <div className="dashboard-date-block">
           <strong>{currentDate}</strong>
-          <span>Última atualização: {lastUpdate}</span>
+          <span>
+            {canImport
+              ? `Última atualização: ${lastUpdate}`
+              : `Competência mais recente: ${competencies.length ? longMonthLabel(competencies.at(-1)!) : "Sem dados"}`}
+          </span>
           <small>Período analisado: {heroPeriod}</small>
         </div>
       </section>
 
-      <section className="dashboard-filter-zone">
+      <section className={canImport ? "dashboard-filter-zone" : "dashboard-filter-zone no-import"}>
         <form method="get" className="dashboard-filter-grid">
           <label>Início
             <select name="inicio" defaultValue={start}>{competencies.map((item) => <option key={item} value={item}>{longMonthLabel(item)}</option>)}</select>
@@ -564,11 +579,13 @@ export default async function ManagementDashboard({
           </div>
         </form>
 
-        <Link href="/sistema/importar" className="dashboard-import-cta">
-          <span className="dashboard-import-icon"><FileSpreadsheet className="size-8" /></span>
-          <span><strong>Importar planilha SIAPS</strong><small>Atualize os dados oficiais da Gestão</small></span>
-          <TrendingUp className="size-5" />
-        </Link>
+        {canImport && (
+          <Link href="/sistema/importar" className="dashboard-import-cta">
+            <span className="dashboard-import-icon"><FileSpreadsheet className="size-8" /></span>
+            <span><strong>Importar planilha SIAPS</strong><small>Atualize os dados oficiais da Gestão</small></span>
+            <TrendingUp className="size-5" />
+          </Link>
+        )}
       </section>
 
       <section id="indicadores" className="dashboard-kpi-grid">
@@ -641,10 +658,16 @@ export default async function ManagementDashboard({
 
         <article className="dashboard-card">
           <div className="dashboard-card-heading">
-            <div><span>Rastreabilidade</span><h2>Últimas importações SIAPS</h2></div>
-            <Link href="/sistema/importar">Ver histórico →</Link>
+            <div><span>Rastreabilidade</span><h2>{canImport ? "Últimas importações SIAPS" : "Competências publicadas"}</h2></div>
+            {canImport && <Link href="/sistema/importar">Ver histórico →</Link>}
           </div>
-          <div className="dashboard-import-table">
+          {!canImport ? (
+            <p className="empty-mini">
+              {competencies.length
+                ? `${competencies.length} competências oficiais disponíveis, de ${longMonthLabel(competencies[0])} a ${longMonthLabel(competencies.at(-1)!)}. O histórico de arquivos importados é restrito ao perfil Gestão.`
+                : "Nenhuma competência publicada."}
+            </p>
+          ) : <div className="dashboard-import-table">
             <div className="dashboard-import-row header"><span>Data</span><span>Arquivo</span><span>Registros</span><span>Status</span></div>
             {recentImports.map((item) => (
               <div className="dashboard-import-row" key={item.id}>
@@ -655,7 +678,7 @@ export default async function ManagementDashboard({
               </div>
             ))}
             {!recentImports.length && <p className="empty-mini">Nenhuma importação registrada.</p>}
-          </div>
+          </div>}
         </article>
 
         <article className="dashboard-card dashboard-analysis">

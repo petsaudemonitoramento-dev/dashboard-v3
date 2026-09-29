@@ -183,6 +183,7 @@ input {
 .dashboard-date-block span,.dashboard-date-block small { display: block; margin-top: .25rem; color: #8091a4; font-size: .68rem; }
 
 .dashboard-filter-zone { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: .8rem; margin-bottom: .85rem; align-items: stretch; }
+.dashboard-filter-zone.no-import { grid-template-columns: minmax(0,1fr); }
 .dashboard-filter-grid {
   display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .65rem; padding: .85rem;
   border: 1px solid #dce7f1; border-radius: 13px; background: rgba(255,255,255,.96);

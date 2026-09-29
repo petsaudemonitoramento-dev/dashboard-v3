@@ -111,14 +111,22 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
   matrix.slice(headerIndex + 1).forEach((source, offset) => {
     if (source.every((cell) => String(cell).trim() === "")) return;
     const fileRow = headerIndex + offset + 2;
-    const cnes = digits(source[indexes.cnes]).padStart(7, "0");
-    const ine = digits(source[indexes.ine]).padStart(10, "0");
+    const cnesDigits = digits(source[indexes.cnes]);
+    const ineDigits = digits(source[indexes.ine]);
+    // Sem CNES e sem INE a linha não pertence a nenhuma equipe (ex.: total/rodapé).
+    // Completar com zeros criaria uma UBS/equipe fictícia e duplicaria o denominador.
+    if (!cnesDigits && !ineDigits) {
+      warnings.push(`Linha ${fileRow}: sem CNES e INE (provável linha de total); ignorada.`);
+      return;
+    }
+    const cnes = cnesDigits.padStart(7, "0");
+    const ine = ineDigits.padStart(10, "0");
     const denominator = numberValue(source[indexes.denominator]);
     const pointsTotal = numberValue(source[indexes.points]);
     const componentValues = Object.fromEntries(COMPONENT_CODES.map((code) => [code, numberValue(source[indexes.components[code]])])) as Record<string, number | null>;
     const rowErrors: string[] = [];
-    if (!/^\d{7}$/.test(cnes)) rowErrors.push("CNES inválido");
-    if (!/^\d{10}$/.test(ine)) rowErrors.push("INE inválido");
+    if (!/^\d{7}$/.test(cnes) || /^0+$/.test(cnes)) rowErrors.push("CNES inválido");
+    if (!/^\d{10}$/.test(ine) || /^0+$/.test(ine)) rowErrors.push("INE inválido");
     if (denominator === null || !Number.isInteger(denominator) || denominator < 0) rowErrors.push("denominador inválido");
     if (pointsTotal === null || pointsTotal < 0) rowErrors.push("pontos inválidos");
     if (Object.values(componentValues).some((value) => value === null || !Number.isInteger(value) || value < 0)) rowErrors.push("A–K devem ser contagens inteiras não negativas");

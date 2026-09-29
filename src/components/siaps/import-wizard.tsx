@@ -59,7 +59,7 @@ export function ImportWizard() {
     {parsed && <>
       <div className="grid gap-3 md:grid-cols-4">
         <div className="metric-card"><FileSpreadsheet className="size-5 text-sky-700" /><span>Arquivo</span><strong className="text-base! break-all">{filename}</strong></div>
-        <div className="metric-card"><span>Competência</span><input className="field mt-3 w-full" type="date" value={competency} onChange={(event) => setCompetency(event.target.value)} /></div>
+        <div className="metric-card"><label className="block text-slate-500" htmlFor="siaps-competency">Competência</label><input id="siaps-competency" className="field mt-3 w-full" type="date" value={competency} onChange={(event) => setCompetency(event.target.value ? `${event.target.value.slice(0, 7)}-01` : "")} /><small>Somente mês e ano são usados.</small></div>
         <div className="metric-card accent-green"><span>Registros válidos</span><strong>{parsed.rows.length}</strong></div>
         <div className="metric-card accent-orange"><span>Ocorrências</span><strong>{parsed.errors.length + parsed.warnings.length}</strong><small>{parsed.errors.length} erros · {parsed.warnings.length} advertências</small></div>
       </div>

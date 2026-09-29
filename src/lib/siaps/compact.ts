@@ -20,8 +20,8 @@ export function validateCompactSiapsRows(rows: z.infer<typeof compactRowsSchema>
     const officialRatio = row[20];
 
     if (!isInteger(fileRow) || fileRow <= 0 || fileRows.has(fileRow)) throw new Error("Linha SIAPS inválida ou duplicada.");
-    if (typeof cnes !== "string" || !/^\d{7}$/.test(cnes)) throw new Error("CNES inválido.");
-    if (typeof ine !== "string" || !/^\d{10}$/.test(ine) || ines.has(ine)) throw new Error("INE inválido ou duplicado.");
+    if (typeof cnes !== "string" || !/^\d{7}$/.test(cnes) || /^0+$/.test(cnes)) throw new Error("CNES inválido.");
+    if (typeof ine !== "string" || !/^\d{10}$/.test(ine) || /^0+$/.test(ine) || ines.has(ine)) throw new Error("INE inválido ou duplicado.");
     if (!isInteger(denominator) || denominator < 0) throw new Error("Denominador inválido.");
     if (components.some((value) => !isInteger(value) || value < 0 || value > denominator)) throw new Error("Contagens A–K inválidas.");
     const numericComponents = components.map(Number);
