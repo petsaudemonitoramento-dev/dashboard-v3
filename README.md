@@ -10,7 +10,7 @@ O Supabase oficial é o projeto `dashboard-v3` (`nyexakdyxtstcyycmlng`). O remot
 2. Configure `.env.local` a partir de `.env.example`.
 3. Execute `npm run dev`.
 4. Valide com `npm test`, `npm run typecheck`, `npm run lint` e `npm run build`.
-5. Com Docker disponível, execute `npm run db:start`, `npm run db:reset` e `npm run test:db`, sempre sem `--linked`.
+5. Execute reconstrução do Supabase e testes SQL/RLS pelo GitHub Actions quando a máquina local estiver com armazenamento restrito.
 
 O workflow manual **MAE APS - Validacao V1** (`.github/workflows/validate-v1.yml`) reproduz esses checks no GitHub Actions, incluindo reconstrução completa do Supabase local e testes SQL/RLS, sem acessar o projeto remoto.
 
@@ -24,12 +24,14 @@ O navegador recebe apenas `NEXT_PUBLIC_SUPABASE_URL`, a chave publicável e a UR
 
 Não existe módulo específico de piloto. O recorte analisado pelo Dashboard é determinado pelos dados oficiais efetivamente importados. Na implantação inicial, a base pode começar apenas com as UBS selecionadas para a primeira etapa e ser ampliada posteriormente sem mudança de código.
 
-O Metabase pode ser usado como ferramenta analítica complementar, mas não substitui os módulos oficiais do MAE APS. O software dos profissionais é um produto separado e não faz parte deste repositório.
+O Metabase está arquitetonicamente preparado como camada analítica complementar e read-only sobre views estáveis do schema `analytics`; consulte `docs/METABASE.md`. O software dos profissionais é um produto separado e não faz parte deste repositório.
 
 ## Release e registro
 
 Após CI verde e congelamento da versão, execute `npm run registro:codigo`, crie a tag da release e somente então rode `npm run registro:hash -- --tag <tag>`. Pendências administrativas permanecem em `docs/registro/PENDENCIAS_NITT.md`.
 
-Documentos operacionais: [deploy](docs/DEPLOY.md), [importação](docs/IMPORTACAO_SIAPS.md), [permissões](docs/PERMISSOES.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
+Documentos operacionais: [deploy](docs/DEPLOY.md), [importação](docs/IMPORTACAO_SIAPS.md), [permissões](docs/PERMISSOES.md), [Metabase](docs/METABASE.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
 
-Créditos: Desenvolvimento — Lucca Araújo · Design — Kethilly Nayara · PET SAÚDE UFCG.
+Domínio oficial: https://maeaps.vercel.app
+
+Créditos: Desenvolvimento — Lucca Araújo · Design — Kethilly Nayara · PET SAÚDE UFCG · Universidade Federal de Campina Grande.
