@@ -49,6 +49,14 @@ jobs:
       - name: Supabase CLI version
         run: npx supabase --version
 
+      - name: Prime Supabase database test images
+        shell: bash
+        run: |
+          docker pull ghcr.io/supabase/postgres:17.6.1.167
+          docker tag ghcr.io/supabase/postgres:17.6.1.167 public.ecr.aws/supabase/postgres:17.6.1.167
+          docker pull ghcr.io/supabase/pg_prove:3.36
+          docker tag ghcr.io/supabase/pg_prove:3.36 public.ecr.aws/supabase/pg_prove:3.36
+
       - name: Start local Supabase
         shell: bash
         run: |
