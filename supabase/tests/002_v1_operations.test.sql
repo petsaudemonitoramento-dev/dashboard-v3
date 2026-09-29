@@ -48,12 +48,12 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000004',true);
 select throws_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$$,
-  '42501', 'Perfil sem permissão para alterar território', 'inactive user cannot change territory'
+  '42501', 'Apenas administradores ativos podem alterar território', 'inactive user cannot change territory'
 );
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000002',true);
 select throws_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$$,
-  '42501', 'Perfil sem permissão para alterar território', 'leitura cannot change territory'
+  '42501', 'Apenas administradores ativos podem alterar território', 'leitura cannot change territory'
 );
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
 select throws_ok(
