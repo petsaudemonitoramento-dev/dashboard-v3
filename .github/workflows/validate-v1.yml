@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           for attempt in 1 2 3 4; do
-            if npx supabase start; then
+            if npx supabase start -x logflare,vector,kong,gotrue,mailpit,realtime,postgrest,storage-api,imgproxy,edge-runtime,postgres-meta,studio,supavisor; then
               exit 0
             fi
             if [ "$attempt" -eq 4 ]; then
