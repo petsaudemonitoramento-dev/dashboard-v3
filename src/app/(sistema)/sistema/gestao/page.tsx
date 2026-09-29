@@ -21,7 +21,7 @@ import {
 
 import { MaeChart } from "@/components/charts/mae-chart";
 import { aggregateC3, C3_COMPONENTS, classifyC3, type C3Fact } from "@/lib/analytics/c3";
-import { requireManagementAccess } from "@/lib/auth/guards";
+import { requireDashboardAccess } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createClient } from "@/lib/supabase/server";
 
@@ -182,7 +182,7 @@ export default async function ManagementDashboard({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  await enforceRouteGuard(() => requireManagementAccess());
+  await enforceRouteGuard(() => requireDashboardAccess());
   const params = await searchParams;
   const supabase = await createClient();
 
