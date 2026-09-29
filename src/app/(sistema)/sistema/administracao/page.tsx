@@ -1,5 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 
+import { SubmitButton } from "@/components/forms/submit-button";
 import { requireAdministrator } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createPrivilegedClient } from "@/lib/supabase/privileged";
@@ -82,6 +83,12 @@ export default async function AdministrationPage({
         <ShieldCheck className="size-16 text-cyan-300" />
       </section>
 
+      {params.erro === "1" && (
+        <section className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" role="alert">
+          Não foi possível atualizar o perfil. Revise os dados e tente novamente.
+        </section>
+      )}
+
       {savedRow && (
         <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           <strong>Perfil atualizado com sucesso.</strong>{" "}
@@ -154,9 +161,7 @@ export default async function AdministrationPage({
                           />
                           Ativo
                         </label>
-                        <button className="primary-button" type="submit">
-                          Salvar
-                        </button>
+                        <SubmitButton label="Salvar" />
                       </form>
                     </td>
                   </tr>
