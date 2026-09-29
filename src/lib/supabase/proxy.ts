@@ -33,6 +33,7 @@ export async function updateSession(request: NextRequest) {
   if (!data?.claims && request.nextUrl.pathname.startsWith("/sistema")) {
     const url = request.nextUrl.clone();
     url.pathname = "/entrar";
+    url.search = "";
     url.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
