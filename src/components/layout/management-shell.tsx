@@ -39,22 +39,57 @@ export function ManagementShell({ children, email, role }: Props) {
   useEffect(() => {
     if (!isDashboard) return;
 
+    const ids = dashboardSections.map(({ id }) => id);
+    let frame = 0;
+
     const syncFromHash = () => {
       const id = window.location.hash.replace("#", "");
-      setActiveSection(id || "dashboard");
-
-      if (id) {
+      if (id && ids.includes(id)) {
+        setActiveSection(id);
         window.requestAnimationFrame(() => {
           document.getElementById(id)?.scrollIntoView({ block: "start" });
         });
       }
     };
 
-    const frame = window.requestAnimationFrame(syncFromHash);
+    const syncFromScroll = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const activationLine = 190;
+        let current = "dashboard";
+
+        for (const id of ids) {
+          const section = document.getElementById(id);
+          if (!section) continue;
+          if (section.getBoundingClientRect().top <= activationLine) current = id;
+        }
+
+        if (
+          window.innerHeight + window.scrollY >=
+          document.documentElement.scrollHeight - 24
+        ) {
+          current = ids.at(-1) ?? current;
+        }
+
+        setActiveSection((previous) => previous === current ? previous : current);
+      });
+    };
+
+    const initialFrame = window.requestAnimationFrame(() => {
+      if (window.location.hash) syncFromHash();
+      else syncFromScroll();
+    });
+
+    window.addEventListener("scroll", syncFromScroll, { passive: true });
+    window.addEventListener("resize", syncFromScroll);
     window.addEventListener("hashchange", syncFromHash);
     window.addEventListener("popstate", syncFromHash);
+
     return () => {
+      window.cancelAnimationFrame(initialFrame);
       window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", syncFromScroll);
+      window.removeEventListener("resize", syncFromScroll);
       window.removeEventListener("hashchange", syncFromHash);
       window.removeEventListener("popstate", syncFromHash);
     };
