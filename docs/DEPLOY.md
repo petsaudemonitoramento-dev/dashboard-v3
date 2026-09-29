@@ -10,6 +10,8 @@
 
 Confirme no Supabase Auth a URL canônica e `/auth/callback` na allow-list. A Data API remota já usa os schemas atuais. Não vincule ou execute `supabase db reset` contra o remoto.
 
+Em produção, `NEXT_PUBLIC_APP_URL` deve ser exatamente `https://maeaps.vercel.app`.
+
 ## Validação
 
-Execute `npm test`, `npm run typecheck`, `npm run lint` e `npm run build`. Em ambiente local com Docker, execute `npm run db:reset` e `npm run test:db`. Publique migrations incrementais somente após revisão e backup; o snapshot estrutural não deve ser reaplicado automaticamente no V3 remoto.
+Execute `npm test`, `npm run typecheck`, `npm run lint` e `npm run build`. Execute `db reset` e testes SQL/RLS somente no GitHub Actions. Publique migrations incrementais somente após revisão e backup; o snapshot estrutural não deve ser reaplicado automaticamente no V3 remoto.

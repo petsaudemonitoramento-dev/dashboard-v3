@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { MapPin, PencilLine } from "lucide-react";
 
-import { requireManagementAccess } from "@/lib/auth/guards";
+import { SubmitButton } from "@/components/forms/submit-button";
+import { requireTerritoryAdministrator } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createClient } from "@/lib/supabase/server";
-import { updateTerritoryAction } from "./actions";
+import { updateEstablishmentIdentityAction, updateTerritoryAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function TerritoryPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const { profile } = await enforceRouteGuard(() => requireManagementAccess());
+  await enforceRouteGuard(() => requireTerritoryAdministrator());
   const params = await searchParams;
   const supabase = await createClient();
   const [establishmentsResult, districtsResult, historiesResult, linksResult, teamsResult] = await Promise.all([
@@ -20,12 +21,17 @@ export default async function TerritoryPage({ searchParams }: { searchParams: Pr
     supabase.schema("core").from("teams").select("id, ine, name").eq("active", true),
   ]);
   if ([establishmentsResult, districtsResult, historiesResult, linksResult, teamsResult].some((result) => result.error)) throw new Error("Não foi possível carregar o território.");
+
   const districts = districtsResult.data ?? [];
   const districtNames = new Map(districts.map((item) => [item.id, item.name]));
   const histories = new Map((historiesResult.data ?? []).map((item) => [item.establishment_id, item]));
   const teams = new Map((teamsResult.data ?? []).map((item) => [item.id, item]));
   const teamsByEstablishment = new Map<string, typeof teamsResult.data>();
-  for (const link of linksResult.data ?? []) teamsByEstablishment.set(link.establishment_id, [...(teamsByEstablishment.get(link.establishment_id) ?? []), teams.get(link.team_id)!]);
+  for (const link of linksResult.data ?? []) {
+    const team = teams.get(link.team_id);
+    if (team) teamsByEstablishment.set(link.establishment_id, [...(teamsByEstablishment.get(link.establishment_id) ?? []), team]);
+  }
+
   const query = (params.busca ?? "").trim().toLocaleLowerCase("pt-BR");
   const districtFilter = params.distrito ?? "all";
   const rows = (establishmentsResult.data ?? []).filter((item) => {
@@ -39,8 +45,14 @@ export default async function TerritoryPage({ searchParams }: { searchParams: Pr
 
   return <div className="space-y-6">
     <section className="hero-panel"><div><span className="eyebrow">Organização territorial</span><h1>Território</h1><p>Complete e corrija vínculos de UBS preservando todo o histórico de vigência.</p></div><MapPin className="size-16 text-cyan-300" /></section>
+    {params.status === "salvo" && <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900" role="status">Alteração salva e registrada na auditoria.</p>}
+    {params.status === "erro" && <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900" role="alert">Não foi possível salvar. Revise os dados e tente novamente.</p>}
     <form className="filter-bar" method="get"><label className="md:col-span-2">Busca<input className="field" name="busca" defaultValue={params.busca} placeholder="UBS ou CNES" /></label><label>Distrito<select name="distrito" defaultValue={districtFilter}><option value="all">Todos</option><option value="unknown">Não informado</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><button className="primary-button" type="submit">Filtrar</button></form>
-    <section className="panel"><div className="panel-heading"><span className="eyebrow">{rows.length} estabelecimentos</span><h2>UBS e equipes vinculadas</h2></div><div className="table-scroll"><table className="data-table"><thead><tr><th>UBS</th><th>CNES</th><th>Distrito atual</th><th>Equipes</th><th></th></tr></thead><tbody>{rows.map((item) => { const linked = teamsByEstablishment.get(item.id) ?? []; const history = histories.get(item.id); return <tr key={item.id}><td><strong>{item.name}</strong></td><td>{item.cnes}</td><td>{history ? districtNames.get(history.district_id) : <span className="badge bg-amber-100! text-amber-800!">Não informado</span>}</td><td><strong>{linked.length}</strong>{linked.slice(0, 3).map((team) => <small className="block text-slate-500" key={team.id}>{team.name || team.ine}</small>)}</td><td>{profile.role !== "leitura" && <Link className="inline-flex items-center gap-1 font-bold text-sky-700" href={`/sistema/territorio?editar=${item.id}&busca=${encodeURIComponent(params.busca ?? "")}&distrito=${districtFilter}`}><PencilLine className="size-4"/>Editar território</Link>}</td></tr>; })}</tbody></table></div></section>
-    {editing && profile.role !== "leitura" && <aside className="fixed inset-0 z-40 flex justify-end bg-slate-950/35"><div className="h-full w-full max-w-md overflow-y-auto bg-white p-7 shadow-2xl"><div className="flex items-start justify-between gap-4"><div><span className="eyebrow">Editar território</span><h2 className="mt-2 text-2xl font-bold text-slate-900">{editing.name}</h2><p className="text-sm text-slate-500">CNES {editing.cnes}</p></div><Link className="text-2xl text-slate-500" href="/sistema/territorio" aria-label="Fechar">×</Link></div><div className="mt-6 rounded-xl bg-slate-50 p-4 text-sm"><span className="block text-slate-500">Distrito atual</span><strong>{current ? districtNames.get(current.district_id) : "Não informado"}</strong>{current && <span className="mt-1 block text-slate-500">Vigente desde {new Date(`${current.valid_from}T00:00:00Z`).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</span>}</div><form action={updateTerritoryAction} className="mt-6 grid gap-5"><input type="hidden" name="establishmentId" value={editing.id}/><label className="grid gap-2 text-sm font-bold text-slate-700">Novo distrito<select className="field" name="districtId" defaultValue={current?.district_id ?? ""}><option value="">Não informado</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="grid gap-2 text-sm font-bold text-slate-700">Data inicial de validade<input className="field" name="validFrom" type="date" required /></label><p className="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">O período anterior será encerrado no dia anterior. Competências anteriores não serão sobrescritas e a alteração será auditada.</p><button className="primary-button" type="submit">Salvar novo período</button></form></div></aside>}
+    <section className="panel"><div className="panel-heading"><span className="eyebrow">{rows.length} estabelecimentos</span><h2>UBS e equipes vinculadas</h2></div><div className="table-scroll"><table className="data-table"><thead><tr><th>UBS</th><th>CNES</th><th>Distrito atual</th><th>Equipes</th><th></th></tr></thead><tbody>{rows.map((item) => { const linked = teamsByEstablishment.get(item.id) ?? []; const history = histories.get(item.id); return <tr key={item.id}><td><strong>{item.name}</strong></td><td>{item.cnes}</td><td>{history ? districtNames.get(history.district_id) : <span className="badge bg-amber-100! text-amber-800!">Não informado</span>}</td><td><strong>{linked.length}</strong>{linked.slice(0, 3).map((team) => <small className="block text-slate-500" key={team.id}>{team.name || team.ine}</small>)}</td><td><Link className="inline-flex items-center gap-1 font-bold text-sky-700" href={`/sistema/territorio?editar=${item.id}&busca=${encodeURIComponent(params.busca ?? "")}&distrito=${districtFilter}`}><PencilLine className="size-4"/>Editar UBS</Link></td></tr>; })}</tbody></table></div></section>
+    {editing && <aside aria-label="Editar UBS" className="fixed inset-0 z-40 flex justify-end bg-slate-950/35"><div className="h-full w-full max-w-md overflow-y-auto bg-white p-7 shadow-2xl"><div className="flex items-start justify-between gap-4"><div><span className="eyebrow">Editar UBS</span><h2 className="mt-2 text-2xl font-bold text-slate-900">{editing.name}</h2><p className="text-sm text-slate-500">CNES {editing.cnes}</p></div><Link className="text-2xl text-slate-500" href="/sistema/territorio" aria-label="Fechar">×</Link></div><div className="mt-6 rounded-xl bg-slate-50 p-4 text-sm"><span className="block text-slate-500">Distrito atual</span><strong>{current ? districtNames.get(current.district_id) : "Não informado"}</strong>{current && <span className="mt-1 block text-slate-500">Vigente desde {new Date(`${current.valid_from}T00:00:00Z`).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</span>}</div>
+      <form action={updateTerritoryAction} className="mt-6 grid gap-5"><input type="hidden" name="establishmentId" value={editing.id}/><label className="grid gap-2 text-sm font-bold text-slate-700">Novo distrito<select className="field" name="districtId" defaultValue={current?.district_id ?? ""}><option value="">Não informado</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="grid gap-2 text-sm font-bold text-slate-700">Data inicial de validade<input className="field" name="validFrom" type="date" required /></label><label className="flex items-start gap-2 text-sm text-slate-700"><input className="mt-1" name="confirmation" type="checkbox" value="true" required/>Confirmo a alteração territorial e sua vigência histórica.</label><p className="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">O período anterior será encerrado no dia anterior. Competências anteriores não serão sobrescritas e a alteração será auditada.</p><SubmitButton label="Salvar novo período"/></form>
+      <hr className="my-7 border-slate-200"/>
+      <form action={updateEstablishmentIdentityAction} className="grid gap-5"><input type="hidden" name="establishmentId" value={editing.id}/><div><span className="eyebrow">Operação sensível</span><h3 className="mt-1 font-bold text-slate-900">Nome e CNES</h3></div><label className="grid gap-2 text-sm font-bold text-slate-700">Nome da UBS<input className="field" name="name" defaultValue={editing.name} maxLength={160} required/></label><label className="grid gap-2 text-sm font-bold text-slate-700">CNES<input className="field" name="cnes" defaultValue={editing.cnes} inputMode="numeric" pattern="[0-9]{7}" maxLength={7} required/></label><p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Alterar nome ou CNES pode afetar conciliações futuras. O UUID interno não muda e os valores anteriores ficam preservados na auditoria.</p><label className="flex items-start gap-2 text-sm text-slate-700"><input className="mt-1" name="confirmation" type="checkbox" value="true" required/>Confirmo que revisei o nome e o CNES.</label><SubmitButton label="Atualizar identidade da UBS"/></form>
+    </div></aside>}
   </div>;
 }

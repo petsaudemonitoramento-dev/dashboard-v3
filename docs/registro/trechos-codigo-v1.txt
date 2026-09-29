@@ -1,9 +1,10 @@
-// origem: src/lib/siaps/parser.ts | linhas: 1-159
+// origem: src/lib/siaps/parser.ts | linhas: 1-171
 import * as XLSX from "xlsx";
 
 import { pointsFromComponents, type C3Components } from "@/lib/analytics/c3";
 
 export const SIAPS_PARSER_VERSION = "mae-aps-c3/1.0.0";
+export const MAX_SIAPS_FILE_BYTES = 10 * 1024 * 1024;
 export const COMPONENT_CODES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"] as const;
 
 export type SiapsC3Row = {
@@ -67,7 +68,13 @@ function detectCompetency(matrix: unknown[][], filename: string): string | null 
 }
 
 export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx"): SiapsParseResult {
-  const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+  const workbook = XLSX.read(buffer, {
+    type: "array", cellDates: true, cellFormula: false, bookDeps: false,
+    bookFiles: false, bookVBA: false, sheetRows: 10_050,
+  });
+  if (!workbook.SheetNames.length) {
+    return { competency: null, rows: [], errors: ["A planilha não contém abas legíveis."], warnings: [], headerRow: null };
+  }
   const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(firstSheet, { header: 1, defval: "", raw: false });
   const errors: string[] = [];
@@ -121,8 +128,13 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
       return;
     }
     const components = componentValues as C3Components;
-    if (pointsFromComponents(components) !== pointsTotal) {
-      warnings.push(`Linha ${fileRow}: pontos informados divergem do cálculo 10×A + 9×(B–K); o valor oficial da planilha será preservado.`);
+    if (Object.values(components).some((value) => value > (denominator as number))) {
+      errors.push(`Linha ${fileRow}: A–K não podem superar o denominador.`);
+      return;
+    }
+    const calculatedPoints = pointsFromComponents(components);
+    if (calculatedPoints !== pointsTotal) {
+      warnings.push(`Linha ${fileRow}: pontos informados divergem de 10×A + 9×(B–K); a pontuação calculada será usada.`);
     }
     rows.push({
       fileRow,
@@ -133,7 +145,7 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
       teamName: indexes.team >= 0 ? String(source[indexes.team] ?? "").trim() : "",
       teamType: indexes.teamType >= 0 ? String(source[indexes.teamType] ?? "").trim() : "",
       components,
-      pointsTotal: pointsTotal as number,
+      pointsTotal: calculatedPoints,
       denominator: denominator as number,
       officialRatio: indexes.ratio >= 0 ? numberValue(source[indexes.ratio]) : null,
     });
@@ -159,7 +171,43 @@ export function compactSiapsRow(row: SiapsC3Row) {
   ];
 }
 
-// origem: src/lib/analytics/c3.ts | linhas: 1-73
+// origem: src/lib/siaps/compact.ts | linhas: 1-34
+import { z } from "zod";
+
+const cellSchema = z.union([z.string().max(240), z.number().finite(), z.null()]);
+export const compactRowsSchema = z.array(z.array(cellSchema).length(21)).max(10_000);
+
+function isInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value);
+}
+
+export function validateCompactSiapsRows(rows: z.infer<typeof compactRowsSchema>) {
+  const fileRows = new Set<number>();
+  const ines = new Set<string>();
+  for (const row of rows) {
+    const fileRow = row[0];
+    const cnes = row[1];
+    const ine = row[4];
+    const components = row.slice(7, 18);
+    const pointsTotal = row[18];
+    const denominator = row[19];
+    const officialRatio = row[20];
+
+    if (!isInteger(fileRow) || fileRow <= 0 || fileRows.has(fileRow)) throw new Error("Linha SIAPS inválida ou duplicada.");
+    if (typeof cnes !== "string" || !/^\d{7}$/.test(cnes)) throw new Error("CNES inválido.");
+    if (typeof ine !== "string" || !/^\d{10}$/.test(ine) || ines.has(ine)) throw new Error("INE inválido ou duplicado.");
+    if (!isInteger(denominator) || denominator < 0) throw new Error("Denominador inválido.");
+    if (components.some((value) => !isInteger(value) || value < 0 || value > denominator)) throw new Error("Contagens A–K inválidas.");
+    const expectedPoints = 10 * Number(components[0]) + 9 * components.slice(1).reduce((sum, value) => sum + Number(value), 0);
+    if (typeof pointsTotal !== "number" || pointsTotal !== expectedPoints) throw new Error("Pontuação C3 divergente de A–K.");
+    if (officialRatio !== null && (typeof officialRatio !== "number" || officialRatio < 0 || officialRatio > 100)) throw new Error("Razão oficial inválida.");
+    fileRows.add(fileRow);
+    ines.add(ine);
+  }
+  return rows;
+}
+
+// origem: src/lib/analytics/c3.ts | linhas: 1-75
 export type C3Components = Record<
   "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K",
   number
@@ -191,10 +239,12 @@ export type C3Classification =
   | "Bom"
   | "Suficiente"
   | "Regular"
+  | "Valor inválido"
   | "Sem população elegível";
 
 export function classifyC3(value: number | null): C3Classification {
   if (value === null) return "Sem população elegível";
+  if (value < 0 || value > 100) return "Valor inválido";
   if (value > 75) return "Ótimo";
   if (value > 50) return "Bom";
   if (value > 25) return "Suficiente";
@@ -234,7 +284,7 @@ export function aggregateC3(facts: C3Fact[], territory: TerritoryFilter = "all")
   };
 }
 
-// origem: src/lib/auth/guards.ts | linhas: 1-116
+// origem: src/lib/auth/guards.ts | linhas: 1-120
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
@@ -341,15 +391,19 @@ export async function requireAdministrator(gateway?: ProfileGateway) {
   return requireRoleFromContext(await getActiveProfileContext(gateway), "admin");
 }
 
-export function requireManagementAccess(gateway?: ProfileGateway) {
-  return getActiveProfileContext(gateway);
+export async function requireDashboardViewer(gateway?: ProfileGateway) {
+  return requireAnyRoleFromContext(
+    await getActiveProfileContext(gateway),
+    ["gestao", "leitura"],
+  );
 }
 
 export async function requireDataManager(gateway?: ProfileGateway) {
-  return requireAnyRoleFromContext(
-    await getActiveProfileContext(gateway),
-    ["admin", "gestao"],
-  );
+  return requireRoleFromContext(await getActiveProfileContext(gateway), "gestao");
+}
+
+export async function requireTerritoryAdministrator(gateway?: ProfileGateway) {
+  return requireRoleFromContext(await getActiveProfileContext(gateway), "admin");
 }
 
 // origem: src/lib/http/import-errors.ts | linhas: 1-21
@@ -358,7 +412,7 @@ import { ZodError } from "zod";
 import { AccessDeniedError } from "@/lib/auth/types";
 
 export type ImportErrorResponse = {
-  status: 400 | 401 | 403 | 500;
+  status: 400 | 401 | 403 | 413 | 500;
   message: string;
 };
 
@@ -381,6 +435,7 @@ import { z } from "zod";
 
 import { requireDataManager } from "@/lib/auth/guards";
 import { importErrorResponse } from "@/lib/http/import-errors";
+import { compactRowsSchema, validateCompactSiapsRows } from "@/lib/siaps/compact";
 import { createPrivilegedClient } from "@/lib/supabase/privileged";
 import { createClient } from "@/lib/supabase/server";
 
@@ -388,15 +443,21 @@ export const runtime = "nodejs";
 
 const payloadSchema = z.object({
   mode: z.enum(["check", "publish"]),
-  filename: z.string().min(1).max(255),
+  filename: z.string().trim().min(1).max(255).refine((value) => /^[^\\/\0]+\.xlsx$/i.test(value), "Nome de arquivo inválido."),
   fileSha256: z.string().regex(/^[a-f0-9]{64}$/),
   competency: z.string().regex(/^20\d{2}-(0[1-9]|1[0-2])-01$/),
-  rows: z.array(z.array(z.union([z.string(), z.number(), z.null()])).length(21)).max(10000).default([]),
+  rows: compactRowsSchema.optional().default([]),
 });
+
+const MAX_REQUEST_BYTES = 8 * 1024 * 1024;
 
 export async function POST(request: Request) {
   try {
     const context = await requireDataManager();
+    const contentLength = Number(request.headers.get("content-length") ?? "0");
+    if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
+      return NextResponse.json({ error: "A requisição excede o limite permitido." }, { status: 413 });
+    }
     const payload = payloadSchema.parse(await request.json());
     const userClient = await createClient();
     const duplicate = await userClient.schema("siaps").from("imports")
@@ -406,6 +467,7 @@ export async function POST(request: Request) {
     if (payload.mode === "check") return NextResponse.json({ duplicate: duplicate.data });
     if (duplicate.data) return NextResponse.json({ error: "Arquivo já importado.", duplicate: duplicate.data }, { status: 409 });
     if (!payload.rows.length) return NextResponse.json({ error: "Nenhum registro válido para publicar." }, { status: 400 });
+    validateCompactSiapsRows(payload.rows);
 
     const privileged = createPrivilegedClient();
     const metadata = {
@@ -422,21 +484,13 @@ export async function POST(request: Request) {
       rows_total: payload.rows.length,
       uploaded_by: context.user.id,
     };
-    let importId: string | null = null;
-    for (let index = 0; index < payload.rows.length; index += 250) {
-      const isLast = index + 250 >= payload.rows.length;
-      const result = await privileged.rpc("stage_siaps_c3_compact", {
-        p_metadata: metadata,
-        p_rows: payload.rows.slice(index, index + 250),
-        p_finalize: isLast,
-      });
-      if (result.error) throw new Error(`Falha ao publicar o bloco SIAPS: ${result.error.message}`);
-      importId = result.data as string;
-    }
+    const result = await privileged.rpc("publish_siaps_c3_v1", { p_metadata: metadata, p_rows: payload.rows });
+    if (result.error) throw new Error("A publicação atômica da importação falhou.");
+    const importId = result.data as string;
     return NextResponse.json({ importId, status: "publicado", rows: payload.rows.length });
   } catch (error) {
     const response = importErrorResponse(error);
-    if (response.status === 500) console.error("Falha interna na importação SIAPS", error);
+    if (response.status === 500) console.error("Falha interna na importação SIAPS.");
     return NextResponse.json({ error: response.message }, { status: response.status });
   }
 }
@@ -447,7 +501,7 @@ import type { EChartsOption } from "echarts";
 
 import { MaeChart } from "@/components/charts/mae-chart";
 import { aggregateC3, C3_COMPONENTS, classifyC3, districtLabel, type C3Fact } from "@/lib/analytics/c3";
-import { requireManagementAccess } from "@/lib/auth/guards";
+import { requireDashboardViewer } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createClient } from "@/lib/supabase/server";
 
@@ -488,7 +542,7 @@ function dashboardHref(params: Record<string, string | undefined>) {
 }
 
 export default async function ManagementDashboard({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  await enforceRouteGuard(() => requireManagementAccess());
+  await enforceRouteGuard(() => requireDashboardViewer());
   const params = await searchParams;
   const supabase = await createClient();
   const [facts, districtsResult, establishmentsResult, teamsResult] = await Promise.all([
@@ -562,8 +616,8 @@ export default async function ManagementDashboard({ searchParams }: { searchPara
   };
 
   return <div className="space-y-6">
-    <section className="hero-panel"><div><span className="eyebrow">Monitoramento C3</span><h1>Dashboard institucional</h1><p>Visão consolidada da Gestação e Puerpério com dados oficiais SIAPS.</p></div><div className="rounded-2xl bg-white/10 px-5 py-4 text-right"><span className="block text-xs text-white/70">Competência mais recente</span><strong className="text-xl">{competency ? monthLabel(`${competency}-01`) : "Sem dados"}</strong></div></section>
-    <form className="filter-bar" method="get">
+    <section className="hero-panel scroll-target" id="resumo"><div><span className="eyebrow">Monitoramento C3</span><h1>Dashboard institucional</h1><p>Visão consolidada da Gestação e Puerpério com dados oficiais SIAPS.</p></div><div className="rounded-2xl bg-white/10 px-5 py-4 text-right"><span className="block text-xs text-white/70">Competência mais recente</span><strong className="text-xl">{competency ? monthLabel(`${competency}-01`) : "Sem dados"}</strong></div></section>
+    <form className="filter-bar scroll-target" id="ubs-equipes" method="get">
       <label>Período<select name="competencia" defaultValue={competency}>{competencies.map((item) => <option key={item} value={item}>{monthLabel(`${item}-01`)}</option>)}</select></label>
       <label>Distrito<select name="distrito" defaultValue={district}><option value="all">Município inteiro</option><option value="unknown">Não informado</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label>UBS<select name="ubs" defaultValue={establishmentId}><option value="all">Todas as UBS</option>{establishments.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.cnes}</option>)}</select></label>
@@ -571,7 +625,7 @@ export default async function ManagementDashboard({ searchParams }: { searchPara
       <button className="primary-button" type="submit">Aplicar</button>
     </form>
     <nav className="breadcrumbs" aria-label="Drill-down territorial"><Link href={dashboardHref({ competencia: competency })}>Município</Link><span>›</span><span>{district === "all" ? "Todos os distritos" : district === "unknown" ? "Não informado" : districtNames.get(Number(district))}</span>{establishmentId !== "all" && <><span>›</span><span>{establishmentNames.get(establishmentId)}</span></>}{teamId !== "all" && <><span>›</span><span>{teamNames.get(teamId)}</span></>}</nav>
-    <section className="metric-grid">
+    <section className="metric-grid scroll-target" id="indicadores">
       <article className="metric-card accent-blue"><span>C3 consolidado</span><strong>{formatC3(summary.c3)}</strong><small>razão das somas</small></article>
       <article className="metric-card accent-aqua"><span>Classificação</span><strong className="text-2xl">{classifyC3(summary.c3)}</strong><small>faixa oficial</small></article>
       <article className="metric-card accent-orange"><span>Denominador</span><strong>{summary.denominator.toLocaleString("pt-BR")}</strong><small>população elegível</small></article>
@@ -580,74 +634,8 @@ export default async function ManagementDashboard({ searchParams }: { searchPara
     <section className="chart-grid">
       <article className="panel lg:col-span-2"><div className="panel-heading"><div><span className="eyebrow">Série histórica</span><h2>Evolução mensal do C3</h2></div></div><MaeChart option={evolutionOption} ariaLabel="Evolução mensal do C3" /></article>
       <article className="panel"><div className="panel-heading"><div><span className="eyebrow">Práticas</span><h2>Componentes A–K</h2></div></div><MaeChart option={componentsOption} ariaLabel="Contagens dos componentes A a K" componentDescriptions={C3_COMPONENTS} /></article>
-      <article className="panel lg:col-span-3"><div className="panel-heading"><div><span className="eyebrow">Comparação</span><h2>Distribuição territorial</h2><p>Clique nas barras para aprofundar quando houver outro nível territorial.</p></div></div>{comparison.length ? <MaeChart option={comparisonOption} ariaLabel="Comparação do C3 entre recortes territoriais" drilldown={drilldown} /> : <p className="empty-state">Não há dados para o recorte selecionado.</p>}</article>
+      <article className="panel scroll-target lg:col-span-3" id="comparativos"><div className="panel-heading"><div><span className="eyebrow">Comparação</span><h2>Distribuição territorial</h2><p>Clique nas barras para aprofundar quando houver outro nível territorial.</p></div></div>{comparison.length ? <MaeChart option={comparisonOption} ariaLabel="Comparação do C3 entre recortes territoriais" drilldown={drilldown} /> : <p className="empty-state">Não há dados para o recorte selecionado.</p>}</article>
     </section>
-  </div>;
-}
-
-// origem: src/app/(sistema)/sistema/piloto/page.tsx | linhas: 1-64
-import type { EChartsOption } from "echarts";
-
-import { MaeChart } from "@/components/charts/mae-chart";
-import { aggregateC3, C3_COMPONENTS, type C3Fact } from "@/lib/analytics/c3";
-import { requireManagementAccess } from "@/lib/auth/guards";
-import { enforceRouteGuard } from "@/lib/auth/route-guard";
-import { createClient } from "@/lib/supabase/server";
-
-export const dynamic = "force-dynamic";
-
-type Fact = { id: number; competency: string; team_id: string; district_id: number | null; denominator: number; points_total: number | string };
-
-function monthLabel(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" }).format(new Date(`${value.slice(0, 10)}T00:00:00Z`)).replace(" de ", "/").toUpperCase();
-}
-
-export default async function PilotPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  await enforceRouteGuard(() => requireManagementAccess());
-  const params = await searchParams;
-  const supabase = await createClient();
-  const cohortResult = await supabase.schema("study").from("cohorts").select("id, name, description").eq("code", "piloto_2026_c3").eq("active", true).maybeSingle();
-  if (cohortResult.error || !cohortResult.data) throw new Error("A coorte piloto_2026_c3 não foi encontrada.");
-  const [membersResult, teamsResult, districtsResult] = await Promise.all([
-    supabase.schema("study").from("cohort_members").select("team_id, district_id, stratum, notes").eq("cohort_id", cohortResult.data.id),
-    supabase.schema("core").from("teams").select("id, ine, name").eq("active", true),
-    supabase.schema("core").from("districts").select("id, name").eq("active", true).order("name"),
-  ]);
-  if (membersResult.error || teamsResult.error || districtsResult.error) throw new Error("Não foi possível carregar a coorte piloto.");
-  const members = membersResult.data ?? [];
-  const memberIds = members.map((item) => item.team_id);
-  const factsResult = memberIds.length ? await supabase.schema("analytics").from("c3_team_monthly").select("id, competency, team_id, district_id, denominator, points_total").eq("is_current", true).in("team_id", memberIds).order("competency") : { data: [], error: null };
-  if (factsResult.error) throw new Error("Não foi possível carregar os fatos do piloto.");
-  const facts = (factsResult.data ?? []) as Fact[];
-  const competencies = [...new Set(facts.map((fact) => fact.competency.slice(0, 7)))].sort();
-  const competency = competencies.includes(params.competencia ?? "") ? params.competencia! : competencies.at(-1) ?? "";
-  const district = params.distrito ?? "all";
-  const team = params.equipe ?? "all";
-  const teams = new Map((teamsResult.data ?? []).map((item) => [item.id, item]));
-  const districts = districtsResult.data ?? [];
-  const districtNames = new Map(districts.map((item) => [item.id, item.name]));
-  const selectedMembers = members.filter((member) => (district === "all" || String(member.district_id ?? "unknown") === district) && (team === "all" || member.team_id === team));
-  const selectedIds = new Set(selectedMembers.map((item) => item.team_id));
-  const selectedFacts = facts.filter((fact) => fact.competency.startsWith(competency) && selectedIds.has(fact.team_id));
-  const asAggregate = (rows: Fact[]) => aggregateC3(rows.map((fact): C3Fact => ({ pointsTotal: Number(fact.points_total), denominator: fact.denominator, districtId: fact.district_id })));
-  const summary = asAggregate(selectedFacts);
-  const evolution = competencies.map((month) => asAggregate(facts.filter((fact) => fact.competency.startsWith(month) && selectedIds.has(fact.team_id))).c3);
-  const totals = Object.fromEntries(Object.keys(C3_COMPONENTS).map((code) => [code, 0])) as Record<string, number>;
-  const ids = selectedFacts.map((fact) => fact.id);
-  if (ids.length) {
-    const practices = await supabase.schema("analytics").from("c3_practice_counts").select("practice_code, fulfilled").in("fact_id", ids);
-    if (practices.error) throw new Error("Não foi possível carregar A–K do piloto.");
-    for (const item of practices.data ?? []) totals[item.practice_code] += item.fulfilled;
-  }
-  const lineOption: EChartsOption = { tooltip: { trigger: "axis" }, grid: { left: 48, right: 25, top: 24, bottom: 42 }, xAxis: { type: "category", data: competencies.map((item) => monthLabel(`${item}-01`)) }, yAxis: { type: "value", min: 0, max: 100 }, series: [{ type: "line", smooth: true, data: evolution, lineStyle: { color: "#0b72e7", width: 4 }, itemStyle: { color: "#16b8b1" }, areaStyle: { color: "rgba(22,184,177,.10)" } }] };
-  const barOption: EChartsOption = { grid: { left: 48, right: 25, top: 24, bottom: 36 }, xAxis: { type: "category", data: Object.keys(totals) }, yAxis: { type: "value" }, series: [{ type: "bar", data: Object.values(totals), itemStyle: { color: "#ff9f43", borderRadius: [6, 6, 0, 0] } }] };
-
-  return <div className="space-y-6"><section className="hero-panel"><div><span className="eyebrow">Coorte analítica</span><h1>Piloto 2026 · C3</h1><p>{cohortResult.data.description || "Acompanhamento da coorte metodológica sem limitar a ingestão municipal."}</p></div><div className="rounded-2xl bg-white/10 p-4 text-center"><strong className="block text-3xl">{members.length}</strong><span className="text-xs text-white/70">equipes na coorte</span></div></section>
-    <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"><strong>Nota metodológica:</strong> os rótulos “boa” e “ruim” são estratos metodológicos externos recebidos com a coorte. Não representam avaliação, ranking ou classificação calculada pelo C3.</div>
-    <form className="filter-bar" method="get"><label>Período<select name="competencia" defaultValue={competency}>{competencies.map((item) => <option key={item} value={item}>{monthLabel(`${item}-01`)}</option>)}</select></label><label>Distrito<select name="distrito" defaultValue={district}><option value="all">Todos</option><option value="unknown">Não informado</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="md:col-span-2">Equipe<select name="equipe" defaultValue={team}><option value="all">Todas as equipes</option>{members.map((item) => { const value = teams.get(item.team_id); return <option key={item.team_id} value={item.team_id}>{value?.name || value?.ine}</option>; })}</select></label><button className="primary-button" type="submit">Aplicar</button></form>
-    <section className="metric-grid"><article className="metric-card accent-blue"><span>C3 consolidado</span><strong>{summary.c3 === null ? "—" : summary.c3.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></article><article className="metric-card accent-green"><span>Equipes no recorte</span><strong>{summary.teams}</strong></article><article className="metric-card accent-orange"><span>Denominador</span><strong>{summary.denominator.toLocaleString("pt-BR")}</strong></article><article className="metric-card accent-aqua"><span>Competência</span><strong className="text-2xl">{competency ? monthLabel(`${competency}-01`) : "—"}</strong></article></section>
-    <section className="chart-grid"><article className="panel lg:col-span-2"><div className="panel-heading"><span className="eyebrow">Série histórica</span><h2>Evolução C3 da coorte</h2></div><MaeChart option={lineOption} ariaLabel="Evolução C3 das equipes do piloto" /></article><article className="panel"><div className="panel-heading"><span className="eyebrow">Práticas</span><h2>Componentes A–K</h2></div><MaeChart option={barOption} componentDescriptions={C3_COMPONENTS} ariaLabel="Componentes A a K do piloto" /></article></section>
-    <section className="panel"><div className="panel-heading"><span className="eyebrow">{selectedMembers.length} equipes</span><h2>Composição da coorte</h2></div><div className="table-scroll"><table className="data-table"><thead><tr><th>Equipe</th><th>INE</th><th>Distrito</th><th>Estrato metodológico externo</th></tr></thead><tbody>{selectedMembers.map((member) => { const item = teams.get(member.team_id); return <tr key={member.team_id}><td><strong>{item?.name || "Equipe sem nome"}</strong></td><td>{item?.ine}</td><td>{member.district_id ? districtNames.get(member.district_id) : "Não informado"}</td><td>{member.stratum ? <span className="badge">{member.stratum}</span> : "—"}</td></tr>; })}</tbody></table></div></section>
   </div>;
 }
 
@@ -820,3 +808,292 @@ grant execute on function public.update_establishment_territory(uuid, smallint, 
 
 revoke all on function public.manage_profile(uuid, app.user_role, boolean) from public, anon;
 grant execute on function public.manage_profile(uuid, app.user_role, boolean) to authenticated;
+
+// origem: supabase/migrations/20260929004905_production_audit_hardening.sql | linhas: 1-287
+-- Hardening final da V1.0.0. Migration incremental e não destrutiva.
+
+create or replace function public.update_establishment_territory(
+  p_establishment_id uuid,
+  p_district_id smallint,
+  p_valid_from date
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = pg_catalog, public, app, core, analytics, audit
+as $function$
+declare
+  v_actor uuid := auth.uid();
+  v_previous core.establishment_district_history%rowtype;
+  v_history_id bigint;
+  v_latest_valid_from date;
+begin
+  if not exists (
+    select 1 from app.profiles
+    where user_id = v_actor and active and role = 'admin'::app.user_role
+  ) then
+    raise exception 'Apenas administradores ativos podem alterar território' using errcode = '42501';
+  end if;
+  if p_valid_from is null then raise exception 'Data inicial de validade obrigatória'; end if;
+  if not exists (select 1 from core.establishments where id = p_establishment_id) then
+    raise exception 'Estabelecimento não encontrado';
+  end if;
+  if p_district_id is not null and not exists (
+    select 1 from core.districts where id = p_district_id and active
+  ) then
+    raise exception 'Distrito ativo não encontrado';
+  end if;
+
+  select * into v_previous
+  from core.establishment_district_history
+  where establishment_id = p_establishment_id and valid_to is null
+  order by valid_from desc limit 1 for update;
+
+  select max(valid_from) into v_latest_valid_from
+  from core.establishment_district_history where establishment_id = p_establishment_id;
+  if v_latest_valid_from is not null and v_latest_valid_from >= p_valid_from then
+    raise exception 'A nova vigência deve começar depois de %', v_latest_valid_from;
+  end if;
+  if v_previous.id is null and exists (
+    select 1 from core.establishment_district_history
+    where establishment_id = p_establishment_id and valid_to is not null and valid_to >= p_valid_from
+  ) then
+    raise exception 'A nova vigência não pode sobrepor período territorial existente';
+  end if;
+  if v_previous.id is not null and v_previous.district_id is not distinct from p_district_id then
+    return v_previous.id;
+  end if;
+  if v_previous.id is not null then
+    update core.establishment_district_history set valid_to = p_valid_from - 1 where id = v_previous.id;
+  end if;
+  if p_district_id is not null then
+    insert into core.establishment_district_history(establishment_id,district_id,valid_from,source,notes)
+    values (p_establishment_id,p_district_id,p_valid_from,'manual','Atualização administrativa no MAE APS')
+    returning id into v_history_id;
+  end if;
+  update analytics.c3_team_monthly set district_id = p_district_id
+  where establishment_id = p_establishment_id
+    and competency >= date_trunc('month', p_valid_from)::date;
+  insert into audit.events(actor_user_id,event_type,entity_type,entity_id,metadata)
+  values (v_actor,'territory_assignment_changed','core.establishments',p_establishment_id::text,
+    jsonb_build_object('previous_district_id',v_previous.district_id,'district_id',p_district_id,
+      'valid_from',p_valid_from,'history_id',v_history_id));
+  return coalesce(v_history_id, v_previous.id);
+end;
+$function$;
+
+create or replace function public.update_establishment_identity(
+  p_establishment_id uuid,
+  p_name text,
+  p_cnes text
+)
+returns core.establishments
+language plpgsql
+security definer
+set search_path = pg_catalog, public, app, core, audit
+as $function$
+declare
+  v_actor uuid := auth.uid();
+  v_previous core.establishments%rowtype;
+  v_result core.establishments%rowtype;
+begin
+  if not exists (
+    select 1 from app.profiles
+    where user_id = v_actor and active and role = 'admin'::app.user_role
+  ) then
+    raise exception 'Apenas administradores ativos podem alterar a identidade da UBS' using errcode = '42501';
+  end if;
+  if p_cnes !~ '^[0-9]{7}$' then raise exception 'CNES deve conter exatamente 7 dígitos'; end if;
+  if length(trim(coalesce(p_name,''))) < 2 or length(trim(p_name)) > 160 then raise exception 'Nome da UBS inválido'; end if;
+  select * into v_previous from core.establishments where id = p_establishment_id for update;
+  if v_previous.id is null then raise exception 'Estabelecimento não encontrado'; end if;
+  if exists (select 1 from core.establishments where cnes = p_cnes and id <> p_establishment_id) then
+    raise exception 'CNES já vinculado a outra UBS';
+  end if;
+  update core.establishments set name = trim(p_name), cnes = p_cnes
+  where id = p_establishment_id returning * into v_result;
+  insert into audit.events(actor_user_id,event_type,entity_type,entity_id,metadata)
+  values (v_actor,'establishment_identity_changed','core.establishments',p_establishment_id::text,
+    jsonb_build_object('previous_name',v_previous.name,'previous_cnes',v_previous.cnes,
+      'name',v_result.name,'cnes',v_result.cnes));
+  return v_result;
+end;
+$function$;
+
+revoke all on function public.update_establishment_identity(uuid,text,text) from public, anon;
+grant execute on function public.update_establishment_identity(uuid,text,text) to authenticated;
+
+-- Único ponto privilegiado de publicação. Valida novamente o payload que veio
+-- do navegador e chama a ingestão existente na mesma transação PostgreSQL.
+create or replace function public.publish_siaps_c3_v1(p_metadata jsonb, p_rows jsonb)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, app, core, siaps, analytics, audit
+as $function$
+declare
+  v_actor uuid;
+  v_filename text;
+  v_count integer;
+begin
+  if jsonb_typeof(p_metadata) <> 'object' or jsonb_typeof(p_rows) <> 'array' then
+    raise exception 'Payload SIAPS inválido';
+  end if;
+  v_actor := nullif(p_metadata->>'uploaded_by','')::uuid;
+  if not exists (
+    select 1 from app.profiles
+    where user_id = v_actor and active and role = 'gestao'::app.user_role
+  ) then
+    raise exception 'Apenas a Gestão ativa pode importar dados' using errcode = '42501';
+  end if;
+  v_filename := p_metadata->>'filename';
+  if v_filename is null or length(v_filename) > 255
+     or lower(right(v_filename,5)) <> '.xlsx'
+     or position('/' in v_filename) > 0 or position(chr(92) in v_filename) > 0 then
+    raise exception 'Nome de arquivo inválido';
+  end if;
+  if (p_metadata->>'file_sha256') !~ '^[a-f0-9]{64}$' then raise exception 'SHA-256 inválido'; end if;
+  v_count := jsonb_array_length(p_rows);
+  if v_count < 1 or v_count > 10000 or coalesce((p_metadata->>'rows_total')::integer,-1) <> v_count then
+    raise exception 'Quantidade de linhas inválida';
+  end if;
+  if exists (select 1 from jsonb_array_elements(p_rows) r where jsonb_typeof(r) <> 'array') then
+    raise exception 'Linha SIAPS inválida';
+  end if;
+  if exists (select 1 from jsonb_array_elements(p_rows) r where jsonb_array_length(r) <> 21) then
+    raise exception 'Linha SIAPS deve conter 21 campos';
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_rows) r
+    where (r->>0) !~ '^[1-9][0-9]*$'
+       or (r->>1) !~ '^[0-9]{7}$'
+       or (r->>4) !~ '^[0-9]{10}$'
+       or (r->>7) !~ '^[0-9]+$' or (r->>8) !~ '^[0-9]+$' or (r->>9) !~ '^[0-9]+$'
+       or (r->>10) !~ '^[0-9]+$' or (r->>11) !~ '^[0-9]+$' or (r->>12) !~ '^[0-9]+$'
+       or (r->>13) !~ '^[0-9]+$' or (r->>14) !~ '^[0-9]+$' or (r->>15) !~ '^[0-9]+$'
+       or (r->>16) !~ '^[0-9]+$' or (r->>17) !~ '^[0-9]+$'
+       or (r->>18) !~ '^[0-9]+([.][0-9]+)?$' or (r->>19) !~ '^[0-9]+$'
+  ) then raise exception 'Identificadores ou medidas SIAPS inválidos'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_rows) r
+    where (r->>7)::integer > (r->>19)::integer or (r->>8)::integer > (r->>19)::integer
+       or (r->>9)::integer > (r->>19)::integer or (r->>10)::integer > (r->>19)::integer
+       or (r->>11)::integer > (r->>19)::integer or (r->>12)::integer > (r->>19)::integer
+       or (r->>13)::integer > (r->>19)::integer or (r->>14)::integer > (r->>19)::integer
+       or (r->>15)::integer > (r->>19)::integer or (r->>16)::integer > (r->>19)::integer
+       or (r->>17)::integer > (r->>19)::integer
+       or (r->>18)::numeric <> 10*(r->>7)::numeric + 9*((r->>8)::numeric+(r->>9)::numeric+
+          (r->>10)::numeric+(r->>11)::numeric+(r->>12)::numeric+(r->>13)::numeric+
+          (r->>14)::numeric+(r->>15)::numeric+(r->>16)::numeric+(r->>17)::numeric)
+       or ((r->20) <> 'null'::jsonb and ((r->>20) !~ '^[0-9]+([.][0-9]+)?$'
+          or (r->>20)::numeric < 0 or (r->>20)::numeric > 100))
+  ) then raise exception 'Medidas C3 inconsistentes'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_rows) r group by r->>0 having count(*) > 1
+  ) or exists (
+    select 1 from jsonb_array_elements(p_rows) r group by r->>4 having count(*) > 1
+  ) then raise exception 'Linha ou INE duplicado no arquivo'; end if;
+  return public.ingest_siaps_c3_compact(p_metadata, p_rows);
+end;
+$function$;
+
+revoke execute on function public.ingest_siaps_c3(jsonb,jsonb) from service_role;
+revoke execute on function public.stage_siaps_c3_compact(jsonb,jsonb,boolean) from service_role;
+revoke execute on function public.ingest_siaps_c3_compact(jsonb,jsonb) from service_role;
+revoke all on function public.publish_siaps_c3_v1(jsonb,jsonb) from public, anon, authenticated;
+grant execute on function public.publish_siaps_c3_v1(jsonb,jsonb) to service_role;
+
+-- RLS por responsabilidade institucional, não apenas por autenticação.
+drop policy if exists c3_practices_active_users_read on analytics.c3_practice_counts;
+create policy c3_practices_dashboard_read on analytics.c3_practice_counts for select to authenticated
+using (exists (select 1 from app.profiles p where p.user_id = (select auth.uid()) and p.active and p.role in ('gestao','leitura')));
+drop policy if exists c3_monthly_active_users_read on analytics.c3_team_monthly;
+create policy c3_monthly_dashboard_read on analytics.c3_team_monthly for select to authenticated
+using (exists (select 1 from app.profiles p where p.user_id = (select auth.uid()) and p.active and p.role in ('gestao','leitura')));
+drop policy if exists imports_active_users_read on siaps.imports;
+create policy imports_gestao_read on siaps.imports for select to authenticated
+using (exists (select 1 from app.profiles p where p.user_id = (select auth.uid()) and p.active and p.role = 'gestao'));
+drop policy if exists cohort_members_active_users_read on study.cohort_members;
+drop policy if exists cohorts_active_users_read on study.cohorts;
+revoke select on study.cohort_members, study.cohorts from authenticated;
+revoke usage on schema study from authenticated;
+
+create or replace view analytics.dashboard_team_directory
+with (security_invoker = true)
+as
+select t.id as team_id, t.ine, t.name as team_name, t.team_type,
+  e.id as establishment_id, e.cnes, e.name as establishment_name,
+  d.id as district_id, d.name as district_name
+from core.teams t
+left join core.team_establishment_history teh on teh.team_id=t.id and teh.valid_to is null
+left join core.establishments e on e.id=teh.establishment_id
+left join core.establishment_district_history edh on edh.establishment_id=e.id and edh.valid_to is null
+left join core.districts d on d.id=edh.district_id
+where t.active;
+
+create or replace view analytics.dashboard_c3_team_monthly
+with (security_invoker = true)
+as
+select f.id as fact_id, f.competency, f.district_id, d.name as district_name,
+  f.establishment_id, e.cnes, e.name as establishment_name,
+  f.team_id, t.ine, t.name as team_name,
+  f.denominator, f.points_total,
+  f.points_total / nullif(f.denominator,0) as c3,
+  case when f.denominator=0 then 'Sem população elegível'
+       when f.points_total/nullif(f.denominator,0) < 0 or f.points_total/nullif(f.denominator,0) > 100 then 'Valor inválido'
+       when f.points_total/nullif(f.denominator,0)>75 then 'Ótimo'
+       when f.points_total/nullif(f.denominator,0)>50 then 'Bom'
+       when f.points_total/nullif(f.denominator,0)>25 then 'Suficiente'
+       else 'Regular' end as classification
+from analytics.c3_team_monthly f
+join core.teams t on t.id=f.team_id
+join core.establishments e on e.id=f.establishment_id
+left join core.districts d on d.id=f.district_id
+where f.is_current;
+
+create or replace view analytics.dashboard_c3_practices
+with (security_invoker = true)
+as
+select f.competency, f.district_id, f.district_name, f.establishment_id, f.cnes,
+  f.establishment_name, f.team_id, f.ine, f.team_name,
+  p.practice_code, p.fulfilled, f.denominator
+from analytics.dashboard_c3_team_monthly f
+join analytics.c3_practice_counts p on p.fact_id=f.fact_id;
+
+create or replace view analytics.dashboard_competencies
+with (security_invoker = true)
+as
+select competency, sum(points_total) as points_total, sum(denominator) as denominator,
+  sum(points_total)/nullif(sum(denominator),0) as c3
+from analytics.c3_team_monthly where is_current group by competency;
+
+create or replace view analytics.dashboard_c3_establishment_monthly
+with (security_invoker = true)
+as
+select competency, district_id, district_name, establishment_id, cnes, establishment_name,
+  sum(points_total) as points_total, sum(denominator) as denominator,
+  sum(points_total)/nullif(sum(denominator),0) as c3, count(*) as teams
+from analytics.dashboard_c3_team_monthly
+group by competency,district_id,district_name,establishment_id,cnes,establishment_name;
+
+create or replace view analytics.dashboard_c3_district_monthly
+with (security_invoker = true)
+as
+select competency, district_id, district_name,
+  sum(points_total) as points_total, sum(denominator) as denominator,
+  sum(points_total)/nullif(sum(denominator),0) as c3,
+  count(distinct establishment_id) as establishments, count(*) as teams
+from analytics.dashboard_c3_team_monthly group by competency,district_id,district_name;
+
+create or replace view analytics.dashboard_c3_practice_summary
+with (security_invoker = true)
+as
+select competency,district_id,district_name,establishment_id,cnes,establishment_name,
+  practice_code,sum(fulfilled) as fulfilled,sum(denominator) as denominator
+from analytics.dashboard_c3_practices
+group by competency,district_id,district_name,establishment_id,cnes,establishment_name,practice_code;
+
+grant select on analytics.dashboard_team_directory, analytics.dashboard_c3_team_monthly,
+  analytics.dashboard_c3_practices, analytics.dashboard_competencies,
+  analytics.dashboard_c3_establishment_monthly, analytics.dashboard_c3_district_monthly,
+  analytics.dashboard_c3_practice_summary to authenticated;

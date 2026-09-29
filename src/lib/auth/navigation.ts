@@ -1,7 +1,7 @@
 import { AccessDeniedError, type UserRole } from "./types";
 
 const ROLE_HOME: Record<UserRole, string> = {
-  admin: "/sistema/gestao",
+  admin: "/sistema/administracao",
   gestao: "/sistema/gestao",
   leitura: "/sistema/gestao",
 };

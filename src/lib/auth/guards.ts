@@ -104,13 +104,17 @@ export async function requireAdministrator(gateway?: ProfileGateway) {
   return requireRoleFromContext(await getActiveProfileContext(gateway), "admin");
 }
 
-export function requireManagementAccess(gateway?: ProfileGateway) {
-  return getActiveProfileContext(gateway);
+export async function requireDashboardViewer(gateway?: ProfileGateway) {
+  return requireAnyRoleFromContext(
+    await getActiveProfileContext(gateway),
+    ["gestao", "leitura"],
+  );
 }
 
 export async function requireDataManager(gateway?: ProfileGateway) {
-  return requireAnyRoleFromContext(
-    await getActiveProfileContext(gateway),
-    ["admin", "gestao"],
-  );
+  return requireRoleFromContext(await getActiveProfileContext(gateway), "gestao");
+}
+
+export async function requireTerritoryAdministrator(gateway?: ProfileGateway) {
+  return requireRoleFromContext(await getActiveProfileContext(gateway), "admin");
 }

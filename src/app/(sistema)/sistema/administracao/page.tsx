@@ -1,5 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 
+import { SubmitButton } from "@/components/forms/submit-button";
 import { requireAdministrator } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createPrivilegedClient } from "@/lib/supabase/privileged";
@@ -9,8 +10,9 @@ export const dynamic = "force-dynamic";
 
 type ProfileRow = { user_id: string; email: string; role: "admin" | "gestao" | "leitura"; active: boolean };
 
-export default async function AdministrationPage() {
+export default async function AdministrationPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   await enforceRouteGuard(() => requireAdministrator());
+  const params = await searchParams;
   let rows: Array<{ id: string; email: string; createdAt: string; profile: ProfileRow | null }> = [];
   let configurationError: string | null = null;
   try {
@@ -27,6 +29,8 @@ export default async function AdministrationPage() {
   }
 
   return <div className="space-y-6"><section className="hero-panel"><div><span className="eyebrow">Acesso restrito</span><h1>Administração</h1><p>Gerencie os papéis e o estado dos perfis autenticados com auditoria.</p></div><ShieldCheck className="size-16 text-cyan-300" /></section>
-    {configurationError ? <section className="panel border-amber-200! bg-amber-50! text-amber-900"><h2 className="font-bold">Configuração server-side necessária</h2><p className="mt-2 text-sm">{configurationError}</p><p className="mt-2 text-sm">Configure <code>SUPABASE_SECRET_KEY</code> apenas no ambiente do servidor. Nenhuma chave privilegiada é enviada ao navegador.</p></section> : <section className="panel"><div className="panel-heading"><span className="eyebrow">{rows.length} usuários autenticados</span><h2>Usuários e perfis</h2></div><div className="table-scroll"><table className="data-table"><thead><tr><th>E-mail</th><th>Cadastro</th><th>Papel</th><th>Ativo</th><th></th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><strong>{row.email}</strong>{!row.profile && <small className="block text-amber-700">Sem perfil provisionado</small>}</td><td>{new Date(row.createdAt).toLocaleDateString("pt-BR")}</td><td colSpan={3}><form action={manageProfileAction} className="flex flex-wrap items-center gap-3"><input type="hidden" name="userId" value={row.id}/><select className="field" name="role" defaultValue={row.profile?.role ?? "leitura"}><option value="admin">admin</option><option value="gestao">gestao</option><option value="leitura">leitura</option></select><label className="flex items-center gap-2 text-sm font-bold text-slate-700"><input name="active" type="checkbox" value="true" defaultChecked={row.profile?.active ?? false}/>Ativo</label><button className="primary-button" type="submit">Salvar</button></form></td></tr>)}</tbody></table></div></section>}
+    {params.status === "salvo" && <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900" role="status">Perfil atualizado e registrado na auditoria.</p>}
+    {params.status === "erro" && <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900" role="alert">Não foi possível atualizar o perfil.</p>}
+    {configurationError ? <section className="panel border-amber-200! bg-amber-50! text-amber-900"><h2 className="font-bold">Configuração server-side necessária</h2><p className="mt-2 text-sm">O serviço administrativo está indisponível.</p><p className="mt-2 text-sm">Configure <code>SUPABASE_SECRET_KEY</code> apenas no ambiente do servidor. Nenhuma chave privilegiada é enviada ao navegador.</p></section> : <section className="panel"><div className="panel-heading"><span className="eyebrow">{rows.length} usuários autenticados</span><h2>Usuários e perfis</h2></div><div className="table-scroll"><table className="data-table"><thead><tr><th>E-mail</th><th>Cadastro</th><th>Papel</th><th>Ativo</th><th></th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><strong>{row.email}</strong>{!row.profile && <small className="block text-amber-700">Sem perfil provisionado</small>}</td><td>{new Date(row.createdAt).toLocaleDateString("pt-BR")}</td><td colSpan={3}><form action={manageProfileAction} className="flex flex-wrap items-center gap-3"><input type="hidden" name="userId" value={row.id}/><select className="field" name="role" defaultValue={row.profile?.role ?? "leitura"}><option value="admin">admin</option><option value="gestao">gestao</option><option value="leitura">leitura</option></select><label className="flex items-center gap-2 text-sm font-bold text-slate-700"><input name="active" type="checkbox" value="true" defaultChecked={row.profile?.active ?? false}/>Ativo</label><SubmitButton label="Salvar"/></form></td></tr>)}</tbody></table></div></section>}
   </div>;
 }

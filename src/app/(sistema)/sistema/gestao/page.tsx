@@ -3,7 +3,7 @@ import type { EChartsOption } from "echarts";
 
 import { MaeChart } from "@/components/charts/mae-chart";
 import { aggregateC3, C3_COMPONENTS, classifyC3, districtLabel, type C3Fact } from "@/lib/analytics/c3";
-import { requireManagementAccess } from "@/lib/auth/guards";
+import { requireDashboardViewer } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createClient } from "@/lib/supabase/server";
 
@@ -44,7 +44,7 @@ function dashboardHref(params: Record<string, string | undefined>) {
 }
 
 export default async function ManagementDashboard({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  await enforceRouteGuard(() => requireManagementAccess());
+  await enforceRouteGuard(() => requireDashboardViewer());
   const params = await searchParams;
   const supabase = await createClient();
   const [facts, districtsResult, establishmentsResult, teamsResult] = await Promise.all([
@@ -118,8 +118,8 @@ export default async function ManagementDashboard({ searchParams }: { searchPara
   };
 
   return <div className="space-y-6">
-    <section className="hero-panel"><div><span className="eyebrow">Monitoramento C3</span><h1>Dashboard institucional</h1><p>Visão consolidada da Gestação e Puerpério com dados oficiais SIAPS.</p></div><div className="rounded-2xl bg-white/10 px-5 py-4 text-right"><span className="block text-xs text-white/70">Competência mais recente</span><strong className="text-xl">{competency ? monthLabel(`${competency}-01`) : "Sem dados"}</strong></div></section>
-    <form className="filter-bar" method="get">
+    <section className="hero-panel scroll-target" id="resumo"><div><span className="eyebrow">Monitoramento C3</span><h1>Dashboard institucional</h1><p>Visão consolidada da Gestação e Puerpério com dados oficiais SIAPS.</p></div><div className="rounded-2xl bg-white/10 px-5 py-4 text-right"><span className="block text-xs text-white/70">Competência mais recente</span><strong className="text-xl">{competency ? monthLabel(`${competency}-01`) : "Sem dados"}</strong></div></section>
+    <form className="filter-bar scroll-target" id="ubs-equipes" method="get">
       <label>Período<select name="competencia" defaultValue={competency}>{competencies.map((item) => <option key={item} value={item}>{monthLabel(`${item}-01`)}</option>)}</select></label>
       <label>Distrito<select name="distrito" defaultValue={district}><option value="all">Município inteiro</option><option value="unknown">Não informado</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label>UBS<select name="ubs" defaultValue={establishmentId}><option value="all">Todas as UBS</option>{establishments.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.cnes}</option>)}</select></label>
@@ -127,7 +127,7 @@ export default async function ManagementDashboard({ searchParams }: { searchPara
       <button className="primary-button" type="submit">Aplicar</button>
     </form>
     <nav className="breadcrumbs" aria-label="Drill-down territorial"><Link href={dashboardHref({ competencia: competency })}>Município</Link><span>›</span><span>{district === "all" ? "Todos os distritos" : district === "unknown" ? "Não informado" : districtNames.get(Number(district))}</span>{establishmentId !== "all" && <><span>›</span><span>{establishmentNames.get(establishmentId)}</span></>}{teamId !== "all" && <><span>›</span><span>{teamNames.get(teamId)}</span></>}</nav>
-    <section className="metric-grid">
+    <section className="metric-grid scroll-target" id="indicadores">
       <article className="metric-card accent-blue"><span>C3 consolidado</span><strong>{formatC3(summary.c3)}</strong><small>razão das somas</small></article>
       <article className="metric-card accent-aqua"><span>Classificação</span><strong className="text-2xl">{classifyC3(summary.c3)}</strong><small>faixa oficial</small></article>
       <article className="metric-card accent-orange"><span>Denominador</span><strong>{summary.denominator.toLocaleString("pt-BR")}</strong><small>população elegível</small></article>
@@ -136,7 +136,7 @@ export default async function ManagementDashboard({ searchParams }: { searchPara
     <section className="chart-grid">
       <article className="panel lg:col-span-2"><div className="panel-heading"><div><span className="eyebrow">Série histórica</span><h2>Evolução mensal do C3</h2></div></div><MaeChart option={evolutionOption} ariaLabel="Evolução mensal do C3" /></article>
       <article className="panel"><div className="panel-heading"><div><span className="eyebrow">Práticas</span><h2>Componentes A–K</h2></div></div><MaeChart option={componentsOption} ariaLabel="Contagens dos componentes A a K" componentDescriptions={C3_COMPONENTS} /></article>
-      <article className="panel lg:col-span-3"><div className="panel-heading"><div><span className="eyebrow">Comparação</span><h2>Distribuição territorial</h2><p>Clique nas barras para aprofundar quando houver outro nível territorial.</p></div></div>{comparison.length ? <MaeChart option={comparisonOption} ariaLabel="Comparação do C3 entre recortes territoriais" drilldown={drilldown} /> : <p className="empty-state">Não há dados para o recorte selecionado.</p>}</article>
+      <article className="panel scroll-target lg:col-span-3" id="comparativos"><div className="panel-heading"><div><span className="eyebrow">Comparação</span><h2>Distribuição territorial</h2><p>Clique nas barras para aprofundar quando houver outro nível territorial.</p></div></div>{comparison.length ? <MaeChart option={comparisonOption} ariaLabel="Comparação do C3 entre recortes territoriais" drilldown={drilldown} /> : <p className="empty-state">Não há dados para o recorte selecionado.</p>}</article>
     </section>
   </div>;
 }

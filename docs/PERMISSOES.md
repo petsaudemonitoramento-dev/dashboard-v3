@@ -2,9 +2,9 @@
 
 | Operação | admin | gestao | leitura |
 | --- | :---: | :---: | :---: |
-| Dashboard, território e piloto (leitura) | ✓ | ✓ | ✓ |
-| Importar SIAPS | ✓ | ✓ | — |
-| Alterar território | ✓ | ✓ | — |
+| Dashboard | — | ✓ | ✓ |
+| Importar SIAPS | — | ✓ | — |
+| Território e identidade da UBS | ✓ | — | — |
 | Gerenciar perfis | ✓ | — | — |
 
 Usuário autenticado sem linha ativa em `app.profiles` permanece bloqueado. Guards server-side usam `auth.getUser()` e consultam apenas o perfil próprio. RLS permanece ativa; `TO authenticated` nunca é a única condição de autorização de dados ou mutações. As RPCs privilegiadas verificam `auth.uid()`, perfil ativo e papel, têm `search_path` fixo e registram `audit.events`.

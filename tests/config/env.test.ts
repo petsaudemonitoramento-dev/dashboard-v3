@@ -42,6 +42,11 @@ describe("validação de ambiente", () => {
     ).toThrow();
   });
 
+  it("rejeita URL canônica com caminho, query ou credenciais", () => {
+    expect(() => parsePublicEnv({ ...BASE, NEXT_PUBLIC_APP_URL: "https://painel.instituicao.br/app" })).toThrow();
+    expect(() => parsePublicEnv({ ...BASE, NEXT_PUBLIC_APP_URL: "https://usuario@painel.instituicao.br" })).toThrow();
+  });
+
   it.each([
     "http://localhost:3000",
     "http://127.0.0.1:3000",

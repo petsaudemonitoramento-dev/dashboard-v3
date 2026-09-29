@@ -14,7 +14,7 @@ Aplicação web TypeScript com Next.js 16/React 19, Supabase Auth SSR, PostgreSQ
 - dashboard C3 com razão das somas, filtros, A–K, série histórica e drill-down;
 - parser, validação, SHA-256, publicação e histórico de importações SIAPS;
 - manutenção do território com histórico e auditoria;
-- análise da coorte externa `piloto_2026_c3` sem limitar a base municipal;
+- camada analítica estável para integração futura e read-only com Metabase;
 - administração auditada de usuários/perfis.
 
 Fonte de dados: relatórios oficiais SIAPS fornecidos à Gestão municipal. Dados agregados por equipe e competência.

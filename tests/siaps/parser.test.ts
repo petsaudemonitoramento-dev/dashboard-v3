@@ -20,14 +20,14 @@ describe("parser SIAPS C3", () => {
     expect(result.rows[0]).toMatchObject({ cnes: "0000001", ine: "0000000001", denominator: 3, pointsTotal: 110 });
   });
 
-  it("não limita a ingestão às 14 equipes do piloto", () => {
+  it("não limita a ingestão a uma lista fixa de equipes", () => {
     expect(parseSiapsWorkbook(workbook(15)).rows).toHaveLength(15);
   });
 
-  it("trata A–K como contagens e preserva pontos oficiais divergentes", () => {
+  it("trata A–K como contagens e recalcula pontos divergentes", () => {
     const result = parseSiapsWorkbook(workbook(1, 999));
     expect(result.rows[0].components.A).toBe(2);
-    expect(result.rows[0].pointsTotal).toBe(999);
+    expect(result.rows[0].pointsTotal).toBe(110);
     expect(result.warnings[0]).toContain("divergem");
   });
 });

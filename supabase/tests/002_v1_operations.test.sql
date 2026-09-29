@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(35);
+select plan(36);
 
 select has_function('public', 'update_establishment_territory', array['uuid','smallint','date'], 'territory RPC exists');
 select has_function('public', 'manage_profile', array['uuid','app.user_role','boolean'], 'profile RPC exists');
@@ -46,14 +46,19 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000004',true);
 select throws_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$$,
-  '42501', 'Perfil sem permissão para alterar território', 'inactive user cannot change territory'
+  '42501', 'Apenas administradores ativos podem alterar território', 'inactive user cannot change territory'
 );
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000002',true);
 select throws_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$$,
-  '42501', 'Perfil sem permissão para alterar território', 'leitura cannot change territory'
+  '42501', 'Apenas administradores ativos podem alterar território', 'leitura cannot change territory'
 );
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
+select throws_ok(
+  $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$$,
+  '42501', 'Apenas administradores ativos podem alterar território', 'gestao cannot change territory'
+);
+select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000003',true);
 select throws_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,null::date)$$,
   'P0001', 'Data inicial de validade obrigatória', 'null validity date is rejected'
@@ -68,17 +73,15 @@ select throws_ok(
 );
 select lives_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-01-01'::date)$$,
-  'gestao can create territory period'
+  'admin can create territory period'
 );
-select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000003',true);
 select lives_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,11::smallint,'2026-04-01'::date)$$,
   'admin can change territory with a new period'
 );
-select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
 select lives_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,null::smallint,'2026-07-01'::date)$$,
-  'gestao can end a territory assignment as unknown'
+  'admin can end a territory assignment as unknown'
 );
 reset role;
 
@@ -94,7 +97,7 @@ select is((
 select is((select count(*) from audit.events where event_type='territory_assignment_changed'), 3::bigint, 'territory changes are audited');
 
 set local role authenticated;
-select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
+select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000003',true);
 select throws_ok(
   $$select public.update_establishment_territory('30000000-0000-0000-0000-000000000001'::uuid,10::smallint,'2026-05-01'::date)$$,
   'P0001', 'A nova vigência não pode sobrepor período territorial existente', 'past assignment cannot overlap preserved history'

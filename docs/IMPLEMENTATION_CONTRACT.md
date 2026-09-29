@@ -12,14 +12,14 @@ O projeto Supabase V3 `nyexakdyxtstcyycmlng` e seus dados publicados são a refe
 - `core`: distritos, estabelecimentos por CNES, equipes por INE e históricos de vínculo.
 - `siaps`: importações, linhas normalizadas, metadados e proveniência.
 - `analytics`: C3 mensal por equipe e componentes A–K.
-- `study`: coortes analíticas e membros. O piloto 2026 é apenas uma coorte.
+- `study`: dados históricos não expostos como módulo da aplicação.
 - `audit`: eventos privilegiados, sem acesso direto de usuários comuns.
 
 Não criar `core.profiles`, `professional`, `analytics_gestao` ou o antigo schema `security`. Não embutir os 14 INEs do piloto em componente, API, importador ou cálculo. Toda equipe importada deve permanecer elegível a análise municipal.
 
 ## Acesso
 
-Login, Google OAuth e recuperação de senha usam Supabase Auth e `@supabase/ssr`. Guards server-side chamam `auth.getUser()` e só autorizam perfil próprio em `app.profiles` com `active=true`. `admin` acessa a área administrativa; `gestao` e `leitura` acessam a área de Gestão. A autenticação pública não autoatribui papel nem ativa perfil. As mutações de território e perfil revalidam sessão, perfil ativo e papel no banco e registram auditoria. A importação usa rota server-side autorizada e cliente privilegiado exclusivo do servidor. Nenhum segredo chega ao navegador.
+Login, Google OAuth e recuperação de senha usam Supabase Auth e `@supabase/ssr`. Guards server-side chamam `auth.getUser()` e só autorizam perfil próprio em `app.profiles` com `active=true`. `admin` acessa Território e Administração; `gestao` acessa Dashboard e Importação; `leitura` acessa apenas o Dashboard. A autenticação pública não autoatribui papel nem ativa perfil. As mutações de território e perfil revalidam sessão, perfil ativo e papel no banco e registram auditoria. A importação usa rota server-side autorizada, validação duplicada e cliente privilegiado exclusivo do servidor. Nenhum segredo chega ao navegador.
 
 `NEXT_PUBLIC_APP_URL` é obrigatória como origem canônica dos links de autenticação: HTTPS fora de loopback, sem inferência de `Host` ou `X-Forwarded-Host`. `.env.local` nunca é versionado.
 
@@ -29,15 +29,8 @@ Vínculo distrito → UBS não confirmado permanece ausente. A UBS/equipe segue 
 
 `pontos_total = 10*A + 9*(B+C+D+E+F+G+H+I+J+K)`. C3 de uma agregação é `SUM(pontos_total) / SUM(denominador)`, nunca média dos percentuais das equipes.
 
-| Competência | Equipes | Denominador | C3 |
-| --- | ---: | ---: | ---: |
-| JAN/26 | 203 | 2.595 | 36,33 |
-| FEV/26 | 203 | 2.540 | 36,24 |
-| MAR/26 | 187 | 2.492 | 37,23 |
-| ABR/26 | 153 | 2.423 | 37,51 |
-| MAI/26 | 157 | 2.467 | 37,49 |
-| JUN/26 | 156 | 2.443 | 36,83 |
+O repositório não fixa totais municipais, número de UBS ou equipes. Todos os valores exibidos são derivados dos dados publicados para a competência e os filtros selecionados.
 
 ## Validação
 
-Executar `npm run build`, `npm run lint`, `npm test`, `supabase db reset` local e testes SQL/RLS. Nunca usar `supabase db reset --linked` no V3. Sem Docker ou outra dependência local, registrar essa validação como pendente sem compensá-la com alterações remotas.
+Executar `npm run build`, `npm run lint` e `npm test` localmente. O reset local e os testes SQL/RLS rodam exclusivamente no GitHub Actions. Nunca usar `supabase db reset --linked` no V3 e nunca compensar uma validação pendente com alterações remotas.

@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { destinationForAccessError } from "@/lib/auth/navigation";
+import { destinationForAccessError, homeForRole } from "@/lib/auth/navigation";
 import { isReauthenticationRequired } from "@/lib/auth/supabase-errors";
 import { AccessDeniedError } from "@/lib/auth/types";
 
 describe("destino de negativa de acesso (B1)", () => {
+  it("encaminha cada perfil somente à sua área", () => {
+    expect(homeForRole("admin")).toBe("/sistema/administracao");
+    expect(homeForRole("gestao")).toBe("/sistema/gestao");
+    expect(homeForRole("leitura")).toBe("/sistema/gestao");
+  });
   it("mapeia os motivos conhecidos", () => {
     expect(destinationForAccessError(new AccessDeniedError("UNAUTHENTICATED", "x"))).toBe(
       "/entrar",

@@ -3,13 +3,14 @@ import { dirname, resolve } from "node:path";
 
 const files = [
   "src/lib/siaps/parser.ts",
+  "src/lib/siaps/compact.ts",
   "src/lib/analytics/c3.ts",
   "src/lib/auth/guards.ts",
   "src/lib/http/import-errors.ts",
   "src/app/api/importacoes/route.ts",
   "src/app/(sistema)/sistema/gestao/page.tsx",
-  "src/app/(sistema)/sistema/piloto/page.tsx",
   "supabase/migrations/20260923002658_mae_aps_v1_operations.sql",
+  "supabase/migrations/20260929004905_production_audit_hardening.sql",
 ];
 const output = resolve("docs/registro/trechos-codigo-v1.txt");
 const sections = [];

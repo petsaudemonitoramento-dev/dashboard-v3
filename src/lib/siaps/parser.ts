@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 import { pointsFromComponents, type C3Components } from "@/lib/analytics/c3";
 
 export const SIAPS_PARSER_VERSION = "mae-aps-c3/1.0.0";
+export const MAX_SIAPS_FILE_BYTES = 10 * 1024 * 1024;
 export const COMPONENT_CODES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"] as const;
 
 export type SiapsC3Row = {
@@ -66,7 +67,13 @@ function detectCompetency(matrix: unknown[][], filename: string): string | null 
 }
 
 export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx"): SiapsParseResult {
-  const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+  const workbook = XLSX.read(buffer, {
+    type: "array", cellDates: true, cellFormula: false, bookDeps: false,
+    bookFiles: false, bookVBA: false, sheetRows: 10_050,
+  });
+  if (!workbook.SheetNames.length) {
+    return { competency: null, rows: [], errors: ["A planilha não contém abas legíveis."], warnings: [], headerRow: null };
+  }
   const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(firstSheet, { header: 1, defval: "", raw: false });
   const errors: string[] = [];
@@ -120,8 +127,13 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
       return;
     }
     const components = componentValues as C3Components;
-    if (pointsFromComponents(components) !== pointsTotal) {
-      warnings.push(`Linha ${fileRow}: pontos informados divergem do cálculo 10×A + 9×(B–K); o valor oficial da planilha será preservado.`);
+    if (Object.values(components).some((value) => value > (denominator as number))) {
+      errors.push(`Linha ${fileRow}: A–K não podem superar o denominador.`);
+      return;
+    }
+    const calculatedPoints = pointsFromComponents(components);
+    if (calculatedPoints !== pointsTotal) {
+      warnings.push(`Linha ${fileRow}: pontos informados divergem de 10×A + 9×(B–K); a pontuação calculada será usada.`);
     }
     rows.push({
       fileRow,
@@ -132,7 +144,7 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
       teamName: indexes.team >= 0 ? String(source[indexes.team] ?? "").trim() : "",
       teamType: indexes.teamType >= 0 ? String(source[indexes.teamType] ?? "").trim() : "",
       components,
-      pointsTotal: pointsTotal as number,
+      pointsTotal: calculatedPoints,
       denominator: denominator as number,
       officialRatio: indexes.ratio >= 0 ? numberValue(source[indexes.ratio]) : null,
     });
