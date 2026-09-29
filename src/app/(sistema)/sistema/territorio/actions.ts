@@ -24,16 +24,25 @@ const identitySchema = z.object({
 
 export async function updateTerritoryAction(formData: FormData) {
   await requireTerritoryAdministrator();
-  const input = territorySchema.parse(Object.fromEntries(formData));
+  const parsed = territorySchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect("/sistema/territorio?erro=territorio");
+  }
+
   const supabase = await createClient();
   const result = await supabase.rpc("update_establishment_territory", {
-    p_establishment_id: input.establishmentId,
-    p_district_id: input.districtId ? Number(input.districtId) : null,
-    p_valid_from: input.validFrom,
+    p_establishment_id: parsed.data.establishmentId,
+    p_district_id: parsed.data.districtId ? Number(parsed.data.districtId) : null,
+    p_valid_from: parsed.data.validFrom,
   });
-  if (result.error) throw new Error(result.error.message);
+
+  if (result.error) {
+    redirect("/sistema/territorio?erro=territorio");
+  }
+
   revalidatePath("/sistema/territorio");
   revalidatePath("/sistema/gestao");
+  redirect("/sistema/territorio?salvo=territorio");
 }
 
 export async function updateEstablishmentIdentityAction(formData: FormData) {
@@ -56,7 +65,9 @@ export async function updateEstablishmentIdentityAction(formData: FormData) {
   });
 
   if (result.error) {
-    redirect(`/sistema/territorio?cadastro=${encodeURIComponent(input.establishmentId)}&${input.returnQuery}&erro=${encodeURIComponent(result.error.message)}`);
+    redirect(
+      `/sistema/territorio?cadastro=${encodeURIComponent(input.establishmentId)}&${input.returnQuery}&erro=${encodeURIComponent("Não foi possível ajustar o cadastro. Revise os dados e tente novamente.")}`,
+    );
   }
 
   revalidatePath("/sistema/territorio");
