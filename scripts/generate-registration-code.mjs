@@ -4,7 +4,6 @@ import { dirname, resolve } from "node:path";
 const files = [
   "src/lib/siaps/parser.ts",
   "src/lib/siaps/compact.ts",
-  "src/lib/siaps/compact.ts",
   "src/lib/analytics/c3.ts",
   "src/lib/auth/guards.ts",
   "src/lib/http/import-errors.ts",
