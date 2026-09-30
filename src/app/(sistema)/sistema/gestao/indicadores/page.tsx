@@ -127,6 +127,17 @@ export default async function IndicatorsPage() {
       data: practiceRows.map((row) => row.rate ?? 0),
     }],
   };
+  const c3AccessibleData = monthly.map((row) => ({
+    id: row.competency,
+    label: monthLabel(row.competency),
+    value: formatC3(row.c3),
+  }));
+  const practicesAccessibleData = practiceRows.map((row) => ({
+    id: row.code,
+    label: `${row.code} · ${row.label}`,
+    value: formatPercent(row.rate),
+    description: row.description,
+  }));
 
   return (
     <div className="management-module">
@@ -151,14 +162,14 @@ export default async function IndicatorsPage() {
           <div className="dashboard-card-heading">
             <div><span>Evolução</span><h2>C3 por competência</h2><p>Acompanhamento temporal do resultado consolidado.</p></div>
           </div>
-          <MaeChart option={c3Option} ariaLabel="Evolução do C3 por competência" height={320} />
+          <MaeChart accessibleData={c3AccessibleData} option={c3Option} ariaLabel="Evolução do C3 por competência" height={320} />
         </article>
 
         <article className="dashboard-card">
           <div className="dashboard-card-heading">
             <div><span>Práticas</span><h2>Cobertura geral A–K</h2><p>Percentual de cumprimento de cada componente no período disponível.</p></div>
           </div>
-          <MaeChart option={practicesOption} ariaLabel="Cobertura das práticas A a K" height={320} />
+          <MaeChart accessibleData={practicesAccessibleData} option={practicesOption} ariaLabel="Cobertura das práticas A a K" height={320} />
         </article>
       </section>
 
@@ -166,17 +177,18 @@ export default async function IndicatorsPage() {
         <div className="dashboard-card-heading">
           <div><span>Detalhamento</span><h2>Práticas que compõem o C3</h2><p>Valores calculados pela razão entre cumprimentos e denominadores agregados.</p></div>
         </div>
-        <div className="table-scroll">
+        <div aria-label="Detalhamento das práticas do C3" className="table-scroll" role="region" tabIndex={0}>
           <table className="data-table module-data-table">
+            <caption className="sr-only">Práticas, descrições, cumprimentos, denominadores e coberturas do C3</caption>
             <thead>
               <tr>
-                <th>Prática</th><th>Descrição</th><th>Cumprimentos</th><th>Denominador</th><th>Cobertura</th>
+                <th scope="col">Prática</th><th scope="col">Descrição</th><th scope="col">Cumprimentos</th><th scope="col">Denominador</th><th scope="col">Cobertura</th>
               </tr>
             </thead>
             <tbody>
               {practiceRows.map((row) => (
                 <tr key={row.code}>
-                  <td><strong>{row.code}</strong><br/><small>{row.label}</small></td>
+                  <th scope="row"><strong>{row.code}</strong><br/><small>{row.label}</small></th>
                   <td>{row.description}</td>
                   <td>{formatInteger(row.fulfilled)}</td>
                   <td>{formatInteger(row.denominator)}</td>

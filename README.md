@@ -12,7 +12,13 @@ O Supabase oficial é o projeto `dashboard-v3` (`nyexakdyxtstcyycmlng`). O remot
 4. Valide com `npm test`, `npm run typecheck`, `npm run lint` e `npm run build`.
 5. Execute reconstrução do Supabase e testes SQL/RLS pelo GitHub Actions quando a máquina local estiver com armazenamento restrito.
 
-O workflow manual **MAE APS - Validacao V1** (`.github/workflows/validate-v1.yml`) reproduz esses checks no GitHub Actions, incluindo reconstrução completa do Supabase local e testes SQL/RLS, sem acessar o projeto remoto.
+O workflow **MAE APS - Validacao V1** (`.github/workflows/validate-v1.yml`) roda automaticamente em pull requests e pushes para `main`, além de aceitar execução manual. Ele reproduz esses checks no GitHub Actions, incluindo reconstrução completa do Supabase local e testes SQL/RLS, sem acessar o projeto remoto.
+
+## CI e produção
+
+O fluxo de entrega é: branch de feature/integração → pull request para `main` → check obrigatório **Validar aplicacao, migrations e RLS** → merge → produção. A proteção da branch no GitHub deve impedir o merge enquanto esse check não estiver verde.
+
+Na Vercel, o mesmo check deve ser configurado como Deployment Check obrigatório do ambiente Production. O build da Vercel pode ocorrer em paralelo ao GitHub Actions, mas o deployment não deve receber o domínio de produção enquanto o check estiver pendente ou vermelho. Essa integração usa o vínculo GitHub já existente e não exige novas credenciais no repositório. Consulte [docs/DEPLOY.md](docs/DEPLOY.md) para a configuração manual.
 
 O navegador recebe apenas `NEXT_PUBLIC_SUPABASE_URL`, a chave publicável e a URL canônica do app. `SUPABASE_SECRET_KEY` é exclusiva do servidor e necessária para ingestão e consulta administrativa de `auth.users`.
 
@@ -30,7 +36,7 @@ O Metabase está arquitetonicamente preparado como camada analítica complementa
 
 Após CI verde e congelamento da versão, execute `npm run registro:codigo`, crie a tag da release e somente então rode `npm run registro:hash -- --tag <tag>`. Pendências administrativas permanecem em `docs/registro/PENDENCIAS_NITT.md`.
 
-Documentos operacionais: [deploy](docs/DEPLOY.md), [importação](docs/IMPORTACAO_SIAPS.md), [permissões](docs/PERMISSOES.md), [Metabase](docs/METABASE.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
+Documentos operacionais: [deploy](docs/DEPLOY.md), [autenticação](docs/AUTENTICACAO.md), [importação](docs/IMPORTACAO_SIAPS.md), [acessibilidade](docs/ACESSIBILIDADE.md), [auditoria](docs/AUDITORIA.md), [segurança HTTP](docs/SEGURANCA_HTTP.md), [teste de carga](docs/TESTE_DE_CARGA.md), [permissões](docs/PERMISSOES.md), [Metabase](docs/METABASE.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
 
 Domínio oficial: https://maeaps.vercel.app
 

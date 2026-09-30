@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 import { requireDataManager } from "@/lib/auth/guards";
 import { importErrorResponse } from "@/lib/http/import-errors";
+import { readJsonRequestBody } from "@/lib/http/request-body";
 import { compactRowsSchema, validateCompactSiapsRows } from "@/lib/siaps/compact";
 import { createPrivilegedClient } from "@/lib/supabase/privileged";
 import { createClient } from "@/lib/supabase/server";
@@ -17,16 +19,10 @@ const payloadSchema = z.object({
   rows: compactRowsSchema.optional().default([]),
 });
 
-const MAX_REQUEST_BYTES = 8 * 1024 * 1024;
-
 export async function POST(request: Request) {
   try {
     const context = await requireDataManager();
-    const contentLength = Number(request.headers.get("content-length") ?? "0");
-    if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
-      return NextResponse.json({ error: "A requisição excede o limite permitido." }, { status: 413 });
-    }
-    const payload = payloadSchema.parse(await request.json());
+    const payload = payloadSchema.parse(await readJsonRequestBody(request));
     const userClient = await createClient();
     const duplicate = await userClient.schema("siaps").from("imports")
       .select("id, filename, competency, status, rows_total, uploaded_at")
@@ -58,7 +54,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ importId, status: "publicado", rows: payload.rows.length });
   } catch (error) {
     const response = importErrorResponse(error);
-    if (response.status === 500) console.error("Falha interna na importação SIAPS.");
+    if (response.status === 500) {
+      console.error(JSON.stringify({
+        area: "siaps_import",
+        level: "error",
+        message: "Falha interna na importação SIAPS.",
+      }));
+      Sentry.captureException(error, { tags: { area: "siaps_import" } });
+    }
     return NextResponse.json({ error: response.message }, { status: response.status });
   }
 }

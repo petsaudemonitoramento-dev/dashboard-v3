@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { administrationActionHref } from "@/lib/administration/pagination";
 import { requireAdministrator } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,29 +15,23 @@ const schema = z.object({
 
 export async function manageProfileAction(formData: FormData) {
   await requireAdministrator();
-
+  const page = formData.get("page");
   const parsed = schema.safeParse({
     userId: formData.get("userId"),
     role: formData.get("role"),
   });
   if (!parsed.success) {
-    redirect("/sistema/administracao?erro=1");
+    redirect(administrationActionHref(page, "erro"));
   }
 
-  const active = formData.get("active") === "true";
   const supabase = await createClient();
   const result = await supabase.rpc("manage_profile", {
     p_user_id: parsed.data.userId,
     p_role: parsed.data.role,
-    p_active: active,
+    p_active: formData.get("active") === "true",
   });
-
-  if (result.error) {
-    redirect("/sistema/administracao?erro=1");
+  if (!result.error) {
+    revalidatePath("/sistema/administracao");
   }
-
-  revalidatePath("/sistema/administracao");
-  redirect(
-    `/sistema/administracao?salvo=${encodeURIComponent(parsed.data.userId)}&papel=${encodeURIComponent(parsed.data.role)}&ativo=${active ? "1" : "0"}`,
-  );
+  redirect(administrationActionHref(page, result.error ? "erro" : "salvo"));
 }

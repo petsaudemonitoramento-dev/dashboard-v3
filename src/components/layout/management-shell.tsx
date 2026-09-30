@@ -36,6 +36,7 @@ export function ManagementShell({ children, email, role }: Props) {
 
   return (
     <div className="management-shell">
+      <a className="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
       <header className="management-topbar">
         <Link href="/sistema/gestao" className="management-brand">
           <span className="management-brand-mark">MAE</span>
@@ -116,7 +117,7 @@ export function ManagementShell({ children, email, role }: Props) {
         </div>
       </aside>
 
-      <main className="management-main">{children}</main>
+      <main className="management-main" id="conteudo-principal" tabIndex={-1}>{children}</main>
       <footer className="management-footer">
         <strong>PET SAÚDE UFCG</strong>
         <span>Desenvolvimento: Lucca Araújo</span>

@@ -9,6 +9,7 @@ import {
   ratioOfSums,
   type TeamMonthlyRow,
 } from "@/lib/analytics/management-pages";
+import { managementDashboardHref } from "@/lib/analytics/dashboard-filters";
 import { requireDashboardAccess } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createClient } from "@/lib/supabase/server";
@@ -20,6 +21,7 @@ type Aggregate = {
   name: string;
   code: string;
   district: string;
+  districtId: number | null;
   rows: TeamMonthlyRow[];
   teamIds: Set<string>;
 };
@@ -42,6 +44,11 @@ export default async function EstablishmentsTeamsPage({
   const params = await searchParams;
   const supabase = await createClient();
   const facts = await fetchTeamMonthly(supabase);
+  const competencies = [...new Set(facts.map((row) => row.competency.slice(0, 7)))].sort();
+  const dashboardPeriod = {
+    start: competencies.at(0) ?? "",
+    end: competencies.at(-1) ?? "",
+  };
 
   const districts = [...new Set(facts.map((row) => row.district_name ?? "Não informado"))]
     .sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -56,6 +63,7 @@ export default async function EstablishmentsTeamsPage({
       name: row.establishment_name,
       code: row.cnes,
       district: row.district_name ?? "Não informado",
+      districtId: row.district_id,
       rows: [],
       teamIds: new Set<string>(),
     };
@@ -89,6 +97,7 @@ export default async function EstablishmentsTeamsPage({
       name: row.team_name || "Equipe sem nome",
       code: row.ine,
       district: row.district_name ?? "Não informado",
+      districtId: row.district_id,
       rows: [],
       teamIds: new Set<string>(),
     };
@@ -174,19 +183,27 @@ export default async function EstablishmentsTeamsPage({
         <div className="dashboard-card-heading">
           <div><span>Unidades</span><h2>Desempenho consolidado por UBS</h2><p>Ordenado do menor para o maior C3 para facilitar a identificação de unidades que merecem aprofundamento.</p></div>
         </div>
-        <div className="table-scroll">
+        <div aria-label="Desempenho consolidado por UBS" className="table-scroll" role="region" tabIndex={0}>
           <table className="data-table module-data-table">
-            <thead><tr><th>UBS</th><th>Distrito</th><th>Equipes</th><th>Denominador</th><th>C3</th><th>Classificação</th><th></th></tr></thead>
+            <caption className="sr-only">UBS, distrito, equipes, denominador, C3, classificação e ação</caption>
+            <thead><tr><th scope="col">UBS</th><th scope="col">Distrito</th><th scope="col">Equipes</th><th scope="col">Denominador</th><th scope="col">C3</th><th scope="col">Classificação</th><th scope="col">Ação</th></tr></thead>
             <tbody>
               {establishments.map((item) => (
                 <tr key={item.id}>
-                  <td><strong>{item.name}</strong><br/><small>CNES {item.code}</small></td>
+                  <th scope="row"><strong>{item.name}</strong><br/><small>CNES {item.code}</small></th>
                   <td>{item.district}</td>
                   <td>{item.teamIds.size}</td>
                   <td>{formatInteger(item.denominator)}</td>
                   <td><strong>{formatC3(item.c3)}</strong></td>
                   <td><span className="module-classification">{item.classification}</span></td>
-                  <td><Link className="module-detail-link" href={`/sistema/gestao?ubs=${item.id}`}>Abrir análise</Link></td>
+                  <td><Link className="module-detail-link" href={managementDashboardHref({
+                    ...dashboardPeriod,
+                    district: item.districtId === null ? "unknown" : String(item.districtId),
+                    establishmentId: item.id,
+                    teamId: "all",
+                    classification: "all",
+                    query: "",
+                  })}>Abrir análise</Link></td>
                 </tr>
               ))}
             </tbody>
@@ -198,19 +215,27 @@ export default async function EstablishmentsTeamsPage({
         <div className="dashboard-card-heading">
           <div><span>Equipes</span><h2>Desempenho consolidado por equipe</h2><p>Detalhamento por INE com vínculo à UBS de referência.</p></div>
         </div>
-        <div className="table-scroll">
+        <div aria-label="Desempenho consolidado por equipe" className="table-scroll" role="region" tabIndex={0}>
           <table className="data-table module-data-table">
-            <thead><tr><th>Equipe</th><th>UBS</th><th>Distrito</th><th>Denominador</th><th>C3</th><th>Classificação</th><th></th></tr></thead>
+            <caption className="sr-only">Equipes, UBS, distrito, denominador, C3, classificação e ação</caption>
+            <thead><tr><th scope="col">Equipe</th><th scope="col">UBS</th><th scope="col">Distrito</th><th scope="col">Denominador</th><th scope="col">C3</th><th scope="col">Classificação</th><th scope="col">Ação</th></tr></thead>
             <tbody>
               {teams.map((item) => (
                 <tr key={item.id}>
-                  <td><strong>{item.name}</strong><br/><small>INE {item.code}</small></td>
+                  <th scope="row"><strong>{item.name}</strong><br/><small>INE {item.code}</small></th>
                   <td>{item.establishment?.name ?? "Não informado"}<br/><small>{item.establishment?.cnes ? `CNES ${item.establishment.cnes}` : ""}</small></td>
                   <td>{item.district}</td>
                   <td>{formatInteger(item.denominator)}</td>
                   <td><strong>{formatC3(item.c3)}</strong></td>
                   <td><span className="module-classification">{item.classification}</span></td>
-                  <td><Link className="module-detail-link" href={`/sistema/gestao?equipe=${item.id}`}>Abrir análise</Link></td>
+                  <td><Link className="module-detail-link" href={managementDashboardHref({
+                    ...dashboardPeriod,
+                    district: item.districtId === null ? "unknown" : String(item.districtId),
+                    establishmentId: item.establishment?.id ?? "all",
+                    teamId: item.id,
+                    classification: "all",
+                    query: "",
+                  })}>Abrir análise</Link></td>
                 </tr>
               ))}
             </tbody>

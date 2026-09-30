@@ -118,6 +118,22 @@ export default async function ComparisonsPage({
       },
     ],
   };
+  const comparisonAccessibleData = months.flatMap((month) => {
+    const rowA = selectedA?.rows.find((item) => item.competency === month);
+    const rowB = selectedB?.rows.find((item) => item.competency === month);
+    return [
+      {
+        id: `${month}-a`,
+        label: `${monthLabel(month)} · ${selectedA?.name ?? "UBS A"}`,
+        value: formatC3(rowA?.c3 === null || rowA?.c3 === undefined ? null : Number(rowA.c3)),
+      },
+      {
+        id: `${month}-b`,
+        label: `${monthLabel(month)} · ${selectedB?.name ?? "UBS B"}`,
+        value: formatC3(rowB?.c3 === null || rowB?.c3 === undefined ? null : Number(rowB.c3)),
+      },
+    ];
+  });
 
   const districtGroups = new Map<string, typeof districtRows>();
   for (const row of districtRows) {
@@ -169,7 +185,7 @@ export default async function ComparisonsPage({
           <div className="dashboard-card-heading">
             <div><span>Evolução</span><h2>C3 das unidades selecionadas</h2></div>
           </div>
-          <MaeChart option={comparisonOption} ariaLabel="Comparação temporal do C3 entre duas UBS" height={340} />
+          <MaeChart accessibleData={comparisonAccessibleData} option={comparisonOption} ariaLabel="Comparação temporal do C3 entre duas UBS" height={340} />
         </article>
 
         <article className="dashboard-card module-comparison-summary">
@@ -196,13 +212,14 @@ export default async function ComparisonsPage({
           <div><span>Distritos</span><h2>Comparação consolidada por distrito</h2><p>Unidades sem vínculo territorial confirmado permanecem em “Não informado”.</p></div>
           <MapPinned className="size-5 text-blue-600" />
         </div>
-        <div className="table-scroll">
+        <div aria-label="Comparação consolidada por distrito" className="table-scroll" role="region" tabIndex={0}>
           <table className="data-table module-data-table">
-            <thead><tr><th>Distrito</th><th>Denominador</th><th>C3</th><th>Classificação</th></tr></thead>
+            <caption className="sr-only">Denominador, C3 e classificação consolidados por distrito</caption>
+            <thead><tr><th scope="col">Distrito</th><th scope="col">Denominador</th><th scope="col">C3</th><th scope="col">Classificação</th></tr></thead>
             <tbody>
               {districts.map((item) => (
                 <tr key={item.name}>
-                  <td><strong>{item.name}</strong></td>
+                  <th scope="row"><strong>{item.name}</strong></th>
                   <td>{formatInteger(item.summary.denominator)}</td>
                   <td><strong>{formatC3(item.summary.c3)}</strong></td>
                   <td>{classifyC3(item.summary.c3)}</td>

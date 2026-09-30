@@ -1,0 +1,3 @@
+-- O rebuild local espera este arquivo porque `supabase/config.toml` habilita o
+-- seed. Ele permanece deliberadamente sem dados de domínio: os fixtures E2E
+-- são criados pelo setup do Playwright, somente após a trava de loopback.

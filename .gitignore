@@ -5,6 +5,8 @@ node_modules/
 .next/
 .supabase-test/
 coverage/
+playwright-report/
+test-results/
 *.tsbuildinfo
 supabase/.branches/
 supabase/.temp/

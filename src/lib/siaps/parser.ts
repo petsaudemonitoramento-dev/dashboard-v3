@@ -1,10 +1,13 @@
 import * as XLSX from "xlsx";
 
 import { pointsFromComponents, type C3Components } from "@/lib/analytics/c3";
+import { SIAPS_ROW_LIMIT_MESSAGE, SIAPS_XLSX_TOO_LARGE_MESSAGE } from "@/lib/siaps/errors";
+import { MAX_SIAPS_ROWS, MAX_SIAPS_XLSX_BYTES } from "@/lib/siaps/limits";
 
 export const SIAPS_PARSER_VERSION = "mae-aps-c3/1.0.0";
-export const MAX_SIAPS_FILE_BYTES = 10 * 1024 * 1024;
+export { MAX_SIAPS_XLSX_BYTES as MAX_SIAPS_FILE_BYTES } from "@/lib/siaps/limits";
 export const COMPONENT_CODES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"] as const;
+const MAX_HEADER_SCAN_ROWS = 50;
 
 export type SiapsC3Row = {
   fileRow: number;
@@ -67,9 +70,16 @@ function detectCompetency(matrix: unknown[][], filename: string): string | null 
 }
 
 export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx"): SiapsParseResult {
+  if (buffer.byteLength > MAX_SIAPS_XLSX_BYTES) {
+    return { competency: null, rows: [], errors: [SIAPS_XLSX_TOO_LARGE_MESSAGE], warnings: [], headerRow: null };
+  }
+
   const workbook = XLSX.read(buffer, {
     type: "array", cellDates: true, cellFormula: false, bookDeps: false,
-    bookFiles: false, bookVBA: false, sheetRows: 10_050,
+    bookFiles: false, bookVBA: false,
+    // Read just enough rows to distinguish the supported maximum from an
+    // oversized worksheet without expanding an arbitrarily large sheet.
+    sheetRows: MAX_SIAPS_ROWS + MAX_HEADER_SCAN_ROWS + 2,
   });
   if (!workbook.SheetNames.length) {
     return { competency: null, rows: [], errors: ["A planilha não contém abas legíveis."], warnings: [], headerRow: null };
@@ -78,7 +88,7 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(firstSheet, { header: 1, defval: "", raw: false });
   const errors: string[] = [];
   const warnings: string[] = [];
-  const headerIndex = matrix.findIndex((row) => {
+  const headerIndex = matrix.slice(0, MAX_HEADER_SCAN_ROWS).findIndex((row) => {
     const cells = row.map(normalize);
     return cells.some((cell) => cell === "CNES") && cells.some((cell) => cell === "INE");
   });
@@ -105,6 +115,21 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
   if (required.some((index) => index < 0)) {
     errors.push("O cabeçalho não contém todas as colunas obrigatórias: CNES, INE, A–K, pontos e denominador.");
     return { competency: detectCompetency(matrix, filename), rows: [], errors, warnings, headerRow: headerIndex + 1 };
+  }
+
+  let dataRowCount = 0;
+  for (const source of matrix.slice(headerIndex + 1)) {
+    if (source.every((cell) => String(cell).trim() === "")) continue;
+    dataRowCount += 1;
+    if (dataRowCount > MAX_SIAPS_ROWS) {
+      return {
+        competency: detectCompetency(matrix, filename),
+        rows: [],
+        errors: [SIAPS_ROW_LIMIT_MESSAGE],
+        warnings,
+        headerRow: headerIndex + 1,
+      };
+    }
   }
 
   const rows: SiapsC3Row[] = [];

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { EChartsOption } from "echarts";
 import type { LucideIcon } from "lucide-react";
+import { redirect } from "next/navigation";
 import {
-  Activity,
   AlertTriangle,
   BarChart3,
   Building2,
@@ -20,7 +20,14 @@ import {
 } from "lucide-react";
 
 import { MaeChart } from "@/components/charts/mae-chart";
+import { ManagementDashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { aggregateC3, C3_COMPONENTS, classifyC3, type C3Fact } from "@/lib/analytics/c3";
+import { loadDashboardPracticeTotalsForPeriod } from "@/lib/analytics/dashboard-data";
+import {
+  managementDashboardHref,
+  normalizeDashboardPeriodFilters,
+  type DashboardSearchParams,
+} from "@/lib/analytics/dashboard-filters";
 import { requireDashboardAccess } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
 import { createClient } from "@/lib/supabase/server";
@@ -147,15 +154,6 @@ function codeForClassification(value: ReturnType<typeof classifyC3>) {
   return "sem";
 }
 
-function dashboardHref(params: Record<string, string | undefined>) {
-  const search = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value && value !== "all") search.set(key, value);
-  });
-  const query = search.toString();
-  return `/sistema/gestao${query ? `?${query}` : ""}`;
-}
-
 function MetricCard({
   title,
   value,
@@ -171,7 +169,7 @@ function MetricCard({
 }) {
   return (
     <article className={`dashboard-kpi ${tone}`}>
-      <div className="dashboard-kpi-icon"><Icon className="size-6" /></div>
+      <div className="dashboard-kpi-icon"><Icon aria-hidden="true" className="size-6" /></div>
       <div>
         <span>{title}</span>
         <strong>{value}</strong>
@@ -184,7 +182,7 @@ function MetricCard({
 export default async function ManagementDashboard({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | undefined>>;
+  searchParams: Promise<DashboardSearchParams>;
 }) {
   const { profile } = await enforceRouteGuard(() => requireDashboardAccess());
   // Somente a Gestão importa dados e lê o histórico de importações (RLS).
@@ -218,22 +216,24 @@ export default async function ManagementDashboard({
   const teamMap = new Map(teams.map((item) => [item.id, item]));
 
   const competencies = [...new Set(facts.map((fact) => fact.competency.slice(0, 7)))].sort();
-  const validMonth = (value: string | undefined) => Boolean(value && /^\d{4}-\d{2}$/.test(value) && competencies.includes(value));
-  let start = validMonth(params.inicio) ? params.inicio! : competencies.at(0) ?? "";
-  let end = validMonth(params.fim) ? params.fim! : competencies.at(-1) ?? "";
-  if (competencies.indexOf(start) > competencies.indexOf(end)) [start, end] = [end, start];
-
-  const startIndex = Math.max(0, competencies.indexOf(start));
-  const endIndex = Math.max(startIndex, competencies.indexOf(end));
-  const periodMonths = competencies.slice(startIndex, endIndex + 1);
-
-  const district = params.distrito ?? "all";
-  const establishmentId = params.ubs ?? "all";
-  const teamId = params.equipe ?? "all";
-  const classification = Object.hasOwn(CLASSIFICATION_CODES, params.classificacao ?? "")
-    ? (params.classificacao as keyof typeof CLASSIFICATION_CODES)
-    : "all";
-  const query = (params.busca ?? "").trim().toLocaleLowerCase("pt-BR");
+  const filters = normalizeDashboardPeriodFilters({
+    competencies,
+    facts,
+    searchParams: params,
+  });
+  if (filters.needsRedirect) {
+    redirect(managementDashboardHref(filters));
+  }
+  const {
+    start,
+    end,
+    periodMonths,
+    district,
+    establishmentId,
+    teamId,
+    classification,
+  } = filters;
+  const query = filters.query.toLocaleLowerCase("pt-BR");
 
   const baseScopeFacts = facts.filter((fact) => {
     if (!periodMonths.includes(fact.competency.slice(0, 7))) return false;
@@ -267,33 +267,56 @@ export default async function ManagementDashboard({
   const teamCount = new Set(selectedFacts.map((fact) => fact.team_id)).size;
   const ubsCount = new Set(selectedFacts.map((fact) => fact.establishment_id)).size;
 
-  // Cada fato tem no máximo 11 práticas (PK fact_id + practice_code A–K).
-  // 90 fatos geram até 990 linhas, abaixo do max_rows padrão (1000) do PostgREST,
-  // que trunca respostas maiores sem erro. A contagem exata impede exibir parcial.
-  const practiceRows: PracticeRow[] = [];
-  for (let index = 0; index < selectedFacts.length; index += PRACTICE_FACTS_PER_REQUEST) {
-    const ids = selectedFacts.slice(index, index + PRACTICE_FACTS_PER_REQUEST).map((fact) => fact.id);
-    if (!ids.length) continue;
-    const result = await supabase
-      .schema("analytics")
-      .from("c3_practice_counts")
-      .select("fact_id, practice_code, fulfilled", { count: "exact" })
-      .in("fact_id", ids)
-      .order("fact_id")
-      .order("practice_code");
-    if (result.error) throw new Error("Não foi possível consultar as práticas A–K.");
-    const rows = (result.data ?? []) as PracticeRow[];
-    if (result.count !== rows.length) throw new Error("Consulta parcial das práticas A–K.");
-    practiceRows.push(...rows);
-  }
-
-  const practicesByFact = new Map<number, Record<string, number>>();
   const componentTotals: Record<string, number> = Object.fromEntries(Object.keys(C3_COMPONENTS).map((code) => [code, 0]));
-  for (const row of practiceRows) {
-    componentTotals[row.practice_code] = (componentTotals[row.practice_code] ?? 0) + row.fulfilled;
-    const current = practicesByFact.get(row.fact_id) ?? {};
-    current[row.practice_code] = row.fulfilled;
-    practicesByFact.set(row.fact_id, current);
+  const componentTotalsByMonth = new Map(
+    periodMonths.map((month) => [
+      month,
+      Object.fromEntries(Object.keys(C3_COMPONENTS).map((code) => [code, 0])) as Record<string, number>,
+    ]),
+  );
+
+  if (!query && classification === "all") {
+    // O caminho comum usa a RPC agregada: cada competência transfere no máximo
+    // onze linhas, sem depender do limite de 1.000 linhas do PostgREST.
+    const totals = await loadDashboardPracticeTotalsForPeriod(supabase, {
+      months: periodMonths,
+      district,
+      establishmentId,
+      teamId,
+    });
+    for (const row of totals) {
+      componentTotals[row.practice_code] = (componentTotals[row.practice_code] ?? 0) + row.fulfilled;
+      const monthly = componentTotalsByMonth.get(row.month);
+      if (monthly) monthly[row.practice_code] = row.fulfilled;
+    }
+  } else {
+    // Busca e classificação são filtros sobre equipes já calculadas. Neste caso,
+    // os lotes preservam o recorte exato e permanecem abaixo de 1.000 linhas.
+    const factMonthById = new Map(selectedFacts.map((fact) => [fact.id, fact.competency.slice(0, 7)]));
+    const practiceRows: PracticeRow[] = [];
+    for (let index = 0; index < selectedFacts.length; index += PRACTICE_FACTS_PER_REQUEST) {
+      const ids = selectedFacts.slice(index, index + PRACTICE_FACTS_PER_REQUEST).map((fact) => fact.id);
+      if (!ids.length) continue;
+      const result = await supabase
+        .schema("analytics")
+        .from("c3_practice_counts")
+        .select("fact_id, practice_code, fulfilled", { count: "exact" })
+        .in("fact_id", ids)
+        .order("fact_id")
+        .order("practice_code");
+      if (result.error) throw new Error("Não foi possível consultar as práticas A–K.");
+      const rows = (result.data ?? []) as PracticeRow[];
+      if (result.count !== rows.length) throw new Error("Consulta parcial das práticas A–K.");
+      practiceRows.push(...rows);
+    }
+    for (const row of practiceRows) {
+      componentTotals[row.practice_code] = (componentTotals[row.practice_code] ?? 0) + row.fulfilled;
+      const month = factMonthById.get(row.fact_id);
+      const monthly = month ? componentTotalsByMonth.get(month) : undefined;
+      if (monthly) {
+        monthly[row.practice_code] = (monthly[row.practice_code] ?? 0) + row.fulfilled;
+      }
+    }
   }
 
   const practiceRate = (code: string) =>
@@ -302,8 +325,7 @@ export default async function ManagementDashboard({
   const evolution = periodMonths.map((month) => {
     const monthFacts = selectedFacts.filter((fact) => fact.competency.startsWith(month));
     const monthSummary = ratio(monthFacts);
-    const monthlyTotal = (code: string) =>
-      monthFacts.reduce((sum, fact) => sum + (practicesByFact.get(fact.id)?.[code] ?? 0), 0);
+    const monthlyTotal = (code: string) => componentTotalsByMonth.get(month)?.[code] ?? 0;
     return {
       month,
       c3: monthSummary.c3,
@@ -332,9 +354,10 @@ export default async function ManagementDashboard({
   const comparisonGroups = new Map<string, { name: string; facts: FactRow[]; id: string }>();
   for (const fact of selectedFacts) {
     const id = comparisonMode === "team" ? fact.team_id : fact.establishment_id;
+    const establishment = comparisonMode === "ubs" ? establishmentMap.get(id) : undefined;
     const name = comparisonMode === "team"
       ? (teamMap.get(id)?.name || teamMap.get(id)?.ine || "Equipe")
-      : (establishmentMap.get(id)?.name || "UBS");
+      : [establishment?.name || "UBS", establishment?.cnes || id].join(" · ");
     const current: { name: string; facts: FactRow[]; id: string } =
       comparisonGroups.get(id) ?? { name, facts: [] as FactRow[], id };
     current.facts.push(fact);
@@ -345,17 +368,18 @@ export default async function ManagementDashboard({
     .sort((a, b) => b.value - a.value)
     .slice(0, 12);
 
-  const baseParams = {
-    inicio: start,
-    fim: end,
-    distrito: district,
-    classificacao: classification,
-    busca: params.busca,
-  };
   const comparisonDrilldown = comparisonMode === "ubs"
     ? Object.fromEntries(comparison.map((item) => [
         item.name,
-        dashboardHref({ ...baseParams, ubs: item.id }),
+        managementDashboardHref({
+          start,
+          end,
+          district,
+          establishmentId: item.id,
+          teamId: "all",
+          classification,
+          query: filters.query,
+        }),
       ]))
     : undefined;
 
@@ -381,24 +405,10 @@ export default async function ManagementDashboard({
     timeZone: "America/Fortaleza",
   }).format(new Date()).replace(/^./, (char) => char.toUpperCase());
 
-  const visibleEstablishmentIds = new Set(
-    facts
-      .filter((fact) => district === "all" || district === "unknown"
-        ? true
-        : fact.district_id === Number(district))
-      .map((fact) => fact.establishment_id),
-  );
-  const visibleEstablishments = district === "all" || district === "unknown"
-    ? establishments
-    : establishments.filter((item) => visibleEstablishmentIds.has(item.id));
-  const visibleTeamIds = new Set(
-    facts
-      .filter((fact) => establishmentId === "all" || fact.establishment_id === establishmentId)
-      .map((fact) => fact.team_id),
-  );
-  const visibleTeams = establishmentId === "all"
-    ? teams
-    : teams.filter((item) => visibleTeamIds.has(item.id));
+  const visibleDistricts = districts.filter((item) => filters.districtIds.has(String(item.id)));
+  const visibleEstablishments = establishments.filter((item) =>
+    filters.availableEstablishmentIds.has(item.id));
+  const visibleTeams = teams.filter((item) => filters.availableTeamIds.has(item.id));
 
   const baseAxis = {
     axisLine: { lineStyle: { color: "#d8e2ef" } },
@@ -510,6 +520,41 @@ export default async function ManagementDashboard({
     }],
   };
 
+  const evolutionAccessibleData = evolution.flatMap((item) => [
+    {
+      id: `${item.month}-c3`,
+      label: `${monthLabel(item.month)} · C3`,
+      value: formatPercent(item.c3),
+    },
+    {
+      id: `${item.month}-a`,
+      label: `${monthLabel(item.month)} · 1ª consulta até 12 semanas`,
+      value: formatPercent(item.a),
+    },
+    {
+      id: `${item.month}-b`,
+      label: `${monthLabel(item.month)} · 7+ consultas`,
+      value: formatPercent(item.b),
+    },
+  ]);
+  const comparisonAccessibleData = comparison.map((item) => ({
+    id: item.id,
+    label: item.name,
+    value: formatC3(item.value),
+    href: comparisonDrilldown?.[item.name],
+  }));
+  const classificationAccessibleData = Object.entries(classificationCounts).map(([label, value]) => ({
+    id: label,
+    label,
+    value: `${formatNumber(value)} equipes`,
+  }));
+  const componentsAccessibleData = Object.keys(C3_COMPONENTS).map((code) => ({
+    id: code,
+    label: `${code} · ${PRACTICE_SHORT[code]}`,
+    value: formatPercent(practiceRate(code)),
+    description: C3_COMPONENTS[code as keyof typeof C3_COMPONENTS],
+  }));
+
   const heroPeriod = start && end
     ? `${monthLabel(start)} – ${monthLabel(end)}`
     : "Sem dados";
@@ -522,9 +567,9 @@ export default async function ManagementDashboard({
           <h1>Olá, Gestão de Saúde</h1>
           <p>Acompanhe indicadores oficiais do SIAPS com filtros territoriais, comparativos e detalhamento das práticas A–K.</p>
           <div className="dashboard-scope-chips">
-            <span><Building2 className="size-4" /> {ubsCount} UBS</span>
-            <span><Users className="size-4" /> {teamCount} equipes</span>
-            <span><CalendarDays className="size-4" /> {periodMonths.length} competências</span>
+            <span><Building2 aria-hidden="true" className="size-4" /> {ubsCount} UBS</span>
+            <span><Users aria-hidden="true" className="size-4" /> {teamCount} equipes</span>
+            <span><CalendarDays aria-hidden="true" className="size-4" /> {periodMonths.length} competências</span>
           </div>
         </div>
         <div className="dashboard-date-block">
@@ -539,51 +584,35 @@ export default async function ManagementDashboard({
       </section>
 
       <section className={canImport ? "dashboard-filter-zone" : "dashboard-filter-zone no-import"}>
-        <form method="get" className="dashboard-filter-grid">
-          <label>Início
-            <select name="inicio" defaultValue={start}>{competencies.map((item) => <option key={item} value={item}>{longMonthLabel(item)}</option>)}</select>
-          </label>
-          <label>Fim
-            <select name="fim" defaultValue={end}>{competencies.map((item) => <option key={item} value={item}>{longMonthLabel(item)}</option>)}</select>
-          </label>
-          <label>Distrito
-            <select name="distrito" defaultValue={district}>
-              <option value="all">Todos os distritos</option>
-              <option value="unknown">Não informado</option>
-              {districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
-          </label>
-          <label>UBS
-            <select name="ubs" defaultValue={establishmentId}>
-              <option value="all">Todas as UBS</option>
-              {visibleEstablishments.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.cnes}</option>)}
-            </select>
-          </label>
-          <label>Equipe
-            <select name="equipe" defaultValue={teamId}>
-              <option value="all">Todas as equipes</option>
-              {visibleTeams.map((item) => <option key={item.id} value={item.id}>{item.name || item.ine}</option>)}
-            </select>
-          </label>
-          <label>Classificação C3
-            <select name="classificacao" defaultValue={classification}>
-              {Object.entries(CLASSIFICATION_CODES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
-          </label>
-          <label className="dashboard-search-filter">Busca
-            <input name="busca" defaultValue={params.busca} placeholder="Nome, CNES ou INE" />
-          </label>
-          <div className="dashboard-filter-actions">
-            <button type="submit"><Activity className="size-4" /> Aplicar filtros</button>
-            <Link href="/sistema/gestao">Limpar</Link>
-          </div>
-        </form>
+        <ManagementDashboardFilters
+          classifications={Object.entries(CLASSIFICATION_CODES).map(([value, label]) => ({ value, label }))}
+          competencies={competencies.map((item) => ({ value: item, label: longMonthLabel(item) }))}
+          districts={visibleDistricts.map((item) => ({ value: String(item.id), label: item.name }))}
+          establishments={visibleEstablishments.map((item) => ({
+            value: item.id,
+            label: `${item.name} · ${item.cnes}`,
+          }))}
+          selection={{
+            start,
+            end,
+            district,
+            establishmentId,
+            teamId,
+            classification,
+            query: filters.query,
+          }}
+          showUnknownDistrict={filters.hasUnknownDistrict}
+          teams={visibleTeams.map((item) => ({
+            value: item.id,
+            label: `${item.name || "Equipe"} · ${item.ine}`,
+          }))}
+        />
 
         {canImport && (
           <Link href="/sistema/importar" className="dashboard-import-cta">
-            <span className="dashboard-import-icon"><FileSpreadsheet className="size-8" /></span>
+            <span className="dashboard-import-icon"><FileSpreadsheet aria-hidden="true" className="size-8" /></span>
             <span><strong>Importar planilha SIAPS</strong><small>Atualize os dados oficiais da Gestão</small></span>
-            <TrendingUp className="size-5" />
+            <TrendingUp aria-hidden="true" className="size-5" />
           </Link>
         )}
       </section>
@@ -604,7 +633,7 @@ export default async function ManagementDashboard({
             <div><span>Evolução temporal</span><h2>Evolução mensal dos principais indicadores</h2></div>
             <span className="dashboard-card-pill">Percentual (%)</span>
           </div>
-          {evolution.length ? <MaeChart option={evolutionOption} ariaLabel="Evolução mensal do C3, primeira consulta e sete consultas" height={300} /> : <p className="empty-state">Sem dados no recorte.</p>}
+          {evolution.length ? <MaeChart accessibleData={evolutionAccessibleData} option={evolutionOption} ariaLabel="Evolução mensal do C3, primeira consulta e sete consultas" height={300} /> : <p className="empty-state">Sem dados no recorte.</p>}
         </article>
 
         <article className="dashboard-card dashboard-chart-medium">
@@ -612,14 +641,14 @@ export default async function ManagementDashboard({
             <div><span>{comparisonMode === "ubs" ? "Por UBS" : "Por equipe"}</span><h2>C3 por {comparisonMode === "ubs" ? "UBS" : "equipe"}</h2></div>
             <span className="dashboard-card-pill">Clique para detalhar</span>
           </div>
-          {comparison.length ? <MaeChart option={comparisonOption} ariaLabel="Comparação do C3 por território" drilldown={comparisonDrilldown} height={300} /> : <p className="empty-state">Sem dados no recorte.</p>}
+          {comparison.length ? <MaeChart accessibleData={comparisonAccessibleData} option={comparisonOption} ariaLabel="Comparação do C3 por território" drilldown={comparisonDrilldown} height={300} /> : <p className="empty-state">Sem dados no recorte.</p>}
         </article>
 
         <article className="dashboard-card dashboard-chart-donut">
           <div className="dashboard-card-heading">
             <div><span>Distribuição</span><h2>Equipes por classificação C3</h2></div>
           </div>
-          <MaeChart option={classificationOption} ariaLabel="Distribuição das equipes por classificação C3" height={300} />
+          <MaeChart accessibleData={classificationAccessibleData} option={classificationOption} ariaLabel="Distribuição das equipes por classificação C3" height={300} />
         </article>
       </section>
 
@@ -632,7 +661,7 @@ export default async function ManagementDashboard({
           </div>
           <span className="dashboard-card-pill">A–K</span>
         </div>
-        <MaeChart option={componentsOption} ariaLabel="Cobertura percentual das práticas A a K" componentDescriptions={C3_COMPONENTS} height={280} />
+        <MaeChart accessibleData={componentsAccessibleData} option={componentsOption} ariaLabel="Cobertura percentual das práticas A a K" componentDescriptions={C3_COMPONENTS} height={280} />
         <div className="practice-legend">
           {Object.keys(C3_COMPONENTS).map((code) => <span key={code}><strong>{code}</strong>{PRACTICE_SHORT[code]}</span>)}
         </div>

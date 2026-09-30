@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(50);
 
 select has_view('analytics','dashboard_team_directory','team directory view exists');
 select has_view('analytics','dashboard_c3_team_monthly','team monthly view exists');
@@ -15,7 +15,9 @@ select is((select count(*) from pg_class c join pg_namespace n on n.oid=c.relnam
   'all analytics views use security_invoker');
 
 select has_function('public','update_establishment_identity',array['uuid','text','text','boolean','boolean'],'identity RPC exists');
+select ok(to_regprocedure('public.update_establishment_identity(uuid,text,text)') is null,'legacy identity RPC without confirmations is removed');
 select has_function('public','publish_siaps_c3_v1',array['jsonb','jsonb'],'atomic import RPC exists');
+select has_function('analytics','dashboard_c3_practice_totals',array['date','smallint','boolean','uuid','uuid'],'practice totals RPC exists');
 select ok(has_function_privilege('authenticated','public.update_establishment_identity(uuid,text,text,boolean,boolean)','EXECUTE'),'authenticated may invoke guarded identity RPC');
 select ok(not has_function_privilege('anon','public.update_establishment_identity(uuid,text,text,boolean,boolean)','EXECUTE'),'anon cannot invoke identity RPC');
 select ok(has_function_privilege('service_role','public.publish_siaps_c3_v1(jsonb,jsonb)','EXECUTE'),'service role may invoke atomic import RPC');
@@ -23,6 +25,10 @@ select ok(not has_function_privilege('authenticated','public.publish_siaps_c3_v1
 select ok(not has_function_privilege('service_role','public.ingest_siaps_c3(jsonb,jsonb)','EXECUTE'),'legacy ingest is closed to service role');
 select ok(not has_function_privilege('service_role','public.stage_siaps_c3_compact(jsonb,jsonb,boolean)','EXECUTE'),'staged non-atomic ingest is closed');
 select ok(not has_function_privilege('service_role','public.ingest_siaps_c3_compact(jsonb,jsonb)','EXECUTE'),'legacy compact ingest is closed');
+select ok(has_function_privilege('authenticated','analytics.dashboard_c3_practice_totals(date,smallint,boolean,uuid,uuid)','EXECUTE'),'authenticated may invoke practice totals RPC');
+select ok(not has_function_privilege('anon','analytics.dashboard_c3_practice_totals(date,smallint,boolean,uuid,uuid)','EXECUTE'),'anon cannot invoke practice totals RPC');
+select is((select p.prosecdef from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+  where n.nspname='analytics' and p.proname='dashboard_c3_practice_totals'),false,'practice totals RPC is security invoker');
 
 insert into auth.users(id,email,encrypted_password,aud,role,created_at,updated_at) values
  ('40000000-0000-0000-0000-000000000001','gestao-prod@test.local','','authenticated','authenticated',now(),now()),
@@ -46,10 +52,32 @@ select lives_ok($$
 $$,'valid C3 workbook is published atomically');
 reset role;
 
+select is(
+  (select count(*) from audit.events where event_type='siaps_c3_import_published'),
+  1::bigint,
+  'completed import emits one durable audit event'
+);
+select is(
+  (select actor_user_id from audit.events where event_type='siaps_c3_import_published' order by id desc limit 1),
+  '40000000-0000-0000-0000-000000000001'::uuid,
+  'completed import audit identifies the responsible management user'
+);
+select is(
+  (select metadata from audit.events where event_type='siaps_c3_import_published' order by id desc limit 1),
+  jsonb_build_object('competency','2026-01-01'::date,'rows',2),
+  'import audit stores only competency and aggregate row count'
+);
+
 select is((select points_total from analytics.dashboard_competencies where competency='2026-01-01'),210::numeric,'competency exposes additive points');
 select is((select denominator from analytics.dashboard_competencies where competency='2026-01-01'),3::bigint,'competency exposes additive denominator');
 select is((select round(c3,2) from analytics.dashboard_competencies where competency='2026-01-01'),70.00::numeric,'competency C3 uses ratio of sums');
 select is((select count(*) from analytics.dashboard_c3_team_monthly where classification in ('Bom','Ótimo')),2::bigint,'classification boundaries are available per team');
+select is((select fulfilled from analytics.dashboard_c3_practice_totals('2026-01-01',null,false,null,null) where practice_code='A'),3::bigint,'municipal practice total aggregates A without row-limit truncation');
+select is((select fulfilled from analytics.dashboard_c3_practice_totals(
+  '2026-01-01',null,false,null,(select id from core.teams where ine='0000000002')
+) where practice_code='A'),2::bigint,'team practice total applies the team filter');
+select is((select fulfilled from analytics.dashboard_c3_practice_totals('2026-01-01',null,true,null,null) where practice_code='A'),3::bigint,'unknown district includes only facts without district');
+select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01',1,true,null,null)),0::bigint,'contradictory unknown and district parameters fail closed');
 
 insert into siaps.imports(id,filename,file_sha256,competency,source_status,status,rows_total,uploaded_by)
 values ('50000000-0000-0000-0000-000000000001','zero.xlsx',repeat('d',64),'2026-02-01','preliminar','publicado',1,'40000000-0000-0000-0000-000000000001');
@@ -62,12 +90,15 @@ select ok((select c3 is null from analytics.dashboard_competencies where compete
 set local role authenticated;
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000003',true);
 select is((select count(*) from analytics.c3_team_monthly),0::bigint,'admin cannot read dashboard facts');
+select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01',null,false,null,null)),0::bigint,'admin cannot read practices through RPC');
 select is((select count(*) from siaps.imports),0::bigint,'admin cannot read import history');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000001',true);
 select is((select count(*) from analytics.c3_team_monthly),3::bigint,'gestao reads dashboard facts');
+select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01',null,false,null,null)),11::bigint,'gestao reads eleven aggregated practices');
 select is((select count(*) from siaps.imports),2::bigint,'gestao reads import history');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000002',true);
 select is((select count(*) from analytics.c3_team_monthly),3::bigint,'leitura reads dashboard facts');
+select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01',null,false,null,null)),11::bigint,'leitura reads eleven aggregated practices');
 select is((select count(*) from siaps.imports),0::bigint,'leitura cannot read import history');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000001',true);
 select throws_ok(
@@ -80,6 +111,13 @@ select lives_ok(
 reset role;
 select is((select cnes from core.establishments where name='UBS Alterada'),'7654329','CNES is persisted without changing internal UUID');
 select is((select metadata->>'previous_cnes' from audit.events where event_type='establishment_identity_changed' order by id desc limit 1),'7654321','audit preserves previous CNES');
+select ok(
+  not exists (
+    select 1 from audit.events
+    where metadata ?| array['ip','ip_address','user_agent','session_id']
+  ),
+  'audit metadata does not collect IP, user agent or session identifiers'
+);
 select ok(not has_table_privilege('authenticated','study.cohorts','SELECT'),'pilot cohort is not exposed as an application module');
 
 select * from finish();

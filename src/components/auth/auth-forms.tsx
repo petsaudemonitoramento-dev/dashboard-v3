@@ -38,7 +38,7 @@ function Message({ state }: { state: FormState }) {
           ? "bg-emerald-50 text-emerald-800"
           : "bg-red-50 text-red-800")
       }
-      role="status"
+      role={state.ok ? "status" : "alert"}
     >
       {state.message}
     </p>
@@ -46,11 +46,13 @@ function Message({ state }: { state: FormState }) {
 }
 
 function Field({
+  autoComplete,
   label,
   name,
   type = "text",
   required = true,
 }: {
+  autoComplete: string;
   label: string;
   name: string;
   type?: string;
@@ -60,9 +62,12 @@ function Field({
     <label className="auth-field">
       {label}
       <input
+        autoCapitalize={type === "email" ? "none" : undefined}
+        autoComplete={autoComplete}
         className="auth-input"
         name={name}
         required={required}
+        spellCheck={type === "email" ? false : undefined}
         type={type}
       />
     </label>
@@ -74,8 +79,8 @@ export function SignInForm() {
   return (
     <div className="auth-signin-stack">
       <form action={action} className="auth-form">
-        <Field label="E-mail" name="email" type="email" />
-        <Field label="Senha" name="password" type="password" />
+        <Field autoComplete="email" label="E-mail" name="email" type="email" />
+        <Field autoComplete="current-password" label="Senha" name="password" type="password" />
         <Message state={state} />
         <SubmitButton label="Entrar" />
       </form>
@@ -101,9 +106,10 @@ export function SignUpForm() {
   const [state, action] = useActionState(signUpAction, INITIAL_STATE);
   return (
     <form action={action} className="auth-form">
-      <Field label="E-mail" name="email" type="email" />
-      <Field label="Senha" name="password" type="password" />
+      <Field autoComplete="email" label="E-mail" name="email" type="email" />
+      <Field autoComplete="new-password" label="Senha" name="password" type="password" />
       <Field
+        autoComplete="new-password"
         label="Confirme a senha"
         name="passwordConfirmation"
         type="password"
@@ -124,7 +130,7 @@ export function PasswordRecoveryForm() {
   );
   return (
     <form action={action} className="auth-form">
-      <Field label="E-mail" name="email" type="email" />
+      <Field autoComplete="email" label="E-mail" name="email" type="email" />
       <Message state={state} />
       <SubmitButton label="Enviar instruções" />
       <Link className="auth-back-link" href="/entrar">
@@ -138,8 +144,9 @@ export function UpdatePasswordForm() {
   const [state, action] = useActionState(updatePasswordAction, INITIAL_STATE);
   return (
     <form action={action} className="auth-form">
-      <Field label="Nova senha" name="password" type="password" />
+      <Field autoComplete="new-password" label="Nova senha" name="password" type="password" />
       <Field
+        autoComplete="new-password"
         label="Confirme a nova senha"
         name="passwordConfirmation"
         type="password"

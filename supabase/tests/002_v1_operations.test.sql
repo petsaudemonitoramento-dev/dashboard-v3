@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(38);
+select plan(44);
 
 select has_function('public', 'update_establishment_territory', array['uuid','smallint','date'], 'territory RPC exists');
 select has_function('public', 'manage_profile', array['uuid','app.user_role','boolean'], 'profile RPC exists');
@@ -129,20 +129,35 @@ select throws_ok(
   '42501', 'Apenas administradores ativos podem gerenciar perfis', 'inactive admin cannot manage profiles'
 );
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000003',true);
+select throws_ok(
+  $$select public.manage_profile('20000000-0000-0000-0000-000000000003','leitura',true)$$,
+  '23514', 'Não é permitido remover o último administrador ativo', 'last active admin cannot be demoted'
+);
+select throws_ok(
+  $$select public.manage_profile('20000000-0000-0000-0000-000000000003','admin',false)$$,
+  '23514', 'Não é permitido remover o último administrador ativo', 'last active admin cannot be deactivated'
+);
+select lives_ok(
+  $$select public.manage_profile('20000000-0000-0000-0000-000000000004','admin',true)$$,
+  'active admin may activate a second administrator'
+);
 select lives_ok(
   $$select public.manage_profile('20000000-0000-0000-0000-000000000002','gestao',true)$$,
   'active admin manages profiles'
 );
-reset role;
-select is((select role::text from app.profiles where user_id='20000000-0000-0000-0000-000000000002'), 'gestao', 'managed role is persisted');
-select is((select count(*) from audit.events where event_type='profile_access_changed'), 1::bigint, 'profile change is audited');
-set local role authenticated;
-select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000003',true);
 select throws_ok(
   $$select public.manage_profile('20000000-0000-0000-0000-000000000099','leitura',true)$$,
   'P0001', 'Usuário autenticado não encontrado', 'unknown auth user is rejected'
 );
+select lives_ok(
+  $$select public.manage_profile('20000000-0000-0000-0000-000000000003','leitura',true)$$,
+  'an administrator may be demoted after a second one is active'
+);
 reset role;
+select is((select role::text from app.profiles where user_id='20000000-0000-0000-0000-000000000002'), 'gestao', 'managed role is persisted');
+select is((select count(*) from app.profiles where role='admin' and active), 1::bigint, 'one active administrator always remains');
+select is((select role::text from app.profiles where user_id='20000000-0000-0000-0000-000000000003'), 'leitura', 'demotion is persisted when another admin exists');
+select is((select count(*) from audit.events where event_type='profile_access_changed'), 3::bigint, 'only successful profile changes are audited');
 
 insert into siaps.imports(filename,file_sha256,competency,source_status,rows_total)
 values ('a.xlsx',repeat('a',64),'2026-01-01','preliminar',1);

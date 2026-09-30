@@ -26,6 +26,7 @@ export default async function SystemLayout({ children }: { children: React.React
   ];
 
   return <div className="app-shell">
+    <a className="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
     <header className="app-header">
       <Link className="brand" href={homeForRole(profile.role)}>
         <span className="brand-mark">MAE</span>
@@ -42,7 +43,7 @@ export default async function SystemLayout({ children }: { children: React.React
         </div>
       </details>
     </header>
-    <main className="app-main">{children}</main>
-    <footer className="app-footer"><strong>PET SAÚDE UFCG</strong><span>Desenvolvimento: Lucca Araújo</span><span>Design: Kethilly Nayara</span></footer>
+    <main className="app-main" id="conteudo-principal" tabIndex={-1}>{children}</main>
+    <footer className="app-footer"><strong>PET SAÚDE UFCG · Universidade Federal de Campina Grande</strong><span>Desenvolvimento: Lucca Araújo</span><span>Design: Kethilly Nayara</span><span>Versão 1.0.0</span></footer>
   </div>;
 }

@@ -1,11 +1,17 @@
 name: MAE APS - Validacao V1
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
-      - codex/bootstrap-v3
-      - integration/v1-audit
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: validate-v1-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -61,7 +67,7 @@ jobs:
         shell: bash
         run: |
           for attempt in 1 2 3 4; do
-            if npx supabase start -x logflare,vector,kong,gotrue,mailpit,realtime,postgrest,storage-api,imgproxy,edge-runtime,postgres-meta,studio,supavisor; then
+            if npx supabase start -x logflare,vector,realtime,storage-api,imgproxy,edge-runtime,postgres-meta,studio,supavisor; then
               exit 0
             fi
             if [ "$attempt" -eq 4 ]; then
@@ -78,6 +84,23 @@ jobs:
 
       - name: SQL and RLS tests
         run: npx supabase test db
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests against local Supabase
+        run: npm run test:e2e
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Supabase status
         if: always()

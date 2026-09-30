@@ -1,6 +1,8 @@
 import { ZodError } from "zod";
 
 import { AccessDeniedError } from "@/lib/auth/types";
+import { RequestBodyTooLargeError } from "@/lib/http/request-body";
+import { SIAPS_REQUEST_TOO_LARGE_MESSAGE, SiapsDomainValidationError } from "@/lib/siaps/errors";
 
 export type ImportErrorResponse = {
   status: 400 | 401 | 403 | 413 | 500;
@@ -8,6 +10,12 @@ export type ImportErrorResponse = {
 };
 
 export function importErrorResponse(error: unknown): ImportErrorResponse {
+  if (error instanceof RequestBodyTooLargeError) {
+    return { status: 413, message: SIAPS_REQUEST_TOO_LARGE_MESSAGE };
+  }
+  if (error instanceof SiapsDomainValidationError) {
+    return { status: 400, message: error.message };
+  }
   if (error instanceof ZodError || error instanceof SyntaxError) {
     return { status: 400, message: "Dados de importação inválidos." };
   }

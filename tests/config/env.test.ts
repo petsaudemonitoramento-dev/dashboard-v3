@@ -36,6 +36,15 @@ describe("validação de ambiente", () => {
     ).toThrow();
   });
 
+  it("rejeita Supabase em HTTP fora de loopback", () => {
+    expect(() =>
+      parsePublicEnv({
+        ...BASE,
+        NEXT_PUBLIC_SUPABASE_URL: "http://project.supabase.co",
+      }),
+    ).toThrow();
+  });
+
   it("rejeita origem canônica com barra final", () => {
     expect(() =>
       parsePublicEnv({ ...BASE, NEXT_PUBLIC_APP_URL: "https://painel.instituicao.br/" }),
@@ -52,5 +61,14 @@ describe("validação de ambiente", () => {
     "http://127.0.0.1:3000",
   ])("tolera HTTP apenas em loopback (%s)", (appUrl) => {
     expect(parsePublicEnv({ ...BASE, NEXT_PUBLIC_APP_URL: appUrl })).toBeTruthy();
+  });
+
+  it.each([
+    "http://localhost:54321",
+    "http://127.0.0.1:54321",
+  ])("tolera Supabase local em loopback (%s)", (supabaseUrl) => {
+    expect(
+      parsePublicEnv({ ...BASE, NEXT_PUBLIC_SUPABASE_URL: supabaseUrl }),
+    ).toBeTruthy();
   });
 });

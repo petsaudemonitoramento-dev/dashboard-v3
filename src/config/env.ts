@@ -18,8 +18,8 @@ function isLoopbackOrigin(value: string) {
 
 export const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url().refine(
-    (value) => value.startsWith("https://"),
-    "A URL do Supabase deve usar HTTPS.",
+    (value) => value.startsWith("https://") || isLoopbackOrigin(value),
+    "A URL do Supabase deve usar HTTPS fora do ambiente local.",
   ),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z
     .string()
