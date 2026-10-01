@@ -23,29 +23,16 @@ function validateCloudTarget() {
     );
   }
 
-  const raw = required("K6_SUPABASE_URL");
-  const url = new URL(raw);
+  const raw = required("K6_SUPABASE_URL").replace(/\/$/, "");
+  const expectedOrigin = `https://${EXPECTED_PROJECT_HOST}`;
 
-  if (
-    url.protocol !== "https:"
-    || url.username
-    || url.password
-    || url.pathname !== "/"
-    || url.search
-    || url.hash
-  ) {
+  if (raw !== expectedOrigin) {
     throw new Error(
-      "K6_SUPABASE_URL deve conter somente a origem HTTPS do Supabase.",
+      `K6_SUPABASE_URL deve ser exatamente ${expectedOrigin}.`,
     );
   }
 
-  if (url.hostname !== EXPECTED_PROJECT_HOST) {
-    throw new Error(
-      `Projeto Supabase inesperado: ${url.hostname}. O teste está travado para ${EXPECTED_PROJECT_HOST}.`,
-    );
-  }
-
-  return url.origin;
+  return expectedOrigin;
 }
 
 const baseUrl = validateCloudTarget();
