@@ -66,3 +66,7 @@ Depois da decisão, testar expiração absoluta, inatividade, refresh, recupera�
 - Google OAuth/PKCE, inclusive cancelamento;
 - usuário sem perfil, perfil inativo e tentativa sem permissão;
 - cookies com `Secure`, `HttpOnly` e política `SameSite` esperada no HTTPS.
+
+### Preview da Vercel
+
+Para testes OAuth no Preview, `NEXT_PUBLIC_APP_URL` deve possuir um override específico para a branch `codex/hardening-v1-integrado`, apontando para a URL estável da branch na Vercel. A variável de Production permanece em `https://maeaps.vercel.app`. Após alterar uma variável de ambiente, é necessário gerar um novo deployment da branch para que o valor seja incorporado ao build.
