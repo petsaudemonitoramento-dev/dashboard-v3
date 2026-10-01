@@ -52,7 +52,14 @@ describe("privacidade da telemetria", () => {
       },
       breadcrumbs: [
         {
-          data: { email: "gestao@maeaps.test", route: "/api/importacoes" },
+          data: {
+            email: "gestao@maeaps.test",
+            route: "/api/importacoes",
+            "http.query":
+              "?select=user_id%2Cemail%2Crole&user_id=eq.422c4937-8549-4bce-ad0c-75603cc59f93",
+            user_id: "422c4937-8549-4bce-ad0c-75603cc59f93",
+            url: "https://example.supabase.co/rest/v1/profiles",
+          },
           message: "Upload dados.xlsx",
         },
       ],
@@ -75,6 +82,11 @@ describe("privacidade da telemetria", () => {
       userAgent: "[removido]",
     });
     expect(event.breadcrumbs?.[0]?.data?.email).toBe("[removido]");
+    expect(event.breadcrumbs?.[0]?.data?.["http.query"]).toBe("[removido]");
+    expect(event.breadcrumbs?.[0]?.data?.user_id).toBe("[removido]");
+    expect(event.breadcrumbs?.[0]?.data?.url).toBe(
+      "https://example.supabase.co/rest/v1/profiles",
+    );
     expect(event.message).toContain("[email-removido]");
   });
 });
