@@ -90,8 +90,12 @@ O computador local não possui Docker utilizável nem espaço para duplicar
 - Supabase local e reconstrução completa por migrations;
 - **131** asserções pgTAP/RLS declaradas (21 + 44 + 16 + 50);
 - **22** Playwright/axe reais em Chromium;
-- CodeQL JavaScript/TypeScript;
-- Vercel Preview do mesmo commit.
+- CodeQL JavaScript/TypeScript.
+
+O Vercel Preview do SHA documental `849e61b8ec21a1df239eb48e735ba04d6adf9d8f`
+concluiu com sucesso em 01/10/2026. Como qualquer push cria outro deployment,
+o Preview precisa continuar verde no HEAD apresentado ao PR. Os workflows do
+GitHub ainda não iniciaram porque não há PR aberto e os gatilhos são PR/`main`.
 
 Nenhum desses itens deve ser marcado como verde com base apenas na inspeção
 local. O PR não pode ser mesclado enquanto os checks não estiverem verdes.
