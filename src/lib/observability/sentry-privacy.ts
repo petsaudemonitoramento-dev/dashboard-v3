@@ -2,6 +2,7 @@ import type { Event } from "@sentry/nextjs";
 
 const SENSITIVE_KEY =
   /(authorization|cookie|email|file_?sha|filename|password|payload|rows|secret|session|token)/i;
+const DIRECT_IDENTIFIER_KEY = /^(?:ip|ip_?address|user_?agent)$/i;
 
 export function sanitizeTelemetryText(value: string) {
   return value
@@ -21,11 +22,15 @@ export function sanitizeTelemetryText(value: string) {
     .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[jwt-removido]")
     .replace(/\bsb_(?:secret|publishable)_[A-Za-z0-9_-]+\b/gi, "[chave-removida]")
     .replace(/\b(?:postgres|postgresql):\/\/[^\s]+/gi, "[conexao-removida]")
+    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, "[ip-removido]")
+    .replace(/\b[A-F0-9]{1,4}(?::[A-F0-9]{0,4}){2,7}\b/gi, "[ip-removido]")
     .replace(/\b[^\s/\\]+\.xlsx\b/gi, "[arquivo-xlsx]");
 }
 
 function sanitizeValue(value: unknown, key = "", depth = 0): unknown {
-  if (SENSITIVE_KEY.test(key)) return "[removido]";
+  if (SENSITIVE_KEY.test(key) || DIRECT_IDENTIFIER_KEY.test(key)) {
+    return "[removido]";
+  }
   if (typeof value === "string") return sanitizeTelemetryText(value);
   if (value === null || typeof value !== "object") return value;
   if (depth >= 4) return "[profundidade-limitada]";

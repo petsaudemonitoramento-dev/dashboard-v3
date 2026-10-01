@@ -11,7 +11,8 @@ describe("privacidade da telemetria", () => {
       "falha de pessoa@saude.gov.br em lote.xlsx com Bearer token-secreto " +
         "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.assinatura " +
         "postgresql://postgres:senha@db.exemplo/postgres " +
-        "https://painel.example/rota?token=valor#segredo-no-fragmento",
+        "https://painel.example/rota?token=valor#segredo-no-fragmento " +
+        "originado em 192.0.2.10 e 2001:db8:85a3::8a2e:370:7334",
     );
 
     expect(value).not.toContain("pessoa@saude.gov.br");
@@ -20,6 +21,8 @@ describe("privacidade da telemetria", () => {
     expect(value).not.toContain("postgres:senha");
     expect(value).not.toContain("?token=valor");
     expect(value).not.toContain("segredo-no-fragmento");
+    expect(value).not.toContain("192.0.2.10");
+    expect(value).not.toContain("2001:db8");
   });
 
   it("descarta PII de request, usuário e contextos sensíveis", () => {
@@ -36,8 +39,16 @@ describe("privacidade da telemetria", () => {
       },
       extra: {
         filename: "dados.xlsx",
+        ip_address: "192.0.2.10",
         safeCount: 10,
         nested: { password: "segredo", status: "falhou" },
+      },
+      contexts: {
+        request_metadata: {
+          ip: "192.0.2.11",
+          session_id: "sessao-interna",
+          userAgent: "Navegador identificável",
+        },
       },
       breadcrumbs: [
         {
@@ -54,8 +65,14 @@ describe("privacidade da telemetria", () => {
     });
     expect(event.extra).toMatchObject({
       filename: "[removido]",
+      ip_address: "[removido]",
       safeCount: 10,
       nested: { password: "[removido]", status: "falhou" },
+    });
+    expect(event.contexts?.request_metadata).toEqual({
+      ip: "[removido]",
+      session_id: "[removido]",
+      userAgent: "[removido]",
     });
     expect(event.breadcrumbs?.[0]?.data?.email).toBe("[removido]");
     expect(event.message).toContain("[email-removido]");
