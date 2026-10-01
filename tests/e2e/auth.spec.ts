@@ -7,7 +7,7 @@ test("protege uma rota interna sem sessão", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/entrar/);
   await expect(
-    page.getByRole("heading", { name: "Boas-vindas" }),
+    page.getByRole("heading", { name: "Acesso ao MAE APS" }),
   ).toBeVisible();
 });
 
