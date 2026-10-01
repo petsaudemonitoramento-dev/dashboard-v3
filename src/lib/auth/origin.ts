@@ -27,18 +27,21 @@ function normalizeVercelHost(value: string | undefined) {
  *
  * Nenhum header HTTP participa desta resolução.
  */
-export function resolveAuthOrigin(
-  environment: AuthOriginEnvironment = process.env,
-) {
+export function resolveAuthOrigin(environment?: AuthOriginEnvironment) {
+  const source: AuthOriginEnvironment = environment ?? {
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    VERCEL_BRANCH_URL: process.env.VERCEL_BRANCH_URL,
+    VERCEL_URL: process.env.VERCEL_URL,
+  };
   const configured = getPublicEnv().NEXT_PUBLIC_APP_URL;
 
-  if (environment.VERCEL_ENV !== "preview") {
+  if (source.VERCEL_ENV !== "preview") {
     return configured;
   }
 
   const branchHost =
-    normalizeVercelHost(environment.VERCEL_BRANCH_URL)
-    ?? normalizeVercelHost(environment.VERCEL_URL);
+    normalizeVercelHost(source.VERCEL_BRANCH_URL)
+    ?? normalizeVercelHost(source.VERCEL_URL);
 
   return branchHost ? `https://${branchHost}` : configured;
 }
