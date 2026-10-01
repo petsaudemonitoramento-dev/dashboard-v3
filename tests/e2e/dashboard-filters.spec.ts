@@ -19,9 +19,9 @@ test.beforeEach(async ({ page }) => {
 test("encadeia Distrito → UBS → Equipe e limpa os descendentes", async ({
   page,
 }) => {
-  const district = page.getByLabel("Distrito");
-  const establishment = page.getByLabel("UBS");
-  const team = page.getByLabel("Equipe");
+  const district = page.locator('select[name="distrito"]');
+  const establishment = page.locator('select[name="ubs"]');
+  const team = page.locator('select[name="equipe"]');
 
   await district.selectOption({ label: "E2E Distrito Norte" });
   await expect(page).toHaveURL(/distrito=31001/);
@@ -62,10 +62,10 @@ test("encadeia Distrito → UBS → Equipe e limpa os descendentes", async ({
 });
 
 test("unknown mostra somente UBS sem distrito", async ({ page }) => {
-  await page.getByLabel("Distrito").selectOption("unknown");
+  await page.locator('select[name="distrito"]').selectOption("unknown");
   await expect(page).toHaveURL(/distrito=unknown/);
 
-  await expect(page.getByLabel("UBS").getByRole("option")).toHaveText([
+  await expect(page.locator('select[name="ubs"]').getByRole("option")).toHaveText([
     "Todas as UBS",
     "E2E UBS Sem Distrito · 9990003",
   ]);
@@ -85,6 +85,6 @@ test("normaliza no servidor uma combinação incompatível recebida pela URL", a
   await expect(page).toHaveURL(
     new RegExp(`inicio=${COMPETENCY}&fim=${COMPETENCY}&distrito=31001&ubs=all&equipe=all$`),
   );
-  await expect(page.getByLabel("UBS")).toHaveValue("all");
-  await expect(page.getByLabel("Equipe")).toHaveValue("all");
+  await expect(page.locator('select[name="ubs"]')).toHaveValue("all");
+  await expect(page.locator('select[name="equipe"]')).toHaveValue("all");
 });
