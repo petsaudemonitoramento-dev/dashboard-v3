@@ -1,6 +1,7 @@
 # Relatório de hardening e preparação da V1
 
-Data da validação local: 30/09/2026.
+Data da validação local: 01/10/2026.
+SHA funcional validado: `902a745bbefcd3e3ce9264705aed318a46d38b3c`.
 
 ## Escopo preservado
 
@@ -13,8 +14,8 @@ Data da validação local: 30/09/2026.
   background, Storage assíncrono, virtualização, materialized views, chaos
   engineering, SonarQube ou suporte CSV;
 - nenhuma migration antiga foi alterada e nenhuma proteção RLS foi removida;
-- não houve deploy, push remoto, aplicação de migration remota ou alteração
-  destrutiva.
+- não houve deploy, aplicação de migration remota ou alteração destrutiva;
+  mudanças foram enviadas somente à branch de integração, nunca a `main`.
 
 ## Revisão arquitetural
 
@@ -109,9 +110,9 @@ tempo/memória, produziu:
 
 | Linhas | XLSX | Parsing | Validação | Delta de heap aproximado | JSON |
 | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1.000 | 186.676 B | 589,15 ms | 46,09 ms | -1.721.432 B | 119.857 B |
-| 5.000 | 889.913 B | 2.075,75 ms | 105,41 ms | 22.005.136 B | 611.857 B |
-| 10.000 | 1.768.547 B | 2.984,38 ms | 321,64 ms | 1.587.904 B | 1.226.862 B |
+| 1.000 | 186.676 B | 564,90 ms | 49,27 ms | -3.036.864 B | 119.857 B |
+| 5.000 | 889.913 B | 2.027,86 ms | 81,35 ms | 22.585.728 B | 611.857 B |
+| 10.000 | 1.768.547 B | 1.436,50 ms | 227,00 ms | 4.461.696 B | 1.226.862 B |
 
 O delta de heap é apenas indicativo e pode ser negativo por coleta de lixo.
 Funcionalmente, 10.001 linhas são recusadas e um payload UTF-8 acima de 4 MiB

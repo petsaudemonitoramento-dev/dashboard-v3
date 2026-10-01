@@ -42,7 +42,7 @@ o manifesto são artefatos externos e ignorados pelo Git; não crie a tag antes
 da aprovação formal do freeze. Consulte `docs/registro/ARQUIVOS_AUTORAIS.md` e
 mantenha as pendências administrativas em `docs/registro/PENDENCIAS_NITT.md`.
 
-Documentos operacionais: [deploy](docs/DEPLOY.md), [autenticação](docs/AUTENTICACAO.md), [importação](docs/IMPORTACAO_SIAPS.md), [acessibilidade](docs/ACESSIBILIDADE.md), [auditoria](docs/AUDITORIA.md), [segurança HTTP](docs/SEGURANCA_HTTP.md), [teste de carga](docs/TESTE_DE_CARGA.md), [permissões](docs/PERMISSOES.md), [Metabase](docs/METABASE.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
+Documentos operacionais: [Release Candidate](docs/RELEASE_CANDIDATE_V1.md), [smoke test](docs/SMOKE_TEST_V1.md), [deploy](docs/DEPLOY.md), [autenticação](docs/AUTENTICACAO.md), [importação](docs/IMPORTACAO_SIAPS.md), [acessibilidade](docs/ACESSIBILIDADE.md), [auditoria](docs/AUDITORIA.md), [segurança HTTP](docs/SEGURANCA_HTTP.md), [teste de carga](docs/TESTE_DE_CARGA.md), [permissões](docs/PERMISSOES.md), [Metabase](docs/METABASE.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
 
 Domínio oficial: https://maeaps.vercel.app
 
