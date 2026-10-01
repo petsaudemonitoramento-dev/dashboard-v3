@@ -136,3 +136,8 @@ manualmente somente o deployment do mesmo commit depois que os dois checks de
 `main` estiverem verdes. Use um dos dois fluxos — Deployment Checks com alias
 automático ou promoção manual sem alias automático — nunca o alias automático
 sem gate.
+
+
+### Observabilidade no Preview
+
+Quando `NEXT_PUBLIC_SENTRY_DSN` estiver configurada no ambiente Preview da Vercel, um novo deployment da branch é necessário para incorporar o valor ao build. O diagnóstico sintético permanece restrito a `VERCEL_ENV=preview` e a sessão de administrador.
