@@ -12,7 +12,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
   }
 
-  if (request.headers.get("x-maeaps-diagnostic") !== DIAGNOSTIC_HEADER) {
+  const url = new URL(request.url);
+  const confirmed =
+    request.headers.get("x-maeaps-diagnostic") === DIAGNOSTIC_HEADER
+    || url.searchParams.get("confirm") === DIAGNOSTIC_HEADER;
+
+  if (!confirmed) {
     return NextResponse.json({ error: "Diagnóstico não autorizado." }, { status: 400 });
   }
 
