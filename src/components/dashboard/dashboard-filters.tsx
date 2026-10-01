@@ -145,6 +145,8 @@ export function ManagementDashboardFilters({
   const [isPending, startTransition] = useTransition();
   const [selection, setSelection] = useOptimistic(initialSelection);
   const queryInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const pendingFocusRef = useRef<string | null>(null);
   const geographicParentPending = isPending && (
     selection.start !== initialSelection.start
     || selection.end !== initialSelection.end
@@ -160,11 +162,32 @@ export function ManagementDashboardFilters({
     }
   }, [initialSelection.query]);
 
+  useEffect(() => {
+    if (isPending || !pendingFocusRef.current) return;
+
+    const name = pendingFocusRef.current;
+    pendingFocusRef.current = null;
+    requestAnimationFrame(() => {
+      formRef.current
+        ?.querySelector<HTMLElement>(`[name="${name}"]`)
+        ?.focus();
+    });
+  }, [
+    isPending,
+    initialSelection.start,
+    initialSelection.end,
+    initialSelection.district,
+    initialSelection.establishmentId,
+    initialSelection.teamId,
+    initialSelection.classification,
+  ]);
+
   function currentQuery() {
     return queryInputRef.current?.value ?? initialSelection.query;
   }
 
-  function navigate(next: ManagementFilterSelection) {
+  function navigate(next: ManagementFilterSelection, focusName?: string) {
+    if (focusName) pendingFocusRef.current = focusName;
     startTransition(() => {
       setSelection(next);
       router.push(managementDashboardHref(next), { scroll: false });
@@ -173,6 +196,7 @@ export function ManagementDashboardFilters({
 
   return (
     <form
+      ref={formRef}
       aria-busy={isPending}
       className="dashboard-filter-grid"
       method="get"
@@ -189,7 +213,7 @@ export function ManagementDashboardFilters({
             ...selection,
             start: event.target.value,
             query: currentQuery(),
-          })}
+          }, event.currentTarget.name)}
           value={selection.start}
         >
           {competencies.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
@@ -203,7 +227,7 @@ export function ManagementDashboardFilters({
             ...selection,
             end: event.target.value,
             query: currentQuery(),
-          })}
+          }, event.currentTarget.name)}
           value={selection.end}
         >
           {competencies.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
@@ -219,7 +243,7 @@ export function ManagementDashboardFilters({
             establishmentId: "all",
             teamId: "all",
             query: currentQuery(),
-          })}
+          }, event.currentTarget.name)}
           value={selection.district}
         >
           <option value="all">Todos os distritos</option>
@@ -237,7 +261,7 @@ export function ManagementDashboardFilters({
             establishmentId: event.target.value,
             teamId: "all",
             query: currentQuery(),
-          })}
+          }, event.currentTarget.name)}
           value={selection.establishmentId}
         >
           <option value="all">Todas as UBS</option>
@@ -253,7 +277,7 @@ export function ManagementDashboardFilters({
             ...selection,
             teamId: event.target.value,
             query: currentQuery(),
-          })}
+          }, event.currentTarget.name)}
           value={selection.teamId}
         >
           <option value="all">Todas as equipes</option>
@@ -268,7 +292,7 @@ export function ManagementDashboardFilters({
             ...selection,
             classification: event.target.value as DashboardClassification,
             query: currentQuery(),
-          })}
+          }, event.currentTarget.name)}
           value={selection.classification}
         >
           {classifications.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
