@@ -147,6 +147,10 @@ test.describe("auditoria automática WCAG", () => {
 test.describe("teclado e gerenciamento de foco", () => {
   test("pula para o conteúdo e opera o menu do usuário", async ({ page }) => {
     await signIn(page, "gestao");
+    await page.goto("/sistema/gestao");
+    await expect(
+      page.getByRole("heading", { name: "Olá, Gestão de Saúde" }),
+    ).toBeVisible();
 
     const skipLink = page.getByRole("link", {
       name: "Pular para o conteúdo",
