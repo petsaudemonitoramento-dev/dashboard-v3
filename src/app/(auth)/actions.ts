@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 
-import { getPublicEnv } from "@/config/env";
+import { resolveAuthOrigin } from "@/lib/auth/origin";
 import { isReauthenticationRequired } from "@/lib/auth/supabase-errors";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -22,21 +22,6 @@ const initialError = (message: string): FormState => ({ message, ok: false });
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
   return typeof value === "string" ? value : "";
-}
-
-/**
- * Origem canônica da aplicação.
- *
- * Vem exclusivamente da configuração. Nenhum cabeçalho da requisição
- * (`x-forwarded-host`, `host`, `x-forwarded-proto`) participa da decisão:
- * eles são controlados por quem faz a chamada e permitiriam apontar o link de
- * recuperação de senha para um domínio hostil, entregando o `code` da vítima.
- *
- * `getPublicEnv()` falha explicitamente no boot se a variável não estiver
- * configurada, então aqui o valor é sempre confiável.
- */
-function canonicalOrigin() {
-  return getPublicEnv().NEXT_PUBLIC_APP_URL;
 }
 
 export async function signInAction(
@@ -73,7 +58,7 @@ export async function signUpAction(
     return initialError(parsed.error.issues[0]?.message ?? "Dados inválidos.");
   }
 
-  const origin = canonicalOrigin();
+  const origin = resolveAuthOrigin();
   const supabase = await createClient();
   const result = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -95,7 +80,7 @@ export async function signUpAction(
 }
 
 export async function signInWithGoogleAction() {
-  const origin = canonicalOrigin();
+  const origin = resolveAuthOrigin();
   const supabase = await createClient();
   const result = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -122,7 +107,7 @@ export async function requestPasswordResetAction(
     return initialError(parsed.error.issues[0]?.message ?? "E-mail inválido.");
   }
 
-  const origin = canonicalOrigin();
+  const origin = resolveAuthOrigin();
   const supabase = await createClient();
   const result = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: origin + "/auth/callback?next=/redefinir-senha",
