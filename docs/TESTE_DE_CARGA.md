@@ -50,3 +50,48 @@ Registre por perfil:
 - taxa de checks;
 - iterações por segundo;
 - consumo e erros observados no Vercel e no Supabase de staging.
+
+
+## Teste cloud real somente leitura
+
+Para validar o banco hospedado sem criar projeto/branch paga, existe também:
+
+```powershell
+npm run test:load:cloud
+```
+
+Esse cenário é deliberadamente mais restrito que o teste de staging:
+
+- trava o destino para o projeto Supabase `dashboard-v3` (`nyexakdyxtstcyycmlng.supabase.co`);
+- aceita somente os perfis de 10 VUs por 1 minuto e 50 VUs por 2 minutos;
+- autentica uma única conta sintética de Gestão no `setup()`;
+- executa apenas leituras das views analíticas C3;
+- não publica XLSX, não altera perfis, não altera território e não executa mutations;
+- exige a confirmação literal `K6_ALLOW_CLOUD=READ_ONLY_AUTHORIZED`;
+- senha e chave publicável ficam apenas em variáveis de ambiente locais e nunca devem ser commitadas.
+
+Variáveis exigidas:
+
+```text
+K6_SUPABASE_URL
+K6_SUPABASE_ANON_KEY
+K6_TEST_EMAIL
+K6_TEST_PASSWORD
+K6_PROFILE=10 ou 50
+K6_ALLOW_CLOUD=READ_ONLY_AUTHORIZED
+```
+
+Use somente uma conta sintética de Gestão. Comece pelo perfil 10 e só avance para
+50 se a taxa de erro permanecer normal. Esse teste consome a franquia normal do
+projeto hospedado, portanto não deve ser repetido sem necessidade nem ampliado
+para cargas maiores enquanto o projeto estiver no plano gratuito.
+
+Durante a execução, registrar:
+
+- `http_req_duration` p50, p90 e p95;
+- `http_req_failed`;
+- taxa de `checks`;
+- iterações por segundo;
+- contadores do Postgres antes/depois;
+- erros nos logs do Supabase;
+- qualquer sinal de throttling ou resposta 5xx.
