@@ -2,7 +2,10 @@ import type { Event } from "@sentry/nextjs";
 
 const SENSITIVE_KEY =
   /(authorization|cookie|email|file_?sha|filename|password|payload|rows|secret|session|token)/i;
-const DIRECT_IDENTIFIER_KEY = /^(?:ip|ip_?address|user_?agent)$/i;
+const DIRECT_IDENTIFIER_KEY =
+  /^(?:ip|ip_?address|user_?agent|user_?id|profile_?id|actor_?user_?id|auth_?user_?id)$/i;
+const QUERY_METADATA_KEY =
+  /(?:^|[._-])(?:query|query_?string|search|search_?params|params)(?:$|[._-])/i;
 
 export function sanitizeTelemetryText(value: string) {
   return value
@@ -28,7 +31,11 @@ export function sanitizeTelemetryText(value: string) {
 }
 
 function sanitizeValue(value: unknown, key = "", depth = 0): unknown {
-  if (SENSITIVE_KEY.test(key) || DIRECT_IDENTIFIER_KEY.test(key)) {
+  if (
+    SENSITIVE_KEY.test(key)
+    || DIRECT_IDENTIFIER_KEY.test(key)
+    || QUERY_METADATA_KEY.test(key)
+  ) {
     return "[removido]";
   }
   if (typeof value === "string") return sanitizeTelemetryText(value);
