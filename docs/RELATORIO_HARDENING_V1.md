@@ -249,15 +249,18 @@ Deployment Checks ou, se indisponíveis, produção staged com promoção manual
 - [ ] opcionalmente registrar baseline k6 em staging autorizado, nunca produção;
 - [ ] após CI verde, fazer backup do banco, executar `supabase migration list`
       e `supabase db push --dry-run`, confirmar exatamente as três migrations
-      novas (`010500`, `013000` e `014500`) e aplicá-las pelo fluxo incremental
-      controlado, sem seed e sem `db reset` remoto;
+      novas (`20260930010500_dashboard_practice_totals.sql`,
+      `20260930013000_protect_last_active_admin.sql` e
+      `20260930014500_reconcile_production_functions.sql`) e aplicá-las pelo
+      fluxo incremental controlado, sem seed e sem `db reset` remoto;
 - [ ] confirmar ruleset GitHub e um dos dois gates Vercel antes do merge;
 - [ ] fazer merge e aguardar novamente os checks do commit em `main`;
 - [ ] confirmar que o deployment promovido corresponde exatamente ao commit;
 - [ ] executar smoke de produção não destrutivo e conferir logs/Sentry;
-- [ ] executar `npm run registro:codigo` conforme o processo de registro;
-- [ ] garantir working tree limpo e criar a tag anotada `v1.0.0` no commit
-      aprovado;
+- [ ] após validar o commit final de `main`, declarar o freeze, executar
+      `npm run registro:codigo` e revisar o pacote autoral gerado;
+- [ ] garantir working tree limpo e criar a tag anotada `v1.0.0` no mesmo commit
+      aprovado e registrado no cabeçalho do pacote;
 - [ ] publicar a tag somente após autorização e então executar
       `npm run registro:hash -- --tag v1.0.0`;
 - [ ] registrar release notes, migrations aplicadas, responsáveis, horário e

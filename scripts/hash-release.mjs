@@ -1,40 +1,87 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
+const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const tagIndex = process.argv.indexOf("--tag");
 const tag = tagIndex >= 0 ? process.argv[tagIndex + 1] : null;
-if (!tag) throw new Error("Informe a tag congelada com --tag, por exemplo: --tag v1.0.0");
-if (execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim()) throw new Error("A árvore Git precisa estar limpa antes do hash final.");
-const head = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-const tagged = execFileSync("git", ["rev-list", "-n", "1", tag], { encoding: "utf8" }).trim();
+
+function git(args, options = {}) {
+  return execFileSync("git", args, {
+    cwd: repoRoot,
+    encoding: "utf8",
+    ...options,
+  });
+}
+
+if (!tag || !/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/.test(tag)) {
+  throw new Error("Informe uma tag semântica com --tag, por exemplo: --tag v1.0.0");
+}
+if (git(["status", "--porcelain", "--untracked-files=all"]).trim()) {
+  throw new Error("A árvore Git precisa estar limpa antes do hash final.");
+}
+
+let tagged;
+try {
+  const tagType = git(["cat-file", "-t", `refs/tags/${tag}`]).trim();
+  if (tagType !== "tag") {
+    throw new Error(`A referência ${tag} precisa ser uma tag anotada.`);
+  }
+  tagged = git(["rev-parse", "--verify", `refs/tags/${tag}^{commit}`]).trim();
+} catch (error) {
+  if (error instanceof Error && error.message.includes("tag anotada")) throw error;
+  throw new Error(`A tag anotada ${tag} não existe neste repositório.`);
+}
+
+const head = git(["rev-parse", "HEAD"]).trim();
 if (head !== tagged) throw new Error(`HEAD não corresponde à tag ${tag}.`);
 
-// O hash cobre exatamente os arquivos versionados na tag, lidos do Git e não do
-// disco: arquivos ignorados (.env.local, supabase/.temp, .vercel) e conversões
-// de fim de linha do sistema operacional não alteram o resultado.
-const tree = execFileSync("git", ["rev-parse", `${tag}^{tree}`], { encoding: "utf8" }).trim();
-const listing = execFileSync("git", ["ls-tree", "-r", "-z", "--full-tree", tag], { encoding: "utf8" });
+const tree = git(["rev-parse", `${tag}^{tree}`]).trim();
+const listing = git(["ls-tree", "-r", "-z", "--full-tree", tag]);
 const files = listing
   .split("\0")
   .filter(Boolean)
   .map((entry) => {
     const [meta, path] = entry.split("\t");
-    const [, type, object] = meta.split(" ");
-    return { type, object, path };
+    const [mode, type, object] = meta.split(" ");
+    return { mode, type, object, path };
   })
-  .filter(({ type, path }) => type === "blob" && path !== "package-lock.json" && !path.startsWith("docs/registro/hash-"))
-  .sort((a, b) => a.path.localeCompare(b.path, "en"));
+  .filter(({ type }) => type === "blob");
 
-const hash = createHash("sha256");
+const sourceHash = createHash("sha256");
 for (const file of files) {
-  hash.update(file.path);
-  hash.update("\0");
-  hash.update(execFileSync("git", ["cat-file", "blob", file.object]));
-  hash.update("\0");
+  const blob = execFileSync("git", ["cat-file", "blob", file.object], { cwd: repoRoot });
+  sourceHash.update(`${file.mode} ${file.type} ${file.path}\0${blob.length}\0`, "utf8");
+  sourceHash.update(blob);
+  sourceHash.update("\0");
 }
-const digest = hash.digest("hex");
-const output = resolve(`docs/registro/hash-${tag}.txt`);
-await writeFile(output, `tag=${tag}\ncommit=${head}\ntree=${tree}\nsha256=${digest}\nfiles=${files.length}\n`, "utf8");
+
+const packagePath = resolve(repoRoot, "docs/registro/trechos-codigo-v1.txt");
+let registrationPackage;
+try {
+  registrationPackage = await readFile(packagePath);
+} catch {
+  throw new Error("Gere e revise o pacote com npm run registro:codigo antes do hash final.");
+}
+const packageText = registrationPackage.toString("utf8");
+if (!packageText.includes(`commit=${head}\n`)) {
+  throw new Error("O pacote de código não corresponde ao commit congelado.");
+}
+
+const output = resolve(repoRoot, `docs/registro/hash-${tag}.txt`);
+const manifest = [
+  "format=mae-aps-release-hash-v1",
+  `tag=${tag}`,
+  `commit=${head}`,
+  `tree=${tree}`,
+  `source_sha256=${sourceHash.digest("hex")}`,
+  `source_files=${files.length}`,
+  "package=docs/registro/trechos-codigo-v1.txt",
+  `package_sha256=${createHash("sha256").update(registrationPackage).digest("hex")}`,
+  `package_bytes=${registrationPackage.length}`,
+  "",
+].join("\n");
+await writeFile(output, manifest, "utf8");
 console.log(output);

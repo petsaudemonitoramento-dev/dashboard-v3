@@ -1,8 +1,12 @@
 
-.env.local
-.env*.local
+.env
+.env.*
+!.env.example
 node_modules/
 .next/
+.vercel/
+tmp/
+temp/
 .supabase-test/
 coverage/
 playwright-report/
@@ -10,3 +14,5 @@ test-results/
 *.tsbuildinfo
 supabase/.branches/
 supabase/.temp/
+docs/registro/trechos-codigo-v1.txt
+docs/registro/hash-*.txt

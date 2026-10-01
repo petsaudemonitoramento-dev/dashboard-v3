@@ -34,7 +34,13 @@ O Metabase está arquitetonicamente preparado como camada analítica complementa
 
 ## Release e registro
 
-Após CI verde e congelamento da versão, execute `npm run registro:codigo`, crie a tag da release e somente então rode `npm run registro:hash -- --tag <tag>`. Pendências administrativas permanecem em `docs/registro/PENDENCIAS_NITT.md`.
+O fluxo de congelamento é: CI verde → Preview aprovado → smoke test aprovado →
+merge aprovado → commit final de `main` validado → freeze → geração e revisão do
+pacote com `npm run registro:codigo` → tag anotada `v1.0.0` → manifesto final
+com `npm run registro:hash -- --tag v1.0.0` → material do registro. O pacote e
+o manifesto são artefatos externos e ignorados pelo Git; não crie a tag antes
+da aprovação formal do freeze. Consulte `docs/registro/ARQUIVOS_AUTORAIS.md` e
+mantenha as pendências administrativas em `docs/registro/PENDENCIAS_NITT.md`.
 
 Documentos operacionais: [deploy](docs/DEPLOY.md), [autenticação](docs/AUTENTICACAO.md), [importação](docs/IMPORTACAO_SIAPS.md), [acessibilidade](docs/ACESSIBILIDADE.md), [auditoria](docs/AUDITORIA.md), [segurança HTTP](docs/SEGURANCA_HTTP.md), [teste de carga](docs/TESTE_DE_CARGA.md), [permissões](docs/PERMISSOES.md), [Metabase](docs/METABASE.md) e [registro de software](docs/registro/RESUMO_TECNICO.md).
 
