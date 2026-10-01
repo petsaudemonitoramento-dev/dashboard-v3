@@ -58,6 +58,27 @@ export default async function AdministrationPage({
         <ShieldCheck aria-hidden="true" className="size-16 text-cyan-300" />
       </section>
 
+      {process.env.VERCEL_ENV === "preview" ? (
+        <section className="panel border-sky-200! bg-sky-50!">
+          <span className="eyebrow">Somente Preview</span>
+          <h2 className="mt-2 font-bold text-slate-900">Diagnóstico do Sentry</h2>
+          <p className="mt-2 text-sm text-slate-700">
+            Envia um erro sintético sanitizado para confirmar a observabilidade.
+            Esta ação é bloqueada fora do Preview e exige sessão de administrador.
+          </p>
+          <form
+            action="/api/diagnostics/sentry?confirm=sentry-preview"
+            className="mt-4"
+            method="post"
+            target="_blank"
+          >
+            <button className="primary-button" type="submit">
+              Enviar erro sintético ao Sentry
+            </button>
+          </form>
+        </section>
+      ) : null}
+
       {status === "salvo" ? (
         <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900" role="status">
           Perfil atualizado e registrado na auditoria.
