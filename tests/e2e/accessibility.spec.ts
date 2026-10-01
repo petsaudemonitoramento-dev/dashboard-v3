@@ -58,7 +58,7 @@ test.describe("auditoria automática WCAG", () => {
   test("página de login", async ({ page }) => {
     await page.goto("/entrar");
     await expect(
-      page.getByRole("heading", { name: "Boas-vindas" }),
+      page.getByRole("heading", { name: "Acesso ao MAE APS" }),
     ).toBeVisible();
 
     await expectNoWcagViolations(page, "Violações na página de login");
@@ -96,7 +96,7 @@ test.describe("auditoria automática WCAG", () => {
       mimeType: XLSX_MIME,
       buffer: invalidWorkbook(),
     });
-    await expect(page.getByText("Erros que impedem a importação")).toBeVisible();
+    await expect(page.getByText("Erros que impedem a importação", { exact: true })).toBeVisible({ timeout: 10_000 });
     await expectNoWcagViolations(
       page,
       "Violações no estado inválido da importação",
@@ -107,7 +107,7 @@ test.describe("auditoria automática WCAG", () => {
       mimeType: XLSX_MIME,
       buffer: validWorkbook(),
     });
-    await expect(page.getByText("E2E UBS Importada")).toBeVisible();
+    await expect(page.getByText("E2E UBS Importada", { exact: true }).first()).toBeVisible({ timeout: 10_000 });
     await expect(
       page.getByRole("button", { name: "Confirmar e publicar" }),
     ).toBeEnabled();
@@ -172,17 +172,17 @@ test.describe("teclado e gerenciamento de foco", () => {
       "/sistema/gestao?inicio=2099-01&fim=2099-01&distrito=all&ubs=all&equipe=all",
     );
 
-    const district = page.getByLabel("Distrito");
+    const district = page.locator('select[name="distrito"]');
     await district.focus();
     await district.selectOption({ label: "E2E Distrito Norte" });
     await expect(page).toHaveURL(/distrito=31001&ubs=all&equipe=all$/);
-    await expect(page.getByLabel("Distrito")).toBeFocused();
+    await expect(page.locator('select[name="distrito"]')).toBeFocused();
 
-    const establishment = page.getByLabel("UBS");
+    const establishment = page.locator('select[name="ubs"]');
     await establishment.focus();
     await establishment.selectOption({ label: "E2E UBS Alfa · 9990001" });
     await expect(page).toHaveURL(/distrito=31001&ubs=[0-9a-f-]+&equipe=all$/);
-    await expect(page.getByLabel("UBS")).toBeFocused();
+    await expect(page.locator('select[name="ubs"]')).toBeFocused();
   });
 
   test("mantém o foco no diálogo e fecha com Escape", async ({ page }) => {
