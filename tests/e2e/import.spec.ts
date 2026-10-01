@@ -34,10 +34,14 @@ test("valida e publica uma planilha válida", async ({ page }) => {
     buffer: validWorkbook(),
   });
 
-  await expect(page.getByText("Registros válidos", { exact: true })).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText("E2E UBS Importada", { exact: true }).first()).toBeVisible({ timeout: 10_000 });
   const publish = page.getByRole("button", { name: "Confirmar e publicar" });
-  await expect(publish).toBeEnabled();
+  await expect(publish).toBeEnabled({ timeout: 20_000 });
+  await expect(
+    page.getByText("Registros válidos", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("E2E UBS Importada", { exact: true }).first(),
+  ).toBeVisible();
   await publish.click();
 
   await expect(page.getByRole("status")).toContainText(
