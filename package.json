@@ -24,7 +24,8 @@
     "db:reset": "supabase db reset",
     "typecheck": "tsc --noEmit",
     "registro:codigo": "node scripts/generate-registration-code.mjs",
-    "registro:hash": "node scripts/hash-release.mjs"
+    "registro:hash": "node scripts/hash-release.mjs",
+    "test:load:cloud": "k6 run tests/load/supabase-cloud.js"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.2",
