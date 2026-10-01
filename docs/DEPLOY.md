@@ -21,6 +21,24 @@ Em produção, `NEXT_PUBLIC_APP_URL` deve ser exatamente `https://maeaps.vercel.
 
 Execute `npm test`, `npm run typecheck`, `npm run lint` e `npm run build`. Execute `db reset` e testes SQL/RLS somente no GitHub Actions. Publique migrations incrementais somente após revisão e backup; o snapshot estrutural não deve ser reaplicado automaticamente no V3 remoto.
 
+Para a V1, a aplicação remota é uma operação manual e controlada, realizada
+somente depois de CI verde, backup verificado e revisão humana:
+
+1. executar `supabase migration list`;
+2. executar `supabase db push --dry-run`;
+3. confirmar que as três migrations pendentes são, exatamente:
+   - `20260930010500_dashboard_practice_totals.sql`;
+   - `20260930013000_protect_last_active_admin.sql`;
+   - `20260930014500_reconcile_production_functions.sql`;
+4. aplicar apenas essas migrations pelo fluxo incremental controlado;
+5. nunca executar `db reset` no remoto;
+6. nunca aplicar `supabase/seed.sql` em produção nem usar `--include-seed`.
+
+A migration `20260930014500_reconcile_production_functions.sql` é a
+reconciliação forward-only das RPCs canônicas diante da colisão histórica de
+versionamento da migration `20260929004905`; ela não deve ser omitida, reescrita
+nem substituída por alteração retroativa de migration já aplicada.
+
 O workflow **MAE APS - Validacao V1** executa, nesta ordem, `npm ci`, testes, TypeScript, ESLint, build do Next.js, Supabase local, reconstrução completa por migrations e testes SQL/RLS. Ele roda em pull requests e pushes para `main` e também pode ser iniciado manualmente. O workflow separado **MAE APS - CodeQL** analisa somente JavaScript/TypeScript com as consultas padrão de segurança, sem duplicar a função com Semgrep.
 
 Na sequência, a mesma instância local do Supabase recebe usuários e dados

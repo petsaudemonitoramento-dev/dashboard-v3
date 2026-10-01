@@ -175,19 +175,28 @@ Deployment Checks ou, se indisponíveis, produção staged com promoção manual
 
 ## Configuração manual no Supabase Dashboard
 
-1. Após backup e CI verde, revisar `supabase migration list` e
-   `supabase db push --dry-run`; um único responsável aplica as duas migrations
-   com `db push`, sem `--include-seed` e nunca com `db reset` no remoto.
-2. Conferir Site URL e allow-list exata de `/auth/callback`, sem curingas amplos
+1. Após CI verde, backup verificado e revisão humana, executar
+   `supabase migration list`.
+2. Executar `supabase db push --dry-run` e confirmar que estão pendentes
+   exatamente `20260930010500_dashboard_practice_totals.sql`,
+   `20260930013000_protect_last_active_admin.sql` e
+   `20260930014500_reconcile_production_functions.sql`.
+3. Um único responsável aplica somente essas três migrations pelo fluxo
+   incremental controlado, sem `--include-seed`, sem aplicar `supabase/seed.sql`
+   em produção e nunca com `db reset` no remoto. A migration `014500` é a
+   reconciliação forward-only das RPCs canônicas e da colisão histórica de
+   versionamento; não deve ser omitida nem substituída pela edição de migration
+   já aplicada.
+4. Conferir Site URL e allow-list exata de `/auth/callback`, sem curingas amplos
    para Preview.
-3. Conferir JWT de 3.600 s, rotação de refresh token e reuse interval de 10 s.
-4. Conferir confirmação de e-mail, secure password change, cadastro anônimo e
+5. Conferir JWT de 3.600 s, rotação de refresh token e reuse interval de 10 s.
+6. Conferir confirmação de e-mail, secure password change, cadastro anônimo e
    manual linking desativados, SMTP e rate limits.
-5. Ativar Leaked Password Protection se o plano oferecer; se não oferecer,
+7. Ativar Leaked Password Protection se o plano oferecer; se não oferecer,
    registrar a limitação, sem workaround improvisado.
-6. Configurar Google Client ID/Secret e a callback Supabase no Google Cloud;
+8. Configurar Google Client ID/Secret e a callback Supabase no Google Cloud;
    testar OAuth/PKCE em staging.
-7. Não definir timebox/inatividade até a instituição decidir política para
+9. Não definir timebox/inatividade até a instituição decidir política para
    turnos, equipamentos compartilhados e reautenticação. Esses controles também
    dependem do plano.
 
@@ -238,8 +247,10 @@ Deployment Checks ou, se indisponíveis, produção staged com promoção manual
 - [ ] executar smoke de Preview/staging para Auth, papéis, filtros, importação,
       dashboard, logout, headers e evento Sentry sanitizado;
 - [ ] opcionalmente registrar baseline k6 em staging autorizado, nunca produção;
-- [ ] fazer backup do banco e aplicar somente as duas migrations novas pelo
-      fluxo controlado, sem seed/reset remoto;
+- [ ] após CI verde, fazer backup do banco, executar `supabase migration list`
+      e `supabase db push --dry-run`, confirmar exatamente as três migrations
+      novas (`010500`, `013000` e `014500`) e aplicá-las pelo fluxo incremental
+      controlado, sem seed e sem `db reset` remoto;
 - [ ] confirmar ruleset GitHub e um dos dois gates Vercel antes do merge;
 - [ ] fazer merge e aguardar novamente os checks do commit em `main`;
 - [ ] confirmar que o deployment promovido corresponde exatamente ao commit;
