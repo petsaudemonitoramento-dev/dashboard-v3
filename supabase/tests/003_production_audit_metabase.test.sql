@@ -72,12 +72,12 @@ select is((select points_total from analytics.dashboard_competencies where compe
 select is((select denominator from analytics.dashboard_competencies where competency='2026-01-01'),3::bigint,'competency exposes additive denominator');
 select is((select round(c3,2) from analytics.dashboard_competencies where competency='2026-01-01'),70.00::numeric,'competency C3 uses ratio of sums');
 select is((select count(*) from analytics.dashboard_c3_team_monthly where classification in ('Bom','Ótimo')),2::bigint,'classification boundaries are available per team');
-select is((select fulfilled from analytics.dashboard_c3_practice_totals('2026-01-01',null,false,null,null) where practice_code='A'),3::bigint,'municipal practice total aggregates A without row-limit truncation');
+select is((select fulfilled from analytics.dashboard_c3_practice_totals('2026-01-01'::date,null::smallint,false,null::uuid,null::uuid) where practice_code='A'),3::bigint,'municipal practice total aggregates A without row-limit truncation');
 select is((select fulfilled from analytics.dashboard_c3_practice_totals(
-  '2026-01-01',null,false,null,(select id from core.teams where ine='0000000002')
+  '2026-01-01'::date,null::smallint,false,null::uuid,(select id from core.teams where ine='0000000002')
 ) where practice_code='A'),2::bigint,'team practice total applies the team filter');
-select is((select fulfilled from analytics.dashboard_c3_practice_totals('2026-01-01',null,true,null,null) where practice_code='A'),3::bigint,'unknown district includes only facts without district');
-select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01',1,true,null,null)),0::bigint,'contradictory unknown and district parameters fail closed');
+select is((select fulfilled from analytics.dashboard_c3_practice_totals('2026-01-01'::date,null::smallint,true,null::uuid,null::uuid) where practice_code='A'),3::bigint,'unknown district includes only facts without district');
+select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01'::date,1::smallint,true,null::uuid,null::uuid)),0::bigint,'contradictory unknown and district parameters fail closed');
 
 insert into siaps.imports(id,filename,file_sha256,competency,source_status,status,rows_total,uploaded_by)
 values ('50000000-0000-0000-0000-000000000001','zero.xlsx',repeat('d',64),'2026-02-01','preliminar','publicado',1,'40000000-0000-0000-0000-000000000001');
@@ -90,15 +90,15 @@ select ok((select c3 is null from analytics.dashboard_competencies where compete
 set local role authenticated;
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000003',true);
 select is((select count(*) from analytics.c3_team_monthly),0::bigint,'admin cannot read dashboard facts');
-select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01',null,false,null,null)),0::bigint,'admin cannot read practices through RPC');
+select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01'::date,null::smallint,false,null::uuid,null::uuid)),0::bigint,'admin cannot read practices through RPC');
 select is((select count(*) from siaps.imports),0::bigint,'admin cannot read import history');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000001',true);
 select is((select count(*) from analytics.c3_team_monthly),3::bigint,'gestao reads dashboard facts');
-select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01',null,false,null,null)),11::bigint,'gestao reads eleven aggregated practices');
+select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01'::date,null::smallint,false,null::uuid,null::uuid)),11::bigint,'gestao reads eleven aggregated practices');
 select is((select count(*) from siaps.imports),2::bigint,'gestao reads import history');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000002',true);
 select is((select count(*) from analytics.c3_team_monthly),3::bigint,'leitura reads dashboard facts');
-select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01',null,false,null,null)),11::bigint,'leitura reads eleven aggregated practices');
+select is((select count(*) from analytics.dashboard_c3_practice_totals('2026-01-01'::date,null::smallint,false,null::uuid,null::uuid)),11::bigint,'leitura reads eleven aggregated practices');
 select is((select count(*) from siaps.imports),0::bigint,'leitura cannot read import history');
 select set_config('request.jwt.claim.sub','40000000-0000-0000-0000-000000000001',true);
 select throws_ok(
