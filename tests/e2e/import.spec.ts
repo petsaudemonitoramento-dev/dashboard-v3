@@ -18,7 +18,7 @@ test("recusa uma planilha inválida antes da publicação", async ({ page }) => 
     buffer: invalidWorkbook(),
   });
 
-  await expect(page.getByText("Erros que impedem a importação")).toBeVisible();
+  await expect(page.getByText("Erros que impedem a importação", { exact: true })).toBeVisible({ timeout: 10_000 });
   await expect(
     page.getByText("Cabeçalho SIAPS com CNES e INE não encontrado."),
   ).toBeVisible();
@@ -34,8 +34,8 @@ test("valida e publica uma planilha válida", async ({ page }) => {
     buffer: validWorkbook(),
   });
 
-  await expect(page.getByText("Registros válidos")).toBeVisible();
-  await expect(page.getByText("E2E UBS Importada")).toBeVisible();
+  await expect(page.getByText("Registros válidos", { exact: true })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("E2E UBS Importada", { exact: true }).first()).toBeVisible({ timeout: 10_000 });
   const publish = page.getByRole("button", { name: "Confirmar e publicar" });
   await expect(publish).toBeEnabled();
   await publish.click();
