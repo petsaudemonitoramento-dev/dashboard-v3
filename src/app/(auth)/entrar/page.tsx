@@ -5,7 +5,7 @@ export default function SignInPage() {
   return (
     <AuthShell
       eyebrow="Acesso institucional"
-      title="Acesso ao MAE APS"
+      title="Boas-vindas"
       description="Entre com sua conta autorizada para acessar o ambiente correspondente ao seu perfil."
     >
       <SignInForm />

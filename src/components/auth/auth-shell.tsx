@@ -1,5 +1,25 @@
+﻿import Image from "next/image";
 import Link from "next/link";
-import { Building2, ShieldCheck } from "lucide-react";
+import {
+  Accessibility,
+  CheckCircle2,
+  ClipboardCheck,
+  Database,
+  Fingerprint,
+  LockKeyhole,
+  ShieldCheck,
+} from "lucide-react";
+
+import { SystemStatus } from "@/components/auth/system-status";
+
+const assuranceItems = [
+  { label: "Privacidade orientada Ã  LGPD", icon: ShieldCheck },
+  { label: "AutenticaÃ§Ã£o institucional", icon: Fingerprint },
+  { label: "Acesso por perfil", icon: LockKeyhole },
+  { label: "Auditoria operacional", icon: ClipboardCheck },
+  { label: "Rastreabilidade", icon: CheckCircle2 },
+  { label: "Acessibilidade verificada", icon: Accessibility },
+];
 
 export function AuthShell({
   eyebrow,
@@ -16,64 +36,134 @@ export function AuthShell({
     <div className="auth-portal">
       <header className="auth-portal-header">
         <Link href="/entrar" className="auth-portal-brand" aria-label="MAE APS">
-          <span className="auth-portal-mark">MAE</span>
-          <span>
+          <span className="auth-portal-mark" aria-hidden="true">
+            <i />
+            <b>MAE</b>
+          </span>
+          <span className="auth-brand-copy">
             <strong>MAE APS</strong>
             <small>Monitoramento, Atenção e Estratégia na APS</small>
           </span>
         </Link>
 
         <div className="auth-portal-institutions" aria-label="Identificação institucional">
-          <span className="auth-pet-wordmark">
-            <span className="auth-pet-dot" aria-hidden="true" />
+          <div className="auth-pet-lockup">
+            <Image
+              className="auth-pet-logo"
+              src="/brands/pet-saude-oficial.png"
+              alt="PET-Saúde"
+              width={600}
+              height={600}
+              priority
+            />
             <span>
-              <strong>PET SAÚDE UFCG</strong>
-              <small>Informação e Saúde Digital</small>
+              <strong>Informação e Saúde Digital</strong>
+              <small>Projeto UFCG</small>
             </span>
-          </span>
-          <span className="auth-ufcg-wordmark">
-            <span className="auth-ufcg-monogram" aria-hidden="true">UFCG</span>
-            <span>
-              <strong>Universidade Federal</strong>
-              <small>de Campina Grande</small>
-            </span>
-          </span>
+          </div>
+          <Image
+            className="auth-ufcg-logo"
+            src="/brands/ufcg-oficial.png"
+            alt="Universidade Federal de Campina Grande"
+            width={1472}
+            height={462}
+            priority
+          />
         </div>
       </header>
 
       <main className="auth-portal-main">
         <section className="auth-portal-context" aria-labelledby="auth-product-title">
-          <span className="auth-context-kicker">Gestão da Atenção Primária à Saúde</span>
-          <h1 id="auth-product-title">Dados oficiais para apoiar decisões na APS.</h1>
-          <p>
-            O MAE APS organiza indicadores oficiais do SIAPS em uma visão segura,
-            territorial e orientada à gestão.
-          </p>
+          <div className="auth-context-glow" aria-hidden="true" />
+          <div className="auth-context-grid" aria-hidden="true" />
 
-          <div className="auth-context-points">
-            <span><Building2 aria-hidden="true" /> Monitoramento territorial</span>
-            <span><ShieldCheck aria-hidden="true" /> Acesso por perfil autorizado</span>
+          <div className="auth-context-content">
+            <span className="auth-context-kicker">
+              <i aria-hidden="true" />
+              Gestão da Atenção Primária à Saúde
+            </span>
+            <h1 id="auth-product-title">
+              Informação oficial para orientar a gestão da APS.
+            </h1>
+            <p>
+              O MAE APS organiza indicadores oficiais em uma visão segura,
+              territorial e orientada à tomada de decisão.
+            </p>
+
+            <div className="auth-technical-panel">
+              <div className="auth-technical-heading">
+                <span className="auth-technical-icon" aria-hidden="true">
+                  <Database />
+                </span>
+                <span>
+                  <small>Base tÃ©cnica do sistema</small>
+                  <strong>ImportaÃ§Ã£o SIAPS C3</strong>
+                </span>
+              </div>
+              <dl>
+                <div>
+                  <dt>Origem</dt>
+                  <dd>SIAPS / SISAB</dd>
+                </div>
+                <div>
+                  <dt>Perfil suportado</dt>
+                  <dd>C3</dd>
+                </div>
+                <div>
+                  <dt>Formato</dt>
+                  <dd>XLSX oficial</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="auth-assurance-panel">
+              <div className="auth-assurance-heading">
+                <span>
+                  <small>Governança e confiabilidade</small>
+                  <strong>Controles implementados</strong>
+                </span>
+                <span className="auth-assurance-code" aria-label="Versão 1.0">v1.0</span>
+              </div>
+              <ul>
+                {assuranceItems.map(({ label, icon: Icon }) => (
+                  <li key={label}>
+                    <Icon aria-hidden="true" />
+                    <span>{label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </section>
 
-        <section className="auth-access-card" aria-labelledby="auth-access-title">
-          <div className="auth-access-heading">
-            <span>{eyebrow}</span>
-            <h2 id="auth-access-title">{title}</h2>
-            <p>{description}</p>
+        <section className="auth-access-zone" aria-labelledby="auth-access-title">
+          <div className="auth-access-orbit auth-access-orbit-one" aria-hidden="true" />
+          <div className="auth-access-orbit auth-access-orbit-two" aria-hidden="true" />
+
+          <div className="auth-access-card">
+            <div className="auth-access-topline">
+              <span>Ambiente institucional</span>
+              <SystemStatus />
+            </div>
+
+            <div className="auth-access-heading">
+              <span>{eyebrow}</span>
+              <h2 id="auth-access-title">{title}</h2>
+              <p>{description}</p>
+            </div>
+
+            {children}
+
+            <p className="auth-access-note">
+              Acesso protegido. As operações seguem as permissões definidas para
+              cada perfil institucional.
+            </p>
           </div>
-
-          {children}
-
-          <p className="auth-access-note">
-            Ambiente institucional. O acesso e as operações privilegiadas seguem
-            as permissões definidas para cada perfil.
-          </p>
         </section>
       </main>
 
       <footer className="auth-portal-footer">
-        <span><strong>MAE APS</strong> · PET SAÚDE UFCG</span>
+        <span><strong>MAE APS</strong> · PET-Saúde UFCG</span>
         <span>Desenvolvimento: Lucca Araújo</span>
         <span>Design: Kethilly Nayara</span>
       </footer>
