@@ -62,6 +62,97 @@ async function loadTrend(
   return (result.data ?? []) as DashboardTrendRow[];
 }
 
+type PracticeCountRow = {
+  practice_code: string;
+  fulfilled: number | string;
+};
+
+function isMissingPracticeTotalsRpc(error: { code?: string; message?: string } | null) {
+  return error?.code === "PGRST202"
+    || error?.message?.includes("dashboard_c3_practice_totals") === true;
+}
+
+async function loadPracticeTotalsFallback(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  input: {
+    competency: string;
+    district: string;
+    establishmentId: string;
+    teamId: string;
+  },
+) {
+  const factIds: number[] = [];
+
+  for (let offset = 0; ; offset += QUERY_PAGE_SIZE) {
+    let query = supabase
+      .schema("analytics")
+      .from("c3_team_monthly")
+      .select("id")
+      .eq("is_current", true)
+      .eq("competency", input.competency)
+      .order("id")
+      .range(offset, offset + QUERY_PAGE_SIZE - 1);
+
+    if (input.district === "unknown") {
+      query = query.is("district_id", null);
+    } else if (input.district !== "all") {
+      query = query.eq("district_id", Number(input.district));
+    }
+
+    if (input.establishmentId !== "all") {
+      query = query.eq("establishment_id", input.establishmentId);
+    }
+
+    if (input.teamId !== "all") {
+      query = query.eq("team_id", input.teamId);
+    }
+
+    const result = await query;
+    if (result.error) {
+      throw new Error("Não foi possível consultar o recorte das práticas A–K.");
+    }
+
+    const rows = (result.data ?? []) as Array<{ id: number }>;
+    factIds.push(...rows.map((row) => row.id));
+    if (rows.length < QUERY_PAGE_SIZE) break;
+  }
+
+  if (!factIds.length) return [];
+
+  const totals = new Map<string, number>();
+  const factsPerRequest = 90;
+
+  for (let index = 0; index < factIds.length; index += factsPerRequest) {
+    const ids = factIds.slice(index, index + factsPerRequest);
+    const result = await supabase
+      .schema("analytics")
+      .from("c3_practice_counts")
+      .select("practice_code, fulfilled", { count: "exact" })
+      .in("fact_id", ids)
+      .order("practice_code");
+
+    if (result.error) {
+      throw new Error("Não foi possível consultar as práticas A–K.");
+    }
+
+    const rows = (result.data ?? []) as PracticeCountRow[];
+    if (result.count !== null && result.count !== rows.length) {
+      throw new Error("Consulta parcial das práticas A–K.");
+    }
+
+    for (const row of rows) {
+      totals.set(
+        row.practice_code,
+        (totals.get(row.practice_code) ?? 0) + Number(row.fulfilled),
+      );
+    }
+  }
+
+  return [...totals.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([practice_code, fulfilled]) => ({ practice_code, fulfilled }));
+}
+
 async function loadPracticeTotals(
   supabase: Awaited<ReturnType<typeof createClient>>,
   filters: ReturnType<typeof normalizeDashboardFilters>,
@@ -80,7 +171,17 @@ async function loadPracticeTotals(
       p_without_district: filters.district === "unknown",
     },
   );
-  if (result.error) throw new Error("Não foi possível consultar os componentes A–K.");
+  if (result.error) {
+    if (isMissingPracticeTotalsRpc(result.error)) {
+      return loadPracticeTotalsFallback(supabase, {
+        competency: `${filters.competency}-01`,
+        district: filters.district,
+        establishmentId: filters.establishmentId,
+        teamId: filters.teamId,
+      });
+    }
+    throw new Error("Não foi possível consultar os componentes A–K.");
+  }
   return (result.data ?? []) as DashboardPracticeTotalRow[];
 }
 
@@ -114,10 +215,22 @@ export async function loadDashboardPracticeTotalsForPeriod(
         p_without_district: input.district === "unknown",
       },
     );
-    if (result.error) {
+    const rows = result.error && isMissingPracticeTotalsRpc(result.error)
+      ? await loadPracticeTotalsFallback(supabase, {
+          competency: `${month}-01`,
+          district: input.district,
+          establishmentId: input.establishmentId,
+          teamId: input.teamId,
+        })
+      : result.error
+        ? null
+        : (result.data ?? []) as DashboardPracticeTotalRow[];
+
+    if (rows === null) {
       throw new Error("Não foi possível consultar os componentes A–K do período.");
     }
-    return ((result.data ?? []) as DashboardPracticeTotalRow[]).map((row) => ({
+
+    return rows.map((row) => ({
       month,
       practice_code: row.practice_code,
       fulfilled: Number(row.fulfilled),
