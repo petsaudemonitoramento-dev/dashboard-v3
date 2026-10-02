@@ -1,5 +1,5 @@
 export function isPreviewEnvironment(
-  environment: Pick<NodeJS.ProcessEnv, "VERCEL_ENV"> = process.env,
+  environment: { VERCEL_ENV?: string } = process.env,
 ) {
   return environment.VERCEL_ENV === "preview";
 }
