@@ -42,27 +42,32 @@ export async function loadAdministrationImportAudit(limit = 25) {
   const baseColumns = "id, filename, file_sha256, competency, status, rows_total, uploaded_by, uploaded_at, published_at";
   const versionedColumns = `${baseColumns}, uploaded_by_email_snapshot, supersedes_import_id, superseded_by_import_id`;
 
-  let result = await privileged
+  const versionedResult = await privileged
     .schema("siaps")
     .from("imports")
     .select(versionedColumns)
     .order("uploaded_at", { ascending: false })
     .limit(limit);
 
-  if (result.error && versioningColumnsUnavailable(result.error)) {
-    result = await privileged
+  let data: unknown[] | null = versionedResult.data;
+  let error = versionedResult.error;
+
+  if (error && versioningColumnsUnavailable(error)) {
+    const fallbackResult = await privileged
       .schema("siaps")
       .from("imports")
       .select(baseColumns)
       .order("uploaded_at", { ascending: false })
       .limit(limit);
+    data = fallbackResult.data;
+    error = fallbackResult.error;
   }
 
-  if (result.error) {
+  if (error) {
     throw new Error("Não foi possível carregar a auditoria de importações.");
   }
 
-  const rows = (result.data ?? []) as ImportRow[];
+  const rows = (data ?? []) as ImportRow[];
   const userIds = [...new Set(rows.map((row) => row.uploaded_by).filter((value): value is string => Boolean(value)))];
   const actorEmails = new Map<string, string>();
 
