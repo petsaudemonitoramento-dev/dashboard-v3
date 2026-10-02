@@ -858,48 +858,38 @@ input {
   gap: 1rem;
 }
 
-.auth-pet-lockup {
+.auth-pet-wordmark {
+  min-width: 168px;
+  min-height: 46px;
   display: flex;
   align-items: center;
-  gap: .58rem;
-}
-
-.auth-pet-logo {
-  width: 46px;
-  height: 46px;
-  flex: 0 0 auto;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.auth-pet-lockup > span {
-  min-width: 0;
-}
-
-.auth-pet-lockup strong,
-.auth-pet-lockup small {
-  display: block;
+  justify-content: flex-end;
+  gap: .38rem;
+  padding-right: 1rem;
+  border-right: 1px solid #dce5eb;
   white-space: nowrap;
 }
 
-.auth-pet-lockup strong {
-  color: #214765;
-  font-size: .66rem;
-  line-height: 1.15;
+.auth-pet-wordmark strong {
+  color: #153f76;
+  font-size: 1.18rem;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -.025em;
 }
 
-.auth-pet-lockup small {
-  margin-top: .15rem;
-  color: #718394;
-  font-size: .6rem;
+.auth-pet-wordmark span {
+  color: #7a8da3;
+  font-size: .82rem;
+  font-weight: 720;
+  line-height: 1;
+  letter-spacing: .035em;
 }
 
 .auth-ufcg-logo {
   width: 146px;
   height: 46px;
   object-fit: contain;
-  padding-left: 1rem;
-  border-left: 1px solid #dce5eb;
 }
 
 .auth-portal-main {
@@ -1214,7 +1204,7 @@ input {
 .auth-access-topline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: .8rem;
   margin-bottom: 1rem;
   color: #708394;
@@ -1363,17 +1353,9 @@ input {
 }
 
 .auth-google-mark {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  place-items: center;
-  border: 1px solid #dde4e9;
-  border-radius: 50%;
-  background: white;
-  color: #1a73e8;
-  font-size: .76rem;
-  font-weight: 900;
-  box-shadow: 0 2px 5px rgba(40, 70, 90, .08);
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
 }
 
 .auth-divider {
@@ -1525,21 +1507,27 @@ input {
     gap: .7rem;
     padding-inline: .75rem;
   }
-  .auth-brand-copy small,
-  .auth-pet-lockup > span {
+  .auth-brand-copy small {
     display: none;
   }
   .auth-portal-institutions {
     gap: .45rem;
   }
-  .auth-pet-logo {
-    width: 39px;
-    height: 39px;
+  .auth-pet-wordmark {
+    min-width: 128px;
+    min-height: 38px;
+    gap: .28rem;
+    padding-right: .55rem;
+  }
+  .auth-pet-wordmark strong {
+    font-size: .92rem;
+  }
+  .auth-pet-wordmark span {
+    font-size: .62rem;
   }
   .auth-ufcg-logo {
     width: 108px;
     height: 38px;
-    padding-left: .55rem;
   }
   .auth-portal-context {
     padding: 2rem 1rem 2.7rem;
@@ -1592,9 +1580,14 @@ input {
   .auth-ufcg-logo {
     width: 88px;
   }
-  .auth-pet-logo {
-    width: 34px;
-    height: 34px;
+  .auth-pet-wordmark {
+    min-width: 108px;
+  }
+  .auth-pet-wordmark strong {
+    font-size: .82rem;
+  }
+  .auth-pet-wordmark span {
+    font-size: .56rem;
   }
   .auth-assurance-panel li {
     font-size: .58rem;
@@ -1633,9 +1626,8 @@ input {
     height: 40px;
   }
 
-  .auth-pet-logo {
-    width: 41px;
-    height: 41px;
+  .auth-pet-wordmark {
+    min-height: 41px;
   }
 
   .auth-ufcg-logo {

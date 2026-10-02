@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { manageProfileAction } from "./actions";
+import { DeleteProfileForm } from "./delete-profile-form";
 import { SubmitButton } from "@/components/forms/submit-button";
 import {
   administrationHref,
@@ -12,6 +13,7 @@ import {
 import { loadAdministrationUsersFromSupabase } from "@/lib/administration/supabase-users";
 import { requireAdministrator } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
+import { isPreviewEnvironment } from "@/lib/observability/environment";
 
 export const dynamic = "force-dynamic";
 
@@ -53,12 +55,12 @@ export default async function AdministrationPage({
         <div>
           <span className="eyebrow">Acesso restrito</span>
           <h1>Administração</h1>
-          <p>Gerencie os papéis e o estado dos perfis autenticados com auditoria.</p>
+          <p>Gerencie papéis, estado e exclusão de perfis não administrativos com auditoria.</p>
         </div>
         <ShieldCheck aria-hidden="true" className="size-16 text-cyan-300" />
       </section>
 
-      {process.env.VERCEL_ENV === "preview" ? (
+      {isPreviewEnvironment() ? (
         <section className="panel border-sky-200! bg-sky-50!">
           <span className="eyebrow">Somente Preview</span>
           <h2 className="mt-2 font-bold text-slate-900">Diagnóstico do Sentry</h2>
@@ -84,9 +86,19 @@ export default async function AdministrationPage({
           Perfil atualizado e registrado na auditoria.
         </p>
       ) : null}
+      {status === "excluido" ? (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900" role="status">
+          Perfil e conta de acesso excluídos. O registro foi removido da lista.
+        </p>
+      ) : null}
+      {status === "admin-protegido" ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900" role="alert">
+          Perfis de administrador não podem ser excluídos pela interface. Essa operação só pode ser feita diretamente no Supabase.
+        </p>
+      ) : null}
       {status === "erro" ? (
         <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900" role="alert">
-          Não foi possível atualizar o perfil.
+          Não foi possível concluir a operação administrativa.
         </p>
       ) : null}
 
@@ -118,6 +130,7 @@ export default async function AdministrationPage({
                   <th scope="col">E-mail</th>
                   <th scope="col">Cadastro</th>
                   <th scope="col">Configuração de acesso</th>
+                  <th scope="col">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,10 +168,19 @@ export default async function AdministrationPage({
                         <SubmitButton label="Salvar" />
                       </form>
                     </td>
+                    <td>
+                      {row.profile?.role === "admin" ? (
+                        <span className="text-xs font-semibold text-slate-500">
+                          Exclusão somente pelo Supabase
+                        </span>
+                      ) : (
+                        <DeleteProfileForm email={row.email} page={currentPage} userId={row.id} />
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {!rows.length ? (
-                  <tr><td className="text-slate-600" colSpan={3}>Nenhum usuário nesta página.</td></tr>
+                  <tr><td className="text-slate-600" colSpan={4}>Nenhum usuário nesta página.</td></tr>
                 ) : null}
               </tbody>
             </table>

@@ -2,13 +2,15 @@ import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 
 import { requireAdministrator } from "@/lib/auth/guards";
+import { isPreviewEnvironment } from "@/lib/observability/environment";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const DIAGNOSTIC_HEADER = "sentry-preview";
 
 export async function POST(request: Request) {
-  if (process.env.VERCEL_ENV !== "preview") {
+  if (!isPreviewEnvironment()) {
     return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
   }
 

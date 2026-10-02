@@ -47,19 +47,9 @@ export function AuthShell({
         </Link>
 
         <div className="auth-portal-institutions" aria-label="Identificação institucional">
-          <div className="auth-pet-lockup">
-            <Image
-              className="auth-pet-logo"
-              src="/brands/pet-saude-oficial.png"
-              alt="PET-Saúde"
-              width={600}
-              height={600}
-              priority
-            />
-            <span>
-              <strong>Informação e Saúde Digital</strong>
-              <small>Projeto UFCG</small>
-            </span>
+          <div className="auth-pet-wordmark" aria-label="PET Saúde UFCG">
+            <strong>PET Saúde</strong>
+            <span>UFCG</span>
           </div>
           <Image
             className="auth-ufcg-logo"
@@ -142,12 +132,11 @@ export function AuthShell({
 
           <div className="auth-access-card">
             <div className="auth-access-topline">
-              <span>Ambiente institucional</span>
               <SystemStatus />
             </div>
 
             <div className="auth-access-heading">
-              <span>{eyebrow}</span>
+              {eyebrow ? <span>{eyebrow}</span> : null}
               <h2 id="auth-access-title">{title}</h2>
               <p>{description}</p>
             </div>

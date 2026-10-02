@@ -1,6 +1,10 @@
 export const ADMIN_USERS_PAGE_SIZE = 50;
 
-export type AdministrationStatus = "erro" | "salvo";
+export type AdministrationStatus =
+  | "admin-protegido"
+  | "erro"
+  | "excluido"
+  | "salvo";
 
 export function parseAdministrationPage(value: unknown) {
   if (value === undefined || value === null || value === "") {
@@ -17,7 +21,12 @@ export function parseAdministrationPage(value: unknown) {
 }
 
 export function parseAdministrationStatus(value: unknown): AdministrationStatus | undefined {
-  return value === "salvo" || value === "erro" ? value : undefined;
+  return value === "salvo"
+    || value === "erro"
+    || value === "excluido"
+    || value === "admin-protegido"
+    ? value
+    : undefined;
 }
 
 export function administrationHref({

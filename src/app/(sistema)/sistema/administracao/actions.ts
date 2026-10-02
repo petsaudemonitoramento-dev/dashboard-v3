@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { deleteAdministrationUserFromSupabase } from "@/lib/administration/delete-user-supabase";
 import { administrationActionHref } from "@/lib/administration/pagination";
 import { requireAdministrator } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
@@ -11,6 +12,10 @@ import { createClient } from "@/lib/supabase/server";
 const schema = z.object({
   userId: z.string().uuid(),
   role: z.enum(["admin", "gestao", "leitura"]),
+});
+
+const deleteSchema = z.object({
+  userId: z.string().uuid(),
 });
 
 export async function manageProfileAction(formData: FormData) {
@@ -34,4 +39,31 @@ export async function manageProfileAction(formData: FormData) {
     revalidatePath("/sistema/administracao");
   }
   redirect(administrationActionHref(page, result.error ? "erro" : "salvo"));
+}
+
+export async function deleteProfileAction(formData: FormData) {
+  const context = await requireAdministrator();
+  const page = formData.get("page");
+  const parsed = deleteSchema.safeParse({ userId: formData.get("userId") });
+
+  if (!parsed.success) {
+    redirect(administrationActionHref(page, "erro"));
+  }
+
+  try {
+    const result = await deleteAdministrationUserFromSupabase(
+      context.user.id,
+      parsed.data.userId,
+    );
+
+    if (result === "admin_protected") {
+      redirect(administrationActionHref(page, "admin-protegido"));
+    }
+  } catch {
+    console.error("Falha ao excluir perfil pela Administração.");
+    redirect(administrationActionHref(page, "erro"));
+  }
+
+  revalidatePath("/sistema/administracao");
+  redirect(administrationActionHref(page, "excluido"));
 }
