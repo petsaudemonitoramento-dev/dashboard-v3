@@ -8,9 +8,25 @@ import { compactSiapsRow, parseSiapsWorkbook, sha256Hex, type SiapsParseResult }
 import { readImportApiResponse, SIAPS_REQUEST_TOO_LARGE_MESSAGE, SIAPS_XLSX_TOO_LARGE_MESSAGE } from "@/lib/siaps/errors";
 import { MAX_SIAPS_REQUEST_BYTES, MAX_SIAPS_XLSX_BYTES, utf8ByteLength } from "@/lib/siaps/limits";
 
-type Duplicate = { id: string; filename: string; competency: string; status: string; rows_total: number } | null;
-type CheckResponse = { duplicate?: Duplicate };
-type PublishResponse = { rows?: number };
+type ImportReference = {
+  id: string;
+  filename: string;
+  competency: string;
+  status: string;
+  rows_total: number;
+  uploaded_at?: string;
+  published_at?: string | null;
+} | null;
+
+type CheckResponse = {
+  duplicate?: ImportReference;
+  existingCompetency?: ImportReference;
+};
+
+type PublishResponse = {
+  rows?: number;
+  replaced?: boolean;
+};
 
 function serializedImportPayload(payload: unknown) {
   const body = JSON.stringify(payload);
@@ -36,14 +52,39 @@ export function ImportWizard() {
   const [hash, setHash] = useState("");
   const [parsed, setParsed] = useState<SiapsParseResult | null>(null);
   const [competency, setCompetency] = useState("");
-  const [duplicate, setDuplicate] = useState<Duplicate>(null);
+  const [duplicate, setDuplicate] = useState<ImportReference>(null);
+  const [existingCompetency, setExistingCompetency] = useState<ImportReference>(null);
+  const [replacementConfirmed, setReplacementConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ message: string; ok: boolean } | null>(null);
+
+  async function checkPublication(fileName: string, fileHash: string, nextCompetency: string) {
+    if (!fileHash || !/^20\d{2}-(0[1-9]|1[0-2])-01$/.test(nextCompetency)) {
+      setExistingCompetency(null);
+      setReplacementConfirmed(false);
+      return;
+    }
+
+    const check = await postImport<CheckResponse>(
+      {
+        mode: "check",
+        filename: fileName,
+        fileSha256: fileHash,
+        competency: nextCompetency,
+        rows: [],
+      },
+      "Não foi possível verificar se o arquivo ou a competência já foram importados.",
+    );
+    setDuplicate(check.duplicate ?? null);
+    setExistingCompetency(check.existingCompetency ?? null);
+    setReplacementConfirmed(false);
+  }
 
   async function selectFile(file: File | undefined) {
     if (!file) return;
     setFilename(file.name); setHash(""); setParsed(null); setCompetency("");
-    setDuplicate(null); setResult(null); setBusy(true);
+    setDuplicate(null); setExistingCompetency(null); setReplacementConfirmed(false);
+    setResult(null); setBusy(true);
     try {
       if (!/\.xlsx$/i.test(file.name)) throw new Error("Selecione um arquivo com extensão .xlsx.");
       if (file.type && file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") throw new Error("O tipo do arquivo não corresponde a XLSX.");
@@ -70,11 +111,11 @@ export function ImportWizard() {
       }
       setFilename(file.name); setHash(nextHash); setParsed(validatedParse); setCompetency(validatedParse.competency ?? "");
       if (validatedParse.errors.length) return;
-      const check = await postImport<CheckResponse>(
-        { mode: "check", filename: file.name, fileSha256: nextHash, competency: nextParsed.competency ?? "2000-01-01", rows: [] },
-        "Não foi possível verificar se o arquivo já foi importado.",
+      await checkPublication(
+        file.name,
+        nextHash,
+        nextParsed.competency ?? "2000-01-01",
       );
-      setDuplicate(check.duplicate ?? null);
     } catch (error) {
       setParsed({ competency: null, rows: [], errors: [error instanceof Error ? error.message : "Falha ao ler o arquivo."], warnings: [], headerRow: null });
     } finally { setBusy(false); }
@@ -85,10 +126,22 @@ export function ImportWizard() {
     setBusy(true); setResult(null);
     try {
       const body = await postImport<PublishResponse>(
-        { mode: "publish", filename, fileSha256: hash, competency, rows: parsed.rows.map(compactSiapsRow) },
+        {
+          mode: "publish",
+          filename,
+          fileSha256: hash,
+          competency,
+          rows: parsed.rows.map(compactSiapsRow),
+          replaceExisting: Boolean(existingCompetency && replacementConfirmed),
+        },
         "Falha ao publicar.",
       );
-      setResult({ message: `Importação publicada: ${body.rows ?? 0} registros válidos.`, ok: true });
+      setResult({
+        message: body.replaced
+          ? `Competência substituída com segurança: ${body.rows ?? 0} registros válidos publicados.`
+          : `Importação publicada: ${body.rows ?? 0} registros válidos.`,
+        ok: true,
+      });
       router.refresh();
     } catch (error) { setResult({ message: error instanceof Error ? error.message : "Falha ao publicar.", ok: false }); }
     finally { setBusy(false); }
@@ -105,15 +158,47 @@ export function ImportWizard() {
     {parsed && <>
       <div className="grid gap-3 md:grid-cols-4">
         <div className="metric-card"><FileSpreadsheet aria-hidden="true" className="size-5 text-sky-700" /><span>Arquivo</span><strong className="text-base! break-all">{filename}</strong></div>
-        <div className="metric-card"><label className="block text-slate-500" htmlFor="siaps-competency">Competência</label><input id="siaps-competency" className="field mt-3 w-full" type="date" value={competency} onChange={(event) => setCompetency(event.target.value ? `${event.target.value.slice(0, 7)}-01` : "")} /><small>Somente mês e ano são usados.</small></div>
+        <div className="metric-card"><label className="block text-slate-500" htmlFor="siaps-competency">Competência</label><input id="siaps-competency" className="field mt-3 w-full" type="date" value={competency} onChange={(event) => {
+          const nextCompetency = event.target.value ? `${event.target.value.slice(0, 7)}-01` : "";
+          setCompetency(nextCompetency);
+          setExistingCompetency(null);
+          setReplacementConfirmed(false);
+          if (nextCompetency && hash) {
+            setBusy(true);
+            void checkPublication(filename, hash, nextCompetency).finally(() => setBusy(false));
+          }
+        }} /><small>Somente mês e ano são usados.</small></div>
         <div className="metric-card accent-green"><span>Registros válidos</span><strong>{parsed.rows.length}</strong></div>
         <div className="metric-card accent-orange"><span>Ocorrências</span><strong>{parsed.errors.length + parsed.warnings.length}</strong><small>{parsed.errors.length} erros · {parsed.warnings.length} advertências</small></div>
       </div>
       {duplicate && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900" role="alert"><AlertCircle aria-hidden="true" className="mr-2 inline size-5" /><strong>Arquivo duplicado:</strong> já consta como {duplicate.status} com {duplicate.rows_total} registros.</div>}
+      {existingCompetency && !duplicate && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950" role="alert">
+          <div className="flex items-start gap-2">
+            <AlertCircle aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+            <div>
+              <strong>Esta competência já possui uma publicação.</strong>
+              <p className="mt-1 text-sm">
+                Arquivo atual: <b>{existingCompetency.filename}</b> · {existingCompetency.rows_total} registros.
+                A nova planilha substituirá integralmente essa versão nos dashboards, mas o histórico anterior será preservado para auditoria.
+              </p>
+              <label className="mt-3 flex items-start gap-2 text-sm font-bold">
+                <input
+                  checked={replacementConfirmed}
+                  className="mt-1"
+                  onChange={(event) => setReplacementConfirmed(event.target.checked)}
+                  type="checkbox"
+                />
+                Confirmo que revisei a planilha corrigida e quero substituir a competência publicada.
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
       {!!parsed.errors.length && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800" role="alert"><strong>Erros que impedem a importação</strong><ul className="mt-2 list-disc pl-5">{parsed.errors.slice(0, 20).map((item) => <li key={item}>{item}</li>)}</ul></div>}
       {!!parsed.warnings.length && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900" role="status"><strong>Advertências</strong><ul className="mt-2 list-disc pl-5">{parsed.warnings.slice(0, 20).map((item) => <li key={item}>{item}</li>)}</ul></div>}
       {!!parsed.rows.length && <div aria-label="Pré-visualização dos registros da importação" className="table-scroll" role="region" tabIndex={0}><table className="data-table"><caption className="sr-only">Primeiros oito registros válidos encontrados na planilha</caption><thead><tr><th scope="col">Linha</th><th scope="col">CNES / UBS</th><th scope="col">INE / Equipe</th><th scope="col">A–K</th><th scope="col">Pontos</th><th scope="col">Denominador</th><th scope="col">Razão oficial</th></tr></thead><tbody>{parsed.rows.slice(0, 8).map((row) => <tr key={row.fileRow}><td>{row.fileRow}</td><td>{row.cnes}<br/><small>{row.establishmentName}</small></td><td>{row.ine}<br/><small>{row.teamName}</small></td><td>{Object.values(row.components).join(" · ")}</td><td>{row.pointsTotal}</td><td>{row.denominator}</td><td>{row.officialRatio ?? "—"}</td></tr>)}</tbody></table></div>}
-      <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-slate-500">SHA-256: <code>{hash}</code></span><button className="primary-button" disabled={busy || !!duplicate || !!parsed.errors.length || !competency} onClick={() => void publish()} type="button">Confirmar e publicar</button></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-slate-500">SHA-256: <code>{hash}</code></span><button className="primary-button" disabled={busy || !!duplicate || !!parsed.errors.length || !competency || (!!existingCompetency && !replacementConfirmed)} onClick={() => void publish()} type="button">{existingCompetency ? "Substituir e publicar" : "Confirmar e publicar"}</button></div>
       {result && <div className={`rounded-xl border p-4 ${result.ok ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"}`} role={result.ok ? "status" : "alert"}>{result.ok ? <CheckCircle2 aria-hidden="true" className="mr-2 inline size-5" /> : <AlertCircle aria-hidden="true" className="mr-2 inline size-5" />}{result.message}</div>}
     </>}
   </section>;

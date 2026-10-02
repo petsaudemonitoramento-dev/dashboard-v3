@@ -10,6 +10,7 @@ import {
   parseAdministrationPage,
   parseAdministrationStatus,
 } from "@/lib/administration/pagination";
+import { loadAdministrationImportAudit } from "@/lib/administration/import-audit";
 import { loadAdministrationUsersFromSupabase } from "@/lib/administration/supabase-users";
 import { requireAdministrator } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
@@ -33,13 +34,22 @@ export default async function AdministrationPage({
   }
 
   let pageData: Awaited<ReturnType<typeof loadAdministrationUsersFromSupabase>> | null = null;
+  let importAudit: Awaited<ReturnType<typeof loadAdministrationImportAudit>> = [];
   let configurationError = false;
+  let importAuditError = false;
   try {
     pageData = await loadAdministrationUsersFromSupabase(parsedPage.page);
   } catch {
     console.error("Falha ao carregar a área administrativa.");
     configurationError = true;
   }
+  try {
+    importAudit = await loadAdministrationImportAudit();
+  } catch {
+    console.error("Falha ao carregar auditoria de importações.");
+    importAuditError = true;
+  }
+
   if (pageData?.redirectPage) {
     redirect(administrationHref({ page: pageData.redirectPage, status }));
   }
@@ -101,6 +111,81 @@ export default async function AdministrationPage({
           Não foi possível concluir a operação administrativa.
         </p>
       ) : null}
+
+
+      <section className="panel">
+        <div className="panel-heading">
+          <span className="eyebrow">Rastreabilidade SIAPS</span>
+          <h2>Auditoria de importações</h2>
+          <p>Últimas publicações registradas, com responsável, competência e integridade do arquivo.</p>
+        </div>
+
+        {importAuditError ? (
+          <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            Não foi possível consultar a auditoria de importações neste momento.
+          </p>
+        ) : (
+          <div
+            aria-label="Auditoria das importações SIAPS"
+            className="table-scroll mt-4"
+            role="region"
+            tabIndex={0}
+          >
+            <table className="data-table">
+              <caption className="sr-only">Histórico recente das importações oficiais do SIAPS</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Data/hora</th>
+                  <th scope="col">Competência</th>
+                  <th scope="col">Arquivo</th>
+                  <th scope="col">Registros</th>
+                  <th scope="col">Responsável</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Integridade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {importAudit.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      {new Date(item.publishedAt ?? item.uploadedAt).toLocaleString("pt-BR", {
+                        timeZone: "America/Fortaleza",
+                      })}
+                    </td>
+                    <td>{new Date(`${item.competency}T12:00:00Z`).toLocaleDateString("pt-BR", {
+                      month: "long",
+                      year: "numeric",
+                      timeZone: "UTC",
+                    })}</td>
+                    <td>
+                      <strong>{item.filename}</strong>
+                      {item.supersedesImportId ? (
+                        <small className="block text-slate-500">Substituiu uma versão anterior</small>
+                      ) : null}
+                    </td>
+                    <td>{item.rowsTotal.toLocaleString("pt-BR")}</td>
+                    <td>{item.actor}</td>
+                    <td>
+                      <span className={item.status === "publicado" ? "badge" : "text-xs font-bold text-slate-600"}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td>
+                      <code title={item.fileSha256}>{item.fileSha256.slice(0, 12)}…</code>
+                    </td>
+                  </tr>
+                ))}
+                {!importAudit.length ? (
+                  <tr>
+                    <td className="text-slate-600" colSpan={7}>Nenhuma importação registrada.</td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
 
       {configurationError ? (
         <section className="panel border-amber-200! bg-amber-50! text-amber-900">
