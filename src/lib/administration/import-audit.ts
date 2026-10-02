@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createPrivilegedClient } from "@/lib/supabase/privileged";
+import { createClient } from "@/lib/supabase/server";
 
 type ImportRow = {
   id: string;
@@ -38,11 +39,12 @@ function versioningColumnsUnavailable(error: { code?: string; message?: string }
 }
 
 export async function loadAdministrationImportAudit(limit = 25) {
+  const supabase = await createClient();
   const privileged = createPrivilegedClient();
   const baseColumns = "id, filename, file_sha256, competency, status, rows_total, uploaded_by, uploaded_at, published_at";
   const versionedColumns = `${baseColumns}, uploaded_by_email_snapshot, supersedes_import_id, superseded_by_import_id`;
 
-  const versionedResult = await privileged
+  const versionedResult = await supabase
     .schema("siaps")
     .from("imports")
     .select(versionedColumns)
@@ -53,7 +55,7 @@ export async function loadAdministrationImportAudit(limit = 25) {
   let error = versionedResult.error;
 
   if (error) {
-    const fallbackResult = await privileged
+    const fallbackResult = await supabase
       .schema("siaps")
       .from("imports")
       .select(baseColumns)
@@ -75,9 +77,13 @@ export async function loadAdministrationImportAudit(limit = 25) {
   const actorEmails = new Map<string, string>();
 
   await Promise.all(userIds.map(async (userId) => {
-    const userResult = await privileged.auth.admin.getUserById(userId);
-    const email = userResult.data.user?.email;
-    if (!userResult.error && email) actorEmails.set(userId, email);
+    try {
+      const userResult = await privileged.auth.admin.getUserById(userId);
+      const email = userResult.data.user?.email;
+      if (!userResult.error && email) actorEmails.set(userId, email);
+    } catch {
+      // A conta pode ter sido removida; o snapshot persistente é usado quando disponível.
+    }
   }));
 
   return rows.map((row): AdministrationImportAuditRow => ({
