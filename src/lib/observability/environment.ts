@@ -1,5 +1,5 @@
 export function isPreviewEnvironment(
-  environment: { VERCEL_ENV?: string } = process.env,
+  environment: Record<string, string | undefined> = process.env,
 ) {
   return environment.VERCEL_ENV === "preview";
 }
