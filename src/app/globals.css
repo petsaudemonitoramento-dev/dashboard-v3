@@ -2502,3 +2502,40 @@ input {
     grid-column: auto;
   }
 }
+
+
+/* ===== MAE APS · Práticas A–K em faixa horizontal ===== */
+@media (min-width: 961px) {
+  .dashboard-secondary-charts {
+    grid-template-columns: minmax(300px, .48fr) minmax(0, 1.52fr);
+    align-items: stretch;
+  }
+
+  .dashboard-secondary-charts .dashboard-chart-donut {
+    grid-column: 1;
+  }
+
+  .dashboard-secondary-charts .dashboard-components-card {
+    grid-column: 2;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dashboard-components-card .mae-chart {
+    width: 100%;
+  }
+
+  .dashboard-components-card .practice-legend {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 961px) and (max-width: 1180px) {
+  .dashboard-secondary-charts {
+    grid-template-columns: minmax(260px, .58fr) minmax(0, 1.42fr);
+  }
+
+  .dashboard-components-card .practice-legend {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
