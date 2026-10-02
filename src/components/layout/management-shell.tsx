@@ -10,7 +10,6 @@ import {
   ChevronDown,
   DatabaseZap,
   GitCompareArrows,
-  HeartPulse,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -52,10 +51,14 @@ export function ManagementShell({ children, email, role }: Props) {
 
       <header className="management-topbar">
         <Link href="/sistema/gestao" className="management-brand">
-          <span className="management-care-mark" aria-hidden="true">
-            <HeartPulse />
-            <i />
-          </span>
+          <Image
+            className="h-[62px] w-[75px] shrink-0 object-contain"
+            src="/brands/mae-aps-wordmark.webp"
+            alt="MAE APS"
+            width={420}
+            height={347}
+            priority
+          />
           <span className="management-brand-copy">
             <strong>Cuidado na Gestação na APS</strong>
             <small>Módulo da Gestão</small>
