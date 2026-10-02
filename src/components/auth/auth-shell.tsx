@@ -1,4 +1,4 @@
-﻿import Image from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Accessibility,
@@ -13,8 +13,8 @@ import {
 import { SystemStatus } from "@/components/auth/system-status";
 
 const assuranceItems = [
-  { label: "Privacidade orientada Ã  LGPD", icon: ShieldCheck },
-  { label: "AutenticaÃ§Ã£o institucional", icon: Fingerprint },
+  { label: "Privacidade orientada à LGPD", icon: ShieldCheck },
+  { label: "Autenticação institucional", icon: Fingerprint },
   { label: "Acesso por perfil", icon: LockKeyhole },
   { label: "Auditoria operacional", icon: ClipboardCheck },
   { label: "Rastreabilidade", icon: CheckCircle2 },
@@ -96,8 +96,8 @@ export function AuthShell({
                   <Database />
                 </span>
                 <span>
-                  <small>Base tÃ©cnica do sistema</small>
-                  <strong>ImportaÃ§Ã£o SIAPS C3</strong>
+                  <small>Base técnica do sistema</small>
+                  <strong>Importação SIAPS C3</strong>
                 </span>
               </div>
               <dl>
@@ -122,7 +122,7 @@ export function AuthShell({
                   <small>Governança e confiabilidade</small>
                   <strong>Controles implementados</strong>
                 </span>
-                <span className="auth-assurance-code" aria-label="Versão 1.0">v1.0</span>
+                <span className="auth-assurance-code" aria-label="Perfil de importação SIAPS C3">SIAPS C3</span>
               </div>
               <ul>
                 {assuranceItems.map(({ label, icon: Icon }) => (

@@ -1614,79 +1614,104 @@ input {
   }
 }
 
-/* MAE APS: compactacao para notebooks 1366x768 */
+/* MAE APS: compactação para notebooks e viewport útil de 1366x768 */
 @media (min-width: 961px) and (max-height: 800px) {
   .auth-portal {
-    grid-template-rows: 60px minmax(0, 1fr) 34px;
+    height: 100dvh;
+    min-height: 100dvh;
+    grid-template-rows: 56px minmax(0, 1fr) 28px;
+    overflow: hidden;
   }
 
   .auth-portal-header {
-    min-height: 60px;
-    padding-block: .38rem;
+    min-height: 56px;
+    padding-block: .25rem;
+  }
+
+  .auth-portal-mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .auth-pet-logo {
+    width: 41px;
+    height: 41px;
+  }
+
+  .auth-ufcg-logo {
+    height: 41px;
   }
 
   .auth-portal-context {
-    padding-top: 1.15rem;
-    padding-bottom: 1.15rem;
+    min-height: 0;
+    padding-top: .75rem;
+    padding-bottom: .75rem;
   }
 
   .auth-context-kicker {
-    margin-bottom: .55rem;
+    margin-bottom: .45rem;
   }
 
   .auth-portal-context h1 {
-    font-size: clamp(2.05rem, 3.2vw, 2.75rem);
+    font-size: clamp(2rem, 3vw, 2.6rem);
   }
 
   .auth-context-content > p {
-    margin-top: .55rem;
-    line-height: 1.45;
+    margin-top: .45rem;
+    line-height: 1.4;
   }
 
   .auth-technical-panel {
-    margin-top: .75rem;
-    padding: .58rem .72rem;
+    margin-top: .55rem;
+    padding: .5rem .68rem;
   }
 
   .auth-assurance-panel {
-    margin-top: .5rem;
-    padding: .58rem .72rem .62rem;
+    margin-top: .42rem;
+    padding: .5rem .68rem .54rem;
   }
 
   .auth-assurance-panel ul {
-    margin-top: .48rem;
-    padding-top: .48rem;
+    margin-top: .4rem;
+    padding-top: .4rem;
   }
 
   .auth-access-zone {
-    padding-top: .85rem;
-    padding-bottom: .85rem;
+    min-height: 0;
+    padding-top: .35rem;
+    padding-bottom: .35rem;
+    overflow-y: auto;
   }
 
   .auth-access-card {
-    padding: 1.2rem 1.35rem;
+    padding: 1rem 1.2rem;
   }
 
   .auth-access-topline {
-    margin-bottom: .65rem;
+    margin-bottom: .45rem;
+  }
+
+  .auth-access-heading h2 {
+    font-size: 1.5rem;
   }
 
   .auth-access-heading p {
-    margin-bottom: .72rem;
+    margin-bottom: .6rem;
   }
 
   .auth-signin-stack,
   .auth-form {
-    gap: .62rem;
+    gap: .55rem;
   }
 
   .auth-access-note {
-    margin-top: .7rem;
-    padding-top: .58rem;
+    margin-top: .55rem;
+    padding-top: .5rem;
   }
 
   .auth-portal-footer {
-    min-height: 34px;
-    padding-block: .3rem;
+    min-height: 28px;
+    padding-block: .2rem;
+    font-size: .58rem;
   }
 }
