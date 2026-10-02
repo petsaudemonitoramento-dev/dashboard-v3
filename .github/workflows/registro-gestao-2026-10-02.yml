@@ -1,0 +1,76 @@
+name: MAE APS - Pacote Registro Gestao
+
+on:
+  push:
+    branches:
+      - registro-build/mae-aps-gestao-2026-10-02
+
+permissions:
+  contents: read
+
+jobs:
+  pacote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout da versao congelada
+        uses: actions/checkout@v4
+        with:
+          ref: 71dbe965c0e9c1e1d3abf13f1ff310a9974564df
+          fetch-depth: 0
+
+      - name: Gerar arquivo completo do codigo-fonte
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p registro
+          git archive \
+            --format=zip \
+            --prefix=MAE_APS_Gestao_71dbe965c0e9/ \
+            --output=registro/MAE_APS_Gestao_Codigo_Fonte_Registro_2026-10-02.zip \
+            71dbe965c0e9c1e1d3abf13f1ff310a9974564df
+
+      - name: Gerar selecao de codigo autoral
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/generate-registration-code.mjs \
+            --ref 71dbe965c0e9c1e1d3abf13f1ff310a9974564df \
+            --output registro/MAE_APS_Gestao_Trechos_Codigo_Autoral_2026-10-02.txt
+
+      - name: Gerar manifesto criptografico
+        shell: bash
+        run: |
+          set -euo pipefail
+          TREE="$(git rev-parse '71dbe965c0e9c1e1d3abf13f1ff310a9974564df^{tree}')"
+          SOURCE="registro/MAE_APS_Gestao_Codigo_Fonte_Registro_2026-10-02.zip"
+          EXCERPT="registro/MAE_APS_Gestao_Trechos_Codigo_Autoral_2026-10-02.txt"
+          SOURCE_SHA="$(sha256sum "$SOURCE" | awk '{print $1}')"
+          EXCERPT_SHA="$(sha256sum "$EXCERPT" | awk '{print $1}')"
+          SOURCE_BYTES="$(stat -c%s "$SOURCE")"
+          EXCERPT_BYTES="$(stat -c%s "$EXCERPT")"
+          {
+            echo "format=mae-aps-registro-gestao-v1"
+            echo "software=MAE APS - Modulo da Gestao"
+            echo "data_congelamento=2026-10-02"
+            echo "frozen_branch=registro/mae-aps-gestao-2026-10-02"
+            echo "commit=71dbe965c0e9c1e1d3abf13f1ff310a9974564df"
+            echo "tree=$TREE"
+            echo "source_archive=MAE_APS_Gestao_Codigo_Fonte_Registro_2026-10-02.zip"
+            echo "source_sha256=$SOURCE_SHA"
+            echo "source_bytes=$SOURCE_BYTES"
+            echo "authorial_excerpt=MAE_APS_Gestao_Trechos_Codigo_Autoral_2026-10-02.txt"
+            echo "authorial_excerpt_sha256=$EXCERPT_SHA"
+            echo "authorial_excerpt_bytes=$EXCERPT_BYTES"
+            echo "ci_codeql_run=45"
+            echo "ci_validation_v1_run=76"
+            echo "vercel_status=success"
+          } > registro/MAE_APS_Gestao_Manifesto_SHA256_2026-10-02.txt
+
+      - name: Publicar artefato do registro
+        uses: actions/upload-artifact@v4
+        with:
+          name: mae-aps-gestao-registro-2026-10-02
+          path: registro/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
