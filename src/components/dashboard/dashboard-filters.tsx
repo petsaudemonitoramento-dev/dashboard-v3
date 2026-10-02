@@ -5,6 +5,7 @@ import {
   Activity,
   Building2,
   CalendarRange,
+  CircleHelp,
   MapPin,
   Search,
   SlidersHorizontal,
@@ -23,6 +24,20 @@ export type DashboardFilterOption = {
   label: string;
   value: string;
 };
+
+function FilterHelp({ text }: { text: string }) {
+  return (
+    <span
+      aria-label={`Ajuda: ${text}`}
+      className="dashboard-help dashboard-filter-help"
+      data-tooltip={text}
+      role="img"
+      tabIndex={0}
+    >
+      <CircleHelp aria-hidden="true" />
+    </span>
+  );
+}
 
 type DashboardFilterSelection = {
   competency: string;
@@ -217,6 +232,7 @@ export function ManagementDashboardFilters({
         <span className="dashboard-filter-label">
           <CalendarRange aria-hidden="true" />
           Período
+          <FilterHelp text="Define as competências inicial e final incluídas no recorte. Indicadores acumulados somam os dados das competências selecionadas." />
         </span>
         <div className="dashboard-period-selects">
           <label className="sr-only" htmlFor="dashboard-inicio">Início do período</label>
@@ -250,7 +266,7 @@ export function ManagementDashboardFilters({
       </div>
 
       <label>
-        <span className="dashboard-filter-label"><MapPin aria-hidden="true" />Distrito</span>
+        <span className="dashboard-filter-label"><MapPin aria-hidden="true" />Distrito <FilterHelp text="Restringe a análise ao distrito sanitário informado no cadastro territorial. Ao trocar o distrito, UBS e equipe são redefinidas para evitar combinações incompatíveis." /></span>
         <select
           name="distrito"
           onChange={(event) => navigate({
@@ -269,7 +285,7 @@ export function ManagementDashboardFilters({
       </label>
 
       <label>
-        <span className="dashboard-filter-label"><Building2 aria-hidden="true" />UBS</span>
+        <span className="dashboard-filter-label"><Building2 aria-hidden="true" />UBS <FilterHelp text="Filtra os indicadores pela Unidade Básica de Saúde vinculada aos registros do SIAPS no recorte selecionado." /></span>
         <select
           disabled={geographicParentPending || establishments.length === 0}
           name="ubs"
@@ -287,7 +303,7 @@ export function ManagementDashboardFilters({
       </label>
 
       <label>
-        <span className="dashboard-filter-label"><Users aria-hidden="true" />Equipe</span>
+        <span className="dashboard-filter-label"><Users aria-hidden="true" />Equipe <FilterHelp text="Refina a análise para uma equipe específica da UBS selecionada, identificada pelo vínculo territorial disponível nos dados." /></span>
         <select
           disabled={teamOptionsPending || selection.establishmentId === "all" || teams.length === 0}
           name="equipe"
@@ -305,7 +321,7 @@ export function ManagementDashboardFilters({
 
       <div className="dashboard-filter-secondary">
         <label>
-          <span className="dashboard-filter-label"><SlidersHorizontal aria-hidden="true" />Classificação C3</span>
+          <span className="dashboard-filter-label"><SlidersHorizontal aria-hidden="true" />Classificação C3 <FilterHelp text="Classificação do C3 agregado no recorte: Ótimo acima de 75; Bom acima de 50; Suficiente acima de 25; Regular até 25." /></span>
           <select
             name="classificacao"
             onChange={(event) => navigate({
@@ -320,7 +336,7 @@ export function ManagementDashboardFilters({
         </label>
 
         <label className="dashboard-search-filter">
-          <span className="dashboard-filter-label"><Search aria-hidden="true" />Busca</span>
+          <span className="dashboard-filter-label"><Search aria-hidden="true" />Busca <FilterHelp text="Localiza UBS ou equipes por nome, CNES ou INE dentro do recorte territorial disponível." /></span>
           <input
             defaultValue={initialSelection.query}
             maxLength={120}

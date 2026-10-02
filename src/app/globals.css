@@ -2356,3 +2356,149 @@ input {
     display: none;
   }
 }
+
+
+/* ===== MAE APS · Ajustes de ocupação horizontal, ajuda contextual e legibilidade ===== */
+.management-main {
+  width: calc(100% - 236px);
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.management-dashboard {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin-inline: 0;
+}
+
+.dashboard-welcome,
+.dashboard-filter-zone,
+.dashboard-kpi-grid,
+.dashboard-chart-row,
+.dashboard-secondary-charts,
+.dashboard-bottom-grid,
+.dashboard-data-note {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+.dashboard-filter-help {
+  width: 18px;
+  height: 18px;
+  margin-left: .08rem;
+  color: #536d87;
+}
+
+.dashboard-filter-help svg {
+  width: 13px;
+  height: 13px;
+}
+
+.dashboard-filter-label {
+  flex-wrap: nowrap;
+}
+
+.dashboard-help:focus-visible {
+  outline: 2px solid #176caf;
+  outline-offset: 2px;
+}
+
+@media (min-width: 961px) {
+  .dashboard-chart-row {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+  }
+
+  .dashboard-secondary-charts {
+    grid-template-columns: minmax(280px, .62fr) minmax(0, 1.38fr);
+  }
+
+  .dashboard-bottom-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .95fr) minmax(0, 1fr);
+  }
+
+  .dashboard-analysis {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 820px) {
+  .management-main {
+    width: 100%;
+  }
+}
+
+/* Login: referência técnica SIAPS e tipografia ligeiramente ampliada */
+@media (min-width: 721px) {
+  .auth-technical-panel dl {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 961px) {
+  .auth-context-content > p {
+    font-size: .96rem;
+  }
+
+  .auth-technical-heading small,
+  .auth-assurance-heading small {
+    font-size: .61rem;
+  }
+
+  .auth-technical-heading strong {
+    font-size: .78rem;
+  }
+
+  .auth-technical-panel dt {
+    font-size: .58rem;
+  }
+
+  .auth-technical-panel dd {
+    font-size: .73rem;
+  }
+
+  .auth-assurance-heading strong {
+    font-size: .79rem;
+  }
+
+  .auth-assurance-panel li {
+    font-size: .66rem;
+  }
+
+  .auth-access-heading h2 {
+    font-size: 1.72rem;
+  }
+
+  .auth-access-heading p {
+    font-size: .84rem;
+  }
+
+  .auth-field {
+    font-size: .75rem;
+  }
+
+  .auth-input {
+    font-size: .86rem;
+  }
+
+  .auth-primary-button,
+  .auth-google-button {
+    font-size: .8rem;
+  }
+
+  .auth-access-note {
+    font-size: .64rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .auth-technical-panel dl {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .auth-technical-panel dl > div:nth-child(3) {
+    grid-column: auto;
+  }
+}

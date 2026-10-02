@@ -3,9 +3,7 @@ import type { EChartsOption } from "echarts";
 import type { LucideIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import {
-  AlertTriangle,
   BarChart3,
-  Building2,
   CalendarDays,
   CircleHelp,
   CheckCircle2,
@@ -13,10 +11,8 @@ import {
   Database,
   FileSpreadsheet,
   Home,
-  Info,
   Sparkles,
   Stethoscope,
-  TrendingUp,
   Users,
 } from "lucide-react";
 
@@ -824,7 +820,10 @@ export default async function ManagementDashboard({
           <div className="dashboard-card-heading">
             <div>
               <span>Rastreabilidade</span>
-              <h2>{canImport ? "Últimas importações do SIAPS" : "Competências publicadas"}</h2>
+              <div className="dashboard-heading-title">
+                <h2>{canImport ? "Últimas importações do SIAPS" : "Competências publicadas"}</h2>
+                <DashboardHelp text="Mostra os lotes oficiais já carregados no MAE APS. A competência indica o mês de referência dos dados; a data corresponde ao momento da importação no sistema." />
+              </div>
             </div>
             {canImport && <Link href="/sistema/importar">Ver histórico →</Link>}
           </div>
@@ -857,9 +856,11 @@ export default async function ManagementDashboard({
           <div className="dashboard-card-heading">
             <div>
               <span>Visão municipal</span>
-              <h2>Análise consolidada da gestão</h2>
+              <div className="dashboard-heading-title">
+                <h2>Análise consolidada da gestão</h2>
+                <DashboardHelp text="Resumo automático produzido a partir dos filtros atuais. Ele combina C3 consolidado, registros elegíveis, quantidade de equipes e UBS e extremos de cobertura das práticas A–K." />
+              </div>
             </div>
-            <Info className="size-5 text-blue-500" aria-hidden="true" />
           </div>
           <div className="analysis-icon"><Database className="size-8" /></div>
           <p>

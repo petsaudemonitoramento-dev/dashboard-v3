@@ -86,21 +86,25 @@ export function AuthShell({
                   <Database />
                 </span>
                 <span>
-                  <small>Base técnica do sistema</small>
-                  <strong>Importação SIAPS C3</strong>
+                  <small>Versão de referência</small>
+                  <strong>SIAPS 2.0.3</strong>
                 </span>
               </div>
               <dl>
+                <div>
+                  <dt>Liberação</dt>
+                  <dd>10/09/2026</dd>
+                </div>
                 <div>
                   <dt>Origem</dt>
                   <dd>SIAPS / SISAB</dd>
                 </div>
                 <div>
-                  <dt>Perfil suportado</dt>
-                  <dd>C3</dd>
+                  <dt>Indicador</dt>
+                  <dd>C3 · Gestação</dd>
                 </div>
                 <div>
-                  <dt>Formato</dt>
+                  <dt>Entrada</dt>
                   <dd>XLSX oficial</dd>
                 </div>
               </dl>
@@ -112,7 +116,7 @@ export function AuthShell({
                   <small>Governança e confiabilidade</small>
                   <strong>Controles implementados</strong>
                 </span>
-                <span className="auth-assurance-code" aria-label="Perfil de importação SIAPS C3">SIAPS C3</span>
+                <span className="auth-assurance-code" aria-label="Versão SIAPS de referência 2.0.3">SIAPS 2.0.3</span>
               </div>
               <ul>
                 {assuranceItems.map(({ label, icon: Icon }) => (
