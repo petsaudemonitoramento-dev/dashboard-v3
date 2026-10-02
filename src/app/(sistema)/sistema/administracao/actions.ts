@@ -50,18 +50,19 @@ export async function deleteProfileAction(formData: FormData) {
     redirect(administrationActionHref(page, "erro"));
   }
 
+  let deletionResult: "admin_protected" | "deleted";
   try {
-    const result = await deleteAdministrationUserFromSupabase(
+    deletionResult = await deleteAdministrationUserFromSupabase(
       context.user.id,
       parsed.data.userId,
     );
-
-    if (result === "admin_protected") {
-      redirect(administrationActionHref(page, "admin-protegido"));
-    }
   } catch {
     console.error("Falha ao excluir perfil pela Administração.");
     redirect(administrationActionHref(page, "erro"));
+  }
+
+  if (deletionResult === "admin_protected") {
+    redirect(administrationActionHref(page, "admin-protegido"));
   }
 
   revalidatePath("/sistema/administracao");
