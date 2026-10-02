@@ -1,0 +1,204 @@
+import * as XLSX from "xlsx";
+
+import { pointsFromComponents, type C3Components } from "@/lib/analytics/c3";
+import { SIAPS_ROW_LIMIT_MESSAGE, SIAPS_XLSX_TOO_LARGE_MESSAGE } from "@/lib/siaps/errors";
+import { MAX_SIAPS_ROWS, MAX_SIAPS_XLSX_BYTES } from "@/lib/siaps/limits";
+
+export const SIAPS_PARSER_VERSION = "mae-aps-c3/1.0.0";
+export { MAX_SIAPS_XLSX_BYTES as MAX_SIAPS_FILE_BYTES } from "@/lib/siaps/limits";
+export const COMPONENT_CODES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"] as const;
+const MAX_HEADER_SCAN_ROWS = 50;
+
+export type SiapsC3Row = {
+  fileRow: number;
+  cnes: string;
+  establishmentName: string;
+  establishmentType: string;
+  ine: string;
+  teamName: string;
+  teamType: string;
+  components: C3Components;
+  pointsTotal: number;
+  denominator: number;
+  officialRatio: number | null;
+};
+
+export type SiapsParseResult = {
+  competency: string | null;
+  rows: SiapsC3Row[];
+  errors: string[];
+  warnings: string[];
+  headerRow: number | null;
+};
+
+function normalize(value: unknown) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
+function digits(value: unknown) {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+function numberValue(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const raw = String(value ?? "").trim().replace(/\s/g, "");
+  if (!raw) return null;
+  const normalized = raw.includes(",")
+    ? raw.replace(/\./g, "").replace(",", ".")
+    : raw;
+  const parsed = Number(normalized.replace("%", ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function findColumn(headers: string[], aliases: string[]) {
+  return headers.findIndex((header) => aliases.some((alias) => header === alias || header.startsWith(`${alias} `)));
+}
+
+function detectCompetency(matrix: unknown[][], filename: string): string | null {
+  const text = matrix.slice(0, 18).flat().map(String).join(" ");
+  const source = `${text} ${filename}`;
+  const iso = source.match(/\b(20\d{2})[-_/](0?[1-9]|1[0-2])\b/);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-01`;
+  const brazilian = source.match(/\b(0?[1-9]|1[0-2])[\/_-](20\d{2})\b/);
+  if (brazilian) return `${brazilian[2]}-${brazilian[1].padStart(2, "0")}-01`;
+  return null;
+}
+
+export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx"): SiapsParseResult {
+  if (buffer.byteLength > MAX_SIAPS_XLSX_BYTES) {
+    return { competency: null, rows: [], errors: [SIAPS_XLSX_TOO_LARGE_MESSAGE], warnings: [], headerRow: null };
+  }
+
+  const workbook = XLSX.read(buffer, {
+    type: "array", cellDates: true, cellFormula: false, bookDeps: false,
+    bookFiles: false, bookVBA: false,
+    // Read just enough rows to distinguish the supported maximum from an
+    // oversized worksheet without expanding an arbitrarily large sheet.
+    sheetRows: MAX_SIAPS_ROWS + MAX_HEADER_SCAN_ROWS + 2,
+  });
+  if (!workbook.SheetNames.length) {
+    return { competency: null, rows: [], errors: ["A planilha não contém abas legíveis."], warnings: [], headerRow: null };
+  }
+  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(firstSheet, { header: 1, defval: "", raw: false });
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const headerIndex = matrix.slice(0, MAX_HEADER_SCAN_ROWS).findIndex((row) => {
+    const cells = row.map(normalize);
+    return cells.some((cell) => cell === "CNES") && cells.some((cell) => cell === "INE");
+  });
+
+  if (headerIndex < 0) {
+    return { competency: detectCompetency(matrix, filename), rows: [], errors: ["Cabeçalho SIAPS com CNES e INE não encontrado."], warnings, headerRow: null };
+  }
+
+  const headers = matrix[headerIndex].map(normalize);
+  const indexes = {
+    cnes: findColumn(headers, ["CNES"]),
+    establishment: findColumn(headers, ["ESTABELECIMENTO", "UNIDADE", "UBS"]),
+    establishmentType: findColumn(headers, ["TIPO ESTABELECIMENTO", "TIPO DE ESTABELECIMENTO"]),
+    ine: findColumn(headers, ["INE"]),
+    team: findColumn(headers, ["EQUIPE", "NOME DA EQUIPE"]),
+    teamType: findColumn(headers, ["TIPO EQUIPE", "TIPO DE EQUIPE"]),
+    points: findColumn(headers, ["PONTOS TOTAL", "PONTUACAO TOTAL", "TOTAL DE PONTOS", "PONTOS"]),
+    denominator: findColumn(headers, ["DENOMINADOR", "POPULACAO ELEGIVEL"]),
+    ratio: findColumn(headers, ["RAZAO OFICIAL", "RESULTADO", "INDICADOR", "C3"]),
+    components: Object.fromEntries(COMPONENT_CODES.map((code) => [code, findColumn(headers, [code])])) as Record<(typeof COMPONENT_CODES)[number], number>,
+  };
+
+  const required = [indexes.cnes, indexes.ine, indexes.points, indexes.denominator, ...Object.values(indexes.components)];
+  if (required.some((index) => index < 0)) {
+    errors.push("O cabeçalho não contém todas as colunas obrigatórias: CNES, INE, A–K, pontos e denominador.");
+    return { competency: detectCompetency(matrix, filename), rows: [], errors, warnings, headerRow: headerIndex + 1 };
+  }
+
+  let dataRowCount = 0;
+  for (const source of matrix.slice(headerIndex + 1)) {
+    if (source.every((cell) => String(cell).trim() === "")) continue;
+    dataRowCount += 1;
+    if (dataRowCount > MAX_SIAPS_ROWS) {
+      return {
+        competency: detectCompetency(matrix, filename),
+        rows: [],
+        errors: [SIAPS_ROW_LIMIT_MESSAGE],
+        warnings,
+        headerRow: headerIndex + 1,
+      };
+    }
+  }
+
+  const rows: SiapsC3Row[] = [];
+  matrix.slice(headerIndex + 1).forEach((source, offset) => {
+    if (source.every((cell) => String(cell).trim() === "")) return;
+    const fileRow = headerIndex + offset + 2;
+    const cnesDigits = digits(source[indexes.cnes]);
+    const ineDigits = digits(source[indexes.ine]);
+    // Sem CNES e sem INE a linha não pertence a nenhuma equipe (ex.: total/rodapé).
+    // Completar com zeros criaria uma UBS/equipe fictícia e duplicaria o denominador.
+    if (!cnesDigits && !ineDigits) {
+      warnings.push(`Linha ${fileRow}: sem CNES e INE (provável linha de total); ignorada.`);
+      return;
+    }
+    const cnes = cnesDigits.padStart(7, "0");
+    const ine = ineDigits.padStart(10, "0");
+    const denominator = numberValue(source[indexes.denominator]);
+    const pointsTotal = numberValue(source[indexes.points]);
+    const componentValues = Object.fromEntries(COMPONENT_CODES.map((code) => [code, numberValue(source[indexes.components[code]])])) as Record<string, number | null>;
+    const rowErrors: string[] = [];
+    if (!/^\d{7}$/.test(cnes) || /^0+$/.test(cnes)) rowErrors.push("CNES inválido");
+    if (!/^\d{10}$/.test(ine) || /^0+$/.test(ine)) rowErrors.push("INE inválido");
+    if (denominator === null || !Number.isInteger(denominator) || denominator < 0) rowErrors.push("denominador inválido");
+    if (pointsTotal === null || pointsTotal < 0) rowErrors.push("pontos inválidos");
+    if (Object.values(componentValues).some((value) => value === null || !Number.isInteger(value) || value < 0)) rowErrors.push("A–K devem ser contagens inteiras não negativas");
+    if (rowErrors.length) {
+      errors.push(`Linha ${fileRow}: ${rowErrors.join("; ")}.`);
+      return;
+    }
+    const components = componentValues as C3Components;
+    if (Object.values(components).some((value) => value > (denominator as number))) {
+      errors.push(`Linha ${fileRow}: A–K não podem superar o denominador.`);
+      return;
+    }
+    const calculatedPoints = pointsFromComponents(components);
+    if (calculatedPoints !== pointsTotal) {
+      warnings.push(`Linha ${fileRow}: pontos informados divergem de 10×A + 9×(B–K); a pontuação calculada será usada.`);
+    }
+    rows.push({
+      fileRow,
+      cnes,
+      establishmentName: String(source[indexes.establishment] ?? "").trim() || `CNES ${cnes}`,
+      establishmentType: indexes.establishmentType >= 0 ? String(source[indexes.establishmentType] ?? "").trim() : "",
+      ine,
+      teamName: indexes.team >= 0 ? String(source[indexes.team] ?? "").trim() : "",
+      teamType: indexes.teamType >= 0 ? String(source[indexes.teamType] ?? "").trim() : "",
+      components,
+      pointsTotal: calculatedPoints,
+      denominator: denominator as number,
+      officialRatio: indexes.ratio >= 0 ? numberValue(source[indexes.ratio]) : null,
+    });
+  });
+
+  const competency = detectCompetency(matrix, filename);
+  if (!competency) warnings.push("Competência não detectada automaticamente; informe-a antes de publicar.");
+  if (!rows.length && !errors.length) errors.push("Nenhum registro C3 válido foi encontrado.");
+  return { competency, rows, errors, warnings, headerRow: headerIndex + 1 };
+}
+
+export async function sha256Hex(buffer: ArrayBuffer) {
+  const digest = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function compactSiapsRow(row: SiapsC3Row) {
+  return [
+    row.fileRow, row.cnes, row.establishmentName, row.establishmentType,
+    row.ine, row.teamName, row.teamType,
+    ...COMPONENT_CODES.map((code) => row.components[code]),
+    row.pointsTotal, row.denominator, row.officialRatio,
+  ];
+}

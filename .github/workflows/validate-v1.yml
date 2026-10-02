@@ -1,0 +1,114 @@
+name: MAE APS - Validacao V1
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: validate-v1-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-v1:
+    name: Validar aplicacao, migrations e RLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-validation.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_validation_only_000000000000
+      SUPABASE_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Supabase CLI version
+        run: npx supabase --version
+
+      - name: Prime Supabase database test images
+        shell: bash
+        run: |
+          docker pull ghcr.io/supabase/postgres:17.6.1.167
+          docker tag ghcr.io/supabase/postgres:17.6.1.167 public.ecr.aws/supabase/postgres:17.6.1.167
+          docker pull ghcr.io/supabase/pg_prove:3.36
+          docker tag ghcr.io/supabase/pg_prove:3.36 public.ecr.aws/supabase/pg_prove:3.36
+
+      - name: Start local Supabase
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4; do
+            if npx supabase start -x logflare,vector,realtime,storage-api,imgproxy,edge-runtime,postgres-meta,studio,supavisor; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 4 ]; then
+              echo "Supabase local não iniciou após 4 tentativas."
+              exit 1
+            fi
+            wait_seconds=$((attempt * 15))
+            echo "Falha transitória ao iniciar Supabase; nova tentativa em ${wait_seconds}s..."
+            sleep "$wait_seconds"
+          done
+
+      - name: Rebuild database from migrations
+        run: npx supabase db reset
+
+      - name: SQL and RLS tests
+        run: npx supabase test db
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests against local Supabase
+        run: npm run test:e2e
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Supabase status
+        if: always()
+        run: npx supabase status || true
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop
