@@ -52,15 +52,18 @@ export async function loadAdministrationImportAudit(limit = 25) {
   let data: unknown[] | null = versionedResult.data;
   let error = versionedResult.error;
 
-  if (error && versioningColumnsUnavailable(error)) {
+  if (error) {
     const fallbackResult = await privileged
       .schema("siaps")
       .from("imports")
       .select(baseColumns)
       .order("uploaded_at", { ascending: false })
       .limit(limit);
-    data = fallbackResult.data;
-    error = fallbackResult.error;
+
+    if (versioningColumnsUnavailable(error) || !fallbackResult.error) {
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
   }
 
   if (error) {

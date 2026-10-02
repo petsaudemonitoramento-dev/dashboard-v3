@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -53,8 +53,8 @@ export function SystemStatus() {
   return (
     <span
       className={online ? "auth-system-status is-online" : "auth-system-status is-offline"}
-      role="status"
       aria-live="polite"
+      aria-atomic="true"
       title="Disponibilidade do MAE APS"
     >
       <i aria-hidden="true" />

@@ -275,7 +275,7 @@ input {
 .dashboard-analysis strong { color: #294f72; }
 .analysis-note { position: relative; display: flex; align-items: center; gap: .4rem; margin-top: .65rem; border-radius: 8px; padding: .58rem .65rem; background: #eef7ff; color: #2b669b; font-size: .66rem; font-weight: 750; }
 .empty-mini { padding: .8rem; color: #52687d; font-size: .65rem; }
-.dashboard-data-note { display: flex; align-items: center; justify-content: center; gap: .4rem; margin-top: .8rem; color: #63788d; font-size: .66rem; text-align: center; }
+.dashboard-data-note { display: flex; align-items: center; justify-content: center; gap: .4rem; margin-top: .8rem; color: #4f647a; font-size: .66rem; text-align: center; }
 
 @keyframes dashboard-rise { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes cta-shimmer { 0%,72% { left: -35%; } 100% { left: 130%; } }
@@ -879,7 +879,7 @@ input {
 }
 
 .auth-pet-wordmark span {
-  color: #7a8da3;
+  color: #586f86;
   font-size: .82rem;
   font-weight: 720;
   line-height: 1;
@@ -1773,7 +1773,7 @@ input {
 
 .management-brand-copy small {
   margin-top: .22rem;
-  color: #7c8ea4;
+  color: #5d7187;
   font-size: .88rem;
 }
 
@@ -1891,7 +1891,7 @@ input {
 .management-footer {
   margin-left: 236px;
   padding-bottom: 1.2rem;
-  color: #718399;
+  color: #53687d;
 }
 
 .management-dashboard {
@@ -1912,7 +1912,7 @@ input {
 }
 
 .dashboard-welcome p {
-  color: #708199;
+  color: #53677d;
   font-size: 1rem;
 }
 
@@ -1929,7 +1929,7 @@ input {
 
 .dashboard-date-block span,
 .dashboard-date-block small {
-  color: #708199;
+  color: #53677d;
   font-size: .7rem;
 }
 
@@ -2083,7 +2083,7 @@ input {
 }
 
 .dashboard-kpi small {
-  color: #718197;
+  color: #556a7f;
 }
 
 .dashboard-chart-row {
@@ -2211,7 +2211,7 @@ input {
 }
 
 .attention-badge.warning {
-  color: #b15c11;
+  color: #934608;
   background: #fff0e2;
 }
 
