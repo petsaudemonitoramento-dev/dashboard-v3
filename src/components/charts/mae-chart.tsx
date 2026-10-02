@@ -35,7 +35,9 @@ export function MaeChart({ option, ariaLabel, accessibleData, drilldown, compone
     ...option,
     tooltip: {
       trigger: "axis",
-      confine: true,
+      confine: false,
+      appendTo: "body",
+      extraCssText: "z-index:9999;max-width:360px;white-space:normal;",
       formatter(params: unknown) {
         const item = Array.isArray(params) ? params[0] as { axisValue?: string; value?: number } : null;
         const code = item?.axisValue ?? "";

@@ -2539,3 +2539,48 @@ input {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+
+/* ===== MAE APS · Tooltips sem recorte e distribuição sem sobreposição ===== */
+.dashboard-card,
+.dashboard-kpi,
+.dashboard-analysis,
+.dashboard-chart-donut,
+.mae-chart {
+  overflow: visible;
+}
+
+.dashboard-analysis::before {
+  display: none;
+}
+
+.dashboard-card:has(.dashboard-help:hover),
+.dashboard-card:has(.dashboard-help:focus-visible),
+.dashboard-kpi:has(.dashboard-help:hover),
+.dashboard-kpi:has(.dashboard-help:focus-visible) {
+  position: relative;
+  z-index: 60;
+}
+
+.dashboard-help::after {
+  z-index: 999;
+  max-width: min(330px, 72vw);
+  white-space: normal;
+}
+
+.dashboard-kpi:first-child .dashboard-help::after,
+.dashboard-chart-donut .dashboard-help::after {
+  right: auto;
+  left: -8px;
+}
+
+.dashboard-filter-help::after {
+  top: calc(100% + 8px);
+  right: auto;
+  bottom: auto;
+  left: 0;
+}
+
+.dashboard-chart-donut .mae-chart > div {
+  overflow: visible;
+}

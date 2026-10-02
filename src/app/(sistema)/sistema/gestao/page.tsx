@@ -441,7 +441,7 @@ export default async function ManagementDashboard({
 
   const evolutionOption: EChartsOption = {
     color: ["#1479e8", "#ff6d1f", "#7357e8"],
-    tooltip: { trigger: "axis", confine: true },
+    tooltip: { trigger: "axis", confine: false, appendTo: "body", extraCssText: "z-index:9999;max-width:340px;white-space:normal;" },
     legend: { top: 0, textStyle: { color: "#53657c", fontSize: 11 } },
     grid: { left: 42, right: 18, top: 42, bottom: 34 },
     xAxis: { type: "category", data: evolution.map((item) => monthLabel(item.month)), ...baseAxis },
@@ -455,7 +455,7 @@ export default async function ManagementDashboard({
 
   const comparisonOption: EChartsOption = {
     color: ["#1682ed"],
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, confine: true },
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, confine: false, appendTo: "body", extraCssText: "z-index:9999;max-width:360px;white-space:normal;" },
     grid: { left: 46, right: 14, top: 20, bottom: 72 },
     xAxis: {
       type: "category",
@@ -478,11 +478,11 @@ export default async function ManagementDashboard({
   };
 
   const classificationOption: EChartsOption = {
-    tooltip: { trigger: "item", formatter: "{b}: {c} equipes ({d}%)" },
+    tooltip: { trigger: "item", formatter: "{b}: {c} equipes ({d}%)", confine: false, appendTo: "body", extraCssText: "z-index:9999;max-width:320px;white-space:normal;" },
     title: {
       text: `${teamCount}\nequipes`,
       left: "50%",
-      top: "34%",
+      top: "27%",
       textAlign: "center",
       textStyle: {
         color: "#143154",
@@ -495,15 +495,16 @@ export default async function ManagementDashboard({
       orient: "horizontal",
       left: "center",
       bottom: 4,
-      itemWidth: 13,
-      itemHeight: 13,
-      itemGap: 18,
-      textStyle: { color: "#526477", fontSize: 11 },
+      itemWidth: 11,
+      itemHeight: 11,
+      itemGap: 10,
+      width: "94%",
+      textStyle: { color: "#526477", fontSize: 10 },
     },
     series: [{
       type: "pie",
-      radius: ["39%", "66%"],
-      center: ["50%", "44%"],
+      radius: ["30%", "52%"],
+      center: ["50%", "34%"],
       avoidLabelOverlap: true,
       label: { show: false },
       emphasis: { scale: true, scaleSize: 6 },
@@ -747,7 +748,7 @@ export default async function ManagementDashboard({
             accessibleData={classificationAccessibleData}
             option={classificationOption}
             ariaLabel="Distribuição das equipes por classificação C3"
-            height={270}
+            height={330}
           />
         </article>
 
