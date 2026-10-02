@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Activity } from "lucide-react";
+import {
+  Activity,
+  Building2,
+  CalendarRange,
+  MapPin,
+  Search,
+  SlidersHorizontal,
+  Users,
+} from "lucide-react";
 import { useEffect, useOptimistic, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -205,36 +213,44 @@ export function ManagementDashboardFilters({
         navigate({ ...selection, query: currentQuery() });
       }}
     >
+      <div className="dashboard-period-group">
+        <span className="dashboard-filter-label">
+          <CalendarRange aria-hidden="true" />
+          Período
+        </span>
+        <div className="dashboard-period-selects">
+          <label className="sr-only" htmlFor="dashboard-inicio">Início do período</label>
+          <select
+            id="dashboard-inicio"
+            name="inicio"
+            onChange={(event) => navigate({
+              ...selection,
+              start: event.target.value,
+              query: currentQuery(),
+            }, event.currentTarget.name)}
+            value={selection.start}
+          >
+            {competencies.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+          <span aria-hidden="true">–</span>
+          <label className="sr-only" htmlFor="dashboard-fim">Fim do período</label>
+          <select
+            id="dashboard-fim"
+            name="fim"
+            onChange={(event) => navigate({
+              ...selection,
+              end: event.target.value,
+              query: currentQuery(),
+            }, event.currentTarget.name)}
+            value={selection.end}
+          >
+            {competencies.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+        </div>
+      </div>
+
       <label>
-        Início
-        <select
-          name="inicio"
-          onChange={(event) => navigate({
-            ...selection,
-            start: event.target.value,
-            query: currentQuery(),
-          }, event.currentTarget.name)}
-          value={selection.start}
-        >
-          {competencies.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-        </select>
-      </label>
-      <label>
-        Fim
-        <select
-          name="fim"
-          onChange={(event) => navigate({
-            ...selection,
-            end: event.target.value,
-            query: currentQuery(),
-          }, event.currentTarget.name)}
-          value={selection.end}
-        >
-          {competencies.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-        </select>
-      </label>
-      <label>
-        Distrito
+        <span className="dashboard-filter-label"><MapPin aria-hidden="true" />Distrito</span>
         <select
           name="distrito"
           onChange={(event) => navigate({
@@ -251,8 +267,9 @@ export function ManagementDashboardFilters({
           {districts.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       </label>
+
       <label>
-        UBS
+        <span className="dashboard-filter-label"><Building2 aria-hidden="true" />UBS</span>
         <select
           disabled={geographicParentPending || establishments.length === 0}
           name="ubs"
@@ -268,8 +285,9 @@ export function ManagementDashboardFilters({
           {establishments.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       </label>
+
       <label>
-        Equipe
+        <span className="dashboard-filter-label"><Users aria-hidden="true" />Equipe</span>
         <select
           disabled={teamOptionsPending || selection.establishmentId === "all" || teams.length === 0}
           name="equipe"
@@ -284,34 +302,40 @@ export function ManagementDashboardFilters({
           {teams.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       </label>
-      <label>
-        Classificação C3
-        <select
-          name="classificacao"
-          onChange={(event) => navigate({
-            ...selection,
-            classification: event.target.value as DashboardClassification,
-            query: currentQuery(),
-          }, event.currentTarget.name)}
-          value={selection.classification}
-        >
-          {classifications.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-        </select>
-      </label>
-      <label className="dashboard-search-filter">
-        Busca
-        <input
-          defaultValue={initialSelection.query}
-          maxLength={120}
-          name="busca"
-          placeholder="Nome, CNES ou INE"
-          ref={queryInputRef}
-        />
-      </label>
-      <div className="dashboard-filter-actions">
-        <button disabled={isPending} type="submit"><Activity aria-hidden="true" className="size-4" /> Aplicar filtros</button>
-        <Link href="/sistema/gestao">Limpar</Link>
+
+      <div className="dashboard-filter-secondary">
+        <label>
+          <span className="dashboard-filter-label"><SlidersHorizontal aria-hidden="true" />Classificação C3</span>
+          <select
+            name="classificacao"
+            onChange={(event) => navigate({
+              ...selection,
+              classification: event.target.value as DashboardClassification,
+              query: currentQuery(),
+            }, event.currentTarget.name)}
+            value={selection.classification}
+          >
+            {classifications.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+        </label>
+
+        <label className="dashboard-search-filter">
+          <span className="dashboard-filter-label"><Search aria-hidden="true" />Busca</span>
+          <input
+            defaultValue={initialSelection.query}
+            maxLength={120}
+            name="busca"
+            placeholder="Nome, CNES ou INE"
+            ref={queryInputRef}
+          />
+        </label>
+
+        <div className="dashboard-filter-actions">
+          <button disabled={isPending} type="submit"><Activity aria-hidden="true" className="size-4" /> Aplicar filtros</button>
+          <Link href="/sistema/gestao">Limpar</Link>
+        </div>
       </div>
+
       <span aria-live="polite" className="sr-only">
         {isPending ? "Atualizando filtros." : "Filtros atualizados."}
       </span>

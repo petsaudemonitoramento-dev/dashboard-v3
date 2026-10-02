@@ -7,6 +7,7 @@ import {
   BarChart3,
   Building2,
   CalendarDays,
+  CircleHelp,
   CheckCircle2,
   ClipboardList,
   Database,
@@ -154,24 +155,49 @@ function codeForClassification(value: ReturnType<typeof classifyC3>) {
   return "sem";
 }
 
+function DashboardHelp({ text }: { text: string }) {
+  return (
+    <span
+      aria-label={`Como é calculado: ${text}`}
+      className="dashboard-help"
+      data-tooltip={text}
+      role="img"
+      tabIndex={0}
+    >
+      <CircleHelp aria-hidden="true" />
+    </span>
+  );
+}
+
+function attentionBand(rate: number) {
+  if (rate <= 25) return { className: "critical", label: "Alta prioridade" };
+  if (rate <= 50) return { className: "warning", label: "Atenção" };
+  return { className: "watch", label: "Monitorar" };
+}
+
 function MetricCard({
   title,
   value,
   subtitle,
   icon: Icon,
   tone,
+  help,
 }: {
   title: string;
   value: string;
   subtitle: string;
   icon: LucideIcon;
   tone: string;
+  help: string;
 }) {
   return (
     <article className={`dashboard-kpi ${tone}`}>
       <div className="dashboard-kpi-icon"><Icon aria-hidden="true" className="size-6" /></div>
       <div>
-        <span>{title}</span>
+        <div className="dashboard-kpi-title">
+          <span>{title}</span>
+          <DashboardHelp text={help} />
+        </div>
         <strong>{value}</strong>
         <small>{subtitle}</small>
       </div>
@@ -390,6 +416,7 @@ export default async function ManagementDashboard({
 
   const lowestPractice = practiceRanking.at(0);
   const highestPractice = practiceRanking.at(-1);
+  const attentionPractices = practiceRanking.filter((item) => item.rate < 75).slice(0, 4);
   const lastUpdate = recentImports.at(0)?.uploaded_at
     ? new Date(recentImports[0].uploaded_at).toLocaleString("pt-BR", {
         dateStyle: "short",
@@ -417,7 +444,7 @@ export default async function ManagementDashboard({
   };
 
   const evolutionOption: EChartsOption = {
-    color: ["#1479e8", "#18a66a", "#7357e8"],
+    color: ["#1479e8", "#ff6d1f", "#7357e8"],
     tooltip: { trigger: "axis", confine: true },
     legend: { top: 0, textStyle: { color: "#53657c", fontSize: 11 } },
     grid: { left: 42, right: 18, top: 42, bottom: 34 },
@@ -563,14 +590,8 @@ export default async function ManagementDashboard({
     <div className="management-dashboard">
       <section className="dashboard-welcome">
         <div>
-          <span className="dashboard-overline">Visão consolidada · C3 Gestação e Puerpério</span>
           <h1>Olá, Gestão de Saúde</h1>
-          <p>Acompanhe indicadores oficiais do SIAPS com filtros territoriais, comparativos e detalhamento das práticas A–K.</p>
-          <div className="dashboard-scope-chips">
-            <span><Building2 aria-hidden="true" className="size-4" /> {ubsCount} UBS</span>
-            <span><Users aria-hidden="true" className="size-4" /> {teamCount} equipes</span>
-            <span><CalendarDays aria-hidden="true" className="size-4" /> {periodMonths.length} competências</span>
-          </div>
+          <p>Área de análise consolidada dos dados do SIAPS sobre o cuidado na gestação.</p>
         </div>
         <div className="dashboard-date-block">
           <strong>{currentDate}</strong>
@@ -611,109 +632,234 @@ export default async function ManagementDashboard({
         {canImport && (
           <Link href="/sistema/importar" className="dashboard-import-cta">
             <span className="dashboard-import-icon"><FileSpreadsheet aria-hidden="true" className="size-8" /></span>
-            <span><strong>Importar planilha SIAPS</strong><small>Atualize os dados oficiais da Gestão</small></span>
-            <TrendingUp aria-hidden="true" className="size-5" />
+            <span>
+              <strong>Importar planilha do SIAPS</strong>
+              <small>Atualize os dados do sistema oficial</small>
+            </span>
           </Link>
         )}
       </section>
 
       <section id="indicadores" className="dashboard-kpi-grid">
-        <MetricCard title="C3 consolidado" value={formatC3(summary.c3)} subtitle={classifyC3(summary.c3)} icon={BarChart3} tone="tone-blue" />
-        <MetricCard title="Denominador acumulado" value={formatNumber(summary.denominator)} subtitle="registros elegíveis no período" icon={Users} tone="tone-cyan" />
-        <MetricCard title="1ª consulta até 12 semanas" value={formatPercent(practiceRate("A"))} subtitle={`${formatNumber(componentTotals.A ?? 0)} registros`} icon={CalendarDays} tone="tone-violet" />
-        <MetricCard title="7+ consultas de pré-natal" value={formatPercent(practiceRate("B"))} subtitle={`${formatNumber(componentTotals.B ?? 0)} registros`} icon={Stethoscope} tone="tone-green" />
-        <MetricCard title="Visitas domiciliares" value={formatPercent(practiceRate("E"))} subtitle={`${formatNumber(componentTotals.E ?? 0)} registros`} icon={Home} tone="tone-orange" />
-        <MetricCard title="Saúde bucal" value={formatPercent(practiceRate("K"))} subtitle={`${formatNumber(componentTotals.K ?? 0)} registros`} icon={CheckCircle2} tone="tone-pink" />
-        <MetricCard title="Equipes analisadas" value={formatNumber(teamCount)} subtitle={`${ubsCount} UBS no recorte`} icon={Building2} tone="tone-sky" />
+        <MetricCard
+          title="Registros elegíveis"
+          value={formatNumber(summary.denominator)}
+          subtitle="denominador acumulado no período"
+          icon={Users}
+          tone="tone-blue"
+          help="Soma do denominador elegível das competências incluídas no recorte. Não é contagem de pessoas únicas quando o período possui mais de uma competência."
+        />
+        <MetricCard
+          title="C3 consolidado"
+          value={formatC3(summary.c3)}
+          subtitle={classifyC3(summary.c3)}
+          icon={BarChart3}
+          tone="tone-orange"
+          help="C3 consolidado = soma dos pontos C3 das equipes dividida pela soma do denominador elegível do recorte. O resultado varia de 0 a 100."
+        />
+        <MetricCard
+          title="1ª consulta até 12 semanas"
+          value={formatPercent(practiceRate("A"))}
+          subtitle={`${formatNumber(componentTotals.A ?? 0)} registros com a prática`}
+          icon={CalendarDays}
+          tone="tone-violet"
+          help="Cobertura A = registros que cumpriram a primeira consulta até a 12ª semana divididos pelo denominador elegível acumulado, multiplicado por 100."
+        />
+        <MetricCard
+          title="Saúde bucal"
+          value={formatPercent(practiceRate("K"))}
+          subtitle={`${formatNumber(componentTotals.K ?? 0)} registros com a prática`}
+          icon={Stethoscope}
+          tone="tone-green"
+          help="Cobertura K = registros com ao menos uma atividade de saúde bucal durante a gestação divididos pelo denominador elegível acumulado, multiplicado por 100."
+        />
+        <MetricCard
+          title="Testes do 1º trimestre"
+          value={formatPercent(practiceRate("G"))}
+          subtitle={`${formatNumber(componentTotals.G ?? 0)} registros com a prática`}
+          icon={CheckCircle2}
+          tone="tone-pink"
+          help="Cobertura G = registros com testes ou exames previstos no primeiro trimestre divididos pelo denominador elegível acumulado, multiplicado por 100."
+        />
+        <MetricCard
+          title="Visitas domiciliares"
+          value={formatPercent(practiceRate("E"))}
+          subtitle={`${formatNumber(componentTotals.E ?? 0)} registros com a prática`}
+          icon={Home}
+          tone="tone-orange"
+          help="Cobertura E = registros com pelo menos três visitas domiciliares após a primeira consulta de pré-natal divididos pelo denominador elegível acumulado, multiplicado por 100."
+        />
       </section>
 
       <section id="ubs-equipes" className="dashboard-chart-row">
         <article className="dashboard-card dashboard-chart-large">
           <div className="dashboard-card-heading">
-            <div><span>Evolução temporal</span><h2>Evolução mensal dos principais indicadores</h2></div>
+            <div>
+              <span>Evolução temporal</span>
+              <div className="dashboard-heading-title">
+                <h2>Evolução mensal dos principais indicadores</h2>
+                <DashboardHelp text="C3 mensal = soma dos pontos das equipes dividida pela soma do denominador elegível da competência. As linhas A e B representam registros que cumpriram cada prática divididos pelo denominador do mês, multiplicados por 100." />
+              </div>
+            </div>
             <span className="dashboard-card-pill">Percentual (%)</span>
           </div>
-          {evolution.length ? <MaeChart accessibleData={evolutionAccessibleData} option={evolutionOption} ariaLabel="Evolução mensal do C3, primeira consulta e sete consultas" height={300} /> : <p className="empty-state">Sem dados no recorte.</p>}
+          {evolution.length ? (
+            <MaeChart
+              accessibleData={evolutionAccessibleData}
+              option={evolutionOption}
+              ariaLabel="Evolução mensal do C3, primeira consulta e sete consultas"
+              height={290}
+            />
+          ) : <p className="empty-state">Sem dados no recorte.</p>}
         </article>
 
         <article className="dashboard-card dashboard-chart-medium">
           <div className="dashboard-card-heading">
-            <div><span>{comparisonMode === "ubs" ? "Por UBS" : "Por equipe"}</span><h2>C3 por {comparisonMode === "ubs" ? "UBS" : "equipe"}</h2></div>
-            <span className="dashboard-card-pill">Clique para detalhar</span>
+            <div>
+              <span>{comparisonMode === "ubs" ? "Por UBS" : "Por equipe"}</span>
+              <div className="dashboard-heading-title">
+                <h2>C3 por {comparisonMode === "ubs" ? "UBS" : "equipe"}</h2>
+                <DashboardHelp text="Para cada UBS ou equipe, o C3 é calculado pela soma dos pontos do grupo dividida pela soma do denominador elegível do mesmo grupo, respeitando todos os filtros selecionados." />
+              </div>
+            </div>
+            <span className="dashboard-card-pill">Comparativo</span>
           </div>
-          {comparison.length ? <MaeChart accessibleData={comparisonAccessibleData} option={comparisonOption} ariaLabel="Comparação do C3 por território" drilldown={comparisonDrilldown} height={300} /> : <p className="empty-state">Sem dados no recorte.</p>}
-        </article>
-
-        <article className="dashboard-card dashboard-chart-donut">
-          <div className="dashboard-card-heading">
-            <div><span>Distribuição</span><h2>Equipes por classificação C3</h2></div>
-          </div>
-          <MaeChart accessibleData={classificationAccessibleData} option={classificationOption} ariaLabel="Distribuição das equipes por classificação C3" height={300} />
+          {comparison.length ? (
+            <MaeChart
+              accessibleData={comparisonAccessibleData}
+              option={comparisonOption}
+              ariaLabel="Comparação do C3 por território"
+              drilldown={comparisonDrilldown}
+              height={290}
+            />
+          ) : <p className="empty-state">Sem dados no recorte.</p>}
         </article>
       </section>
 
-      <section id="comparativos" className="dashboard-card dashboard-components-card">
-        <div className="dashboard-card-heading">
-          <div>
-            <span>Práticas A–K</span>
-            <h2>Cobertura dos componentes do indicador C3</h2>
-            <p>Percentual calculado a partir das contagens oficiais e do denominador agregado do recorte selecionado.</p>
+      <section id="comparativos" className="dashboard-secondary-charts">
+        <article className="dashboard-card dashboard-chart-donut">
+          <div className="dashboard-card-heading">
+            <div>
+              <span>Distribuição</span>
+              <div className="dashboard-heading-title">
+                <h2>Equipes por classificação C3</h2>
+                <DashboardHelp text="A classificação usa o C3 agregado de cada equipe no recorte: acima de 75 = Ótimo; acima de 50 = Bom; acima de 25 = Suficiente; até 25 = Regular. Valores fora de 0–100 são sinalizados como inválidos." />
+              </div>
+            </div>
           </div>
-          <span className="dashboard-card-pill">A–K</span>
-        </div>
-        <MaeChart accessibleData={componentsAccessibleData} option={componentsOption} ariaLabel="Cobertura percentual das práticas A a K" componentDescriptions={C3_COMPONENTS} height={280} />
-        <div className="practice-legend">
-          {Object.keys(C3_COMPONENTS).map((code) => <span key={code}><strong>{code}</strong>{PRACTICE_SHORT[code]}</span>)}
-        </div>
+          <MaeChart
+            accessibleData={classificationAccessibleData}
+            option={classificationOption}
+            ariaLabel="Distribuição das equipes por classificação C3"
+            height={270}
+          />
+        </article>
+
+        <article className="dashboard-card dashboard-components-card">
+          <div className="dashboard-card-heading">
+            <div>
+              <span>Práticas A–K</span>
+              <div className="dashboard-heading-title">
+                <h2>Cobertura dos componentes do indicador C3</h2>
+                <DashboardHelp text="Cobertura de cada prática A–K = total de registros que cumprem a prática dividido pelo denominador elegível acumulado do recorte, multiplicado por 100." />
+              </div>
+              <p>Leitura detalhada das práticas oficiais que compõem o C3.</p>
+            </div>
+            <span className="dashboard-card-pill">A–K</span>
+          </div>
+          <MaeChart
+            accessibleData={componentsAccessibleData}
+            option={componentsOption}
+            ariaLabel="Cobertura percentual das práticas A a K"
+            componentDescriptions={C3_COMPONENTS}
+            height={270}
+          />
+          <div className="practice-legend">
+            {Object.keys(C3_COMPONENTS).map((code) => (
+              <span key={code}><strong>{code}</strong>{PRACTICE_SHORT[code]}</span>
+            ))}
+          </div>
+        </article>
       </section>
 
       <section id="resumo" className="dashboard-bottom-grid">
         <article className="dashboard-card dashboard-attention">
           <div className="dashboard-card-heading">
-            <div><span>Leitura rápida</span><h2>Práticas com menor cobertura</h2></div>
-            <AlertTriangle className="size-5 text-amber-500" />
-          </div>
-          <div className="attention-list">
-            {practiceRanking.slice(0, 4).map((item, index) => (
-              <div key={item.code}>
-                <span className={index < 2 ? "attention-dot critical" : "attention-dot"} />
-                <div><strong>{item.code} · {item.label}</strong><small>{C3_COMPONENTS[item.code as keyof typeof C3_COMPONENTS]}</small></div>
-                <b>{formatPercent(item.rate)}</b>
+            <div>
+              <span>Monitoramento gerencial</span>
+              <div className="dashboard-heading-title">
+                <h2>Indicadores que precisam de atenção</h2>
+                <DashboardHelp text="O painel destaca práticas com cobertura inferior a 75% para priorização gerencial. As faixas são usadas apenas como sinalização visual do MAE APS e não substituem metas ou critérios normativos oficiais." />
               </div>
-            ))}
-            {!practiceRanking.length && <p className="empty-mini">Sem dados de práticas para o recorte.</p>}
+            </div>
+            <Link href="/sistema/gestao/indicadores">Ver todos →</Link>
+          </div>
+
+          <div className="attention-list">
+            {attentionPractices.map((item) => {
+              const band = attentionBand(item.rate);
+              return (
+                <div key={item.code}>
+                  <span className={`attention-dot ${band.className}`} />
+                  <div>
+                    <strong>{item.code} · {item.label}</strong>
+                    <small>{C3_COMPONENTS[item.code as keyof typeof C3_COMPONENTS]}</small>
+                  </div>
+                  <span className={`attention-badge ${band.className}`}>
+                    {band.label} · {formatPercent(item.rate)}
+                  </span>
+                </div>
+              );
+            })}
+            {!attentionPractices.length ? (
+              <div className="attention-ok">
+                <CheckCircle2 aria-hidden="true" />
+                <span>Nenhuma prática está abaixo do limiar gerencial de 75% neste recorte.</span>
+              </div>
+            ) : null}
           </div>
         </article>
 
         <article className="dashboard-card">
           <div className="dashboard-card-heading">
-            <div><span>Rastreabilidade</span><h2>{canImport ? "Últimas importações SIAPS" : "Competências publicadas"}</h2></div>
+            <div>
+              <span>Rastreabilidade</span>
+              <h2>{canImport ? "Últimas importações do SIAPS" : "Competências publicadas"}</h2>
+            </div>
             {canImport && <Link href="/sistema/importar">Ver histórico →</Link>}
           </div>
+
           {!canImport ? (
             <p className="empty-mini">
               {competencies.length
                 ? `${competencies.length} competências oficiais disponíveis, de ${longMonthLabel(competencies[0])} a ${longMonthLabel(competencies.at(-1)!)}. O histórico de arquivos importados é restrito ao perfil Gestão.`
                 : "Nenhuma competência publicada."}
             </p>
-          ) : <div className="dashboard-import-table">
-            <div className="dashboard-import-row header"><span>Data</span><span>Arquivo</span><span>Registros</span><span>Status</span></div>
-            {recentImports.map((item) => (
-              <div className="dashboard-import-row" key={item.id}>
-                <span>{new Date(item.uploaded_at).toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" })}</span>
-                <span title={item.filename}>{item.filename}</span>
-                <span>{formatNumber(item.rows_total)}</span>
-                <span><b className="status-ok">{item.status}</b></span>
+          ) : (
+            <div className="dashboard-import-table">
+              <div className="dashboard-import-row header">
+                <span>Data</span><span>Competência</span><span>Registros</span><span>Status</span>
               </div>
-            ))}
-            {!recentImports.length && <p className="empty-mini">Nenhuma importação registrada.</p>}
-          </div>}
+              {recentImports.map((item) => (
+                <div className="dashboard-import-row" key={item.id}>
+                  <span>{new Date(item.uploaded_at).toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" })}</span>
+                  <span title={item.filename}>{longMonthLabel(item.competency)}</span>
+                  <span>{formatNumber(item.rows_total)}</span>
+                  <span><b className="status-ok">{item.status}</b></span>
+                </div>
+              ))}
+              {!recentImports.length && <p className="empty-mini">Nenhuma importação registrada.</p>}
+            </div>
+          )}
         </article>
 
         <article className="dashboard-card dashboard-analysis">
           <div className="dashboard-card-heading">
-            <div><span>Análise consolidada</span><h2>Resumo da Gestão</h2></div>
-            <Info className="size-5 text-blue-500" />
+            <div>
+              <span>Visão municipal</span>
+              <h2>Análise consolidada da gestão</h2>
+            </div>
+            <Info className="size-5 text-blue-500" aria-hidden="true" />
           </div>
           <div className="analysis-icon"><Database className="size-8" /></div>
           <p>
@@ -726,12 +872,16 @@ export default async function ManagementDashboard({
               enquanto <strong>{highestPractice.code} · {highestPractice.label}</strong> apresenta a maior ({formatPercent(highestPractice.rate)}).
             </p>
           )}
-          <div className="analysis-note"><Sparkles className="size-4" /> Use os filtros e comparativos para localizar diferenças entre territórios antes de aprofundar a análise.</div>
+          <div className="analysis-note">
+            <Sparkles className="size-4" aria-hidden="true" />
+            Use filtros e comparativos para localizar diferenças entre territórios antes de aprofundar a análise.
+          </div>
+          <p className="analysis-motto">Dados oficiais para apoiar uma gestão mais eficiente e um cuidado materno mais seguro.</p>
         </article>
       </section>
 
       <div className="dashboard-data-note">
-        <ClipboardList className="size-4" />
+        <ClipboardList className="size-4" aria-hidden="true" />
         <span>Os percentuais apresentados são derivados exclusivamente dos dados oficiais carregados no MAE APS; não são utilizados valores simulados no Dashboard.</span>
       </div>
     </div>

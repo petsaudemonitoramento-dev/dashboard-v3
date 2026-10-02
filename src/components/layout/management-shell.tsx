@@ -1,17 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Bell,
   Building2,
+  ChevronDown,
   DatabaseZap,
   GitCompareArrows,
+  HeartPulse,
   LayoutDashboard,
   ListChecks,
   LogOut,
-  Menu,
-  University,
 } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
@@ -29,38 +31,59 @@ const analysisItems = [
   { href: "/sistema/gestao/resumo", label: "Resumo", icon: ListChecks },
 ];
 
+function initialsFromEmail(email: string) {
+  const local = email.split("@")[0] ?? "";
+  const parts = local.split(/[._-]+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return local.slice(0, 2).toUpperCase() || "GS";
+}
+
 export function ManagementShell({ children, email, role }: Props) {
   const pathname = usePathname();
   const isImport = pathname.startsWith("/sistema/importar");
   const isDashboardHome = pathname === "/sistema/gestao";
+  const initials = initialsFromEmail(email);
 
   return (
     <div className="management-shell">
       <a className="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
+
       <header className="management-topbar">
         <Link href="/sistema/gestao" className="management-brand">
-          <span className="management-brand-mark">MAE</span>
-          <span>
-            <strong>MAE APS</strong>
-            <small>Monitoramento, Atenção e Estratégia na APS</small>
-            <em>Módulo da Gestão</em>
+          <span className="management-care-mark" aria-hidden="true">
+            <HeartPulse />
+            <i />
+          </span>
+          <span className="management-brand-copy">
+            <strong>Cuidado na Gestação na APS</strong>
+            <small>Módulo da Gestão</small>
           </span>
         </Link>
 
         <div className="management-institutions">
-          <div className="pet-wordmark">
-            <span className="pet-dot" />
-            <span><strong>PET SAÚDE UFCG</strong><small>Informação e Saúde Digital</small></span>
-          </div>
-          <div className="ufcg-wordmark">
-            <span className="ufcg-monogram">UFCG</span>
-            <span><strong>Universidade Federal</strong><small>de Campina Grande</small></span>
-          </div>
+          <Image
+            className="management-ufcg-logo"
+            src="/brands/ufcg-oficial.png"
+            alt="Universidade Federal de Campina Grande"
+            width={1472}
+            height={462}
+            priority
+          />
+
+          <span className="management-bell" aria-hidden="true">
+            <Bell />
+          </span>
+
           <details className="management-user">
             <summary aria-label="Abrir menu da conta">
-              <span>{email.slice(0, 1).toUpperCase()}</span>
-              <span className="management-user-copy"><strong>{role === "gestao" ? "Gestão" : "Leitura"}</strong><small>{email}</small></span>
-              <Menu className="size-4" />
+              <span>{initials}</span>
+              <span className="management-user-copy">
+                <strong>{role === "gestao" ? "Gestão" : "Leitura"}</strong>
+                <small>{email}</small>
+              </span>
+              <ChevronDown className="size-4" aria-hidden="true" />
             </summary>
             <div className="management-user-popover">
               <strong>{role === "gestao" ? "GESTÃO" : "LEITURA"}</strong>
@@ -80,16 +103,17 @@ export function ManagementShell({ children, email, role }: Props) {
             className={isDashboardHome ? "active" : ""}
             aria-current={isDashboardHome ? "page" : undefined}
           >
-            <LayoutDashboard className="size-5" /><span>Dashboard</span>
+            <LayoutDashboard className="size-5" /><span>Início</span>
           </Link>
 
           {role === "gestao" && (
             <Link
               href="/sistema/importar"
+              aria-label="Importar dados"
               className={isImport ? "active" : ""}
               aria-current={isImport ? "page" : undefined}
             >
-              <DatabaseZap className="size-5" /><span>Importar dados</span>
+              <DatabaseZap className="size-5" /><span>Importar SIAPS</span>
             </Link>
           )}
 
@@ -111,15 +135,18 @@ export function ManagementShell({ children, email, role }: Props) {
         </nav>
 
         <div className="management-sidebar-note">
-          <University className="size-8" />
-          <p>Dados oficiais para uma APS mais forte, organizada e orientada por evidências.</p>
-          <small>MAE APS · PET SAÚDE UFCG</small>
+          <span className="management-sidebar-line" aria-hidden="true" />
+          <p>Mais saúde para mães e bebês.<br />Fortalecendo a APS.</p>
+          <small>MAE APS · PET Saúde UFCG</small>
         </div>
       </aside>
 
-      <main className="management-main" id="conteudo-principal" tabIndex={-1}>{children}</main>
+      <main className="management-main" id="conteudo-principal" tabIndex={-1}>
+        {children}
+      </main>
+
       <footer className="management-footer">
-        <strong>PET SAÚDE UFCG</strong>
+        <strong>MAE APS · PET Saúde UFCG</strong>
         <span>Desenvolvimento: Lucca Araújo</span>
         <span>Design: Kethilly Nayara</span>
       </footer>
