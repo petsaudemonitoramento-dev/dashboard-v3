@@ -147,6 +147,10 @@ export function AuthShell({
 
             {children}
 
+            <p className="auth-mobile-reference">
+              SIAPS 2.0.3 · 10/09/2026 · Origem: SIAPS / SISAB
+            </p>
+
             <p className="auth-access-note">
               Acesso protegido. As operações seguem as permissões definidas para
               cada perfil institucional.
