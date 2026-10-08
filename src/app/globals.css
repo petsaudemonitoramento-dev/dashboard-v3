@@ -2584,3 +2584,138 @@ input {
 .dashboard-chart-donut .mae-chart > div {
   overflow: visible;
 }
+
+/* ===== MAE APS · viewport adaptativo · 2026-10-08 =====
+   CSS de dimensões intrínsecas: nenhum listener/JS adicional.
+   Os campos de autenticação devem continuar acessíveis sob zoom e teclado virtual. */
+.auth-portal {
+  height: 100dvh;
+  min-height: 100svh;
+  grid-template-rows: clamp(52px, 7.5dvh, 64px) minmax(0, 1fr) clamp(26px, 4dvh, 38px);
+  overflow: hidden;
+}
+.auth-portal-main {
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, 58fr) minmax(380px, 42fr);
+  overflow: hidden;
+}
+.auth-portal-context {
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-top: clamp(.65rem, 2dvh, 1.5rem);
+  padding-bottom: clamp(.65rem, 2dvh, 1.5rem);
+}
+.auth-context-content,
+.auth-access-card,
+.auth-portal-brand,
+.auth-portal-institutions { min-width: 0; }
+.auth-access-zone {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(.4rem, 1.3dvh, 1rem) clamp(.8rem, 2vw, 2rem) clamp(.4rem, 1.3dvh, 1rem) clamp(2.2rem, 4vw, 4.5rem);
+}
+.auth-access-card { padding: clamp(.8rem, 1.8dvh, 1.4rem) clamp(.9rem, 1.7vw, 1.4rem); }
+.auth-access-topline { margin-bottom: clamp(.25rem, 1dvh, .65rem); }
+.auth-access-heading p { margin-bottom: clamp(.45rem, 1.4dvh, .85rem); }
+.auth-signin-stack, .auth-form { gap: clamp(.4rem, 1.1dvh, .7rem); }
+.auth-field { gap: .25rem; }
+.auth-access-note { margin-top: clamp(.45rem, 1.1dvh, .8rem); padding-top: .55rem; }
+.auth-portal-footer { min-width: 0; padding-block: .2rem; }
+.auth-mobile-reference { display: none; }
+
+/* Desktop estreito mantém duas colunas, reduzindo áreas decorativas antes do formulário. */
+@media (min-width: 961px) and (max-width: 1160px) {
+  .auth-portal-main { grid-template-columns: minmax(0, 57fr) minmax(370px, 43fr); }
+  .auth-portal-context { padding-right: clamp(4.5rem, 7vw, 6rem); }
+  .auth-access-zone { padding-left: clamp(2.4rem, 4vw, 3.5rem); }
+  .auth-portal-context h1 { font-size: clamp(1.85rem, 3vw, 2.5rem); }
+  .auth-assurance-panel ul { gap: .3rem; }
+}
+@media (min-width: 961px) and (max-height: 720px) {
+  .auth-portal-context h1 { font-size: clamp(1.65rem, 2.7vw, 2.35rem); line-height: 1.08; }
+  .auth-context-kicker { margin-bottom: .35rem; }
+  .auth-context-content > p { margin-top: .45rem; font-size: .8rem; }
+  .auth-technical-panel { margin-top: .55rem; padding: .5rem .65rem; }
+  .auth-assurance-panel { display: none; }
+  .auth-access-heading h2 { font-size: 1.45rem; }
+  .auth-access-heading p { line-height: 1.32; }
+  .auth-access-note { display: none; }
+}
+@media (min-width: 961px) and (max-height: 540px) {
+  .auth-portal { grid-template-rows: 52px minmax(0, 1fr); }
+  .auth-portal-footer, .auth-technical-panel, .auth-context-content > p { display: none; }
+  .auth-portal-context h1 { font-size: clamp(1.5rem, 2.5vw, 2.05rem); }
+}
+
+/* Tablets e celulares: o login deve aparecer imediatamente, sem painel antes dele. */
+@media (max-width: 960px) {
+  .auth-portal {
+    height: auto;
+    min-height: 100dvh;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+  .auth-portal-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    overflow: visible;
+  }
+  .auth-portal-context { display: none; }
+  .auth-access-zone {
+    min-height: 0;
+    padding: clamp(.75rem, 2.5dvh, 1.75rem) clamp(.65rem, 3vw, 1.25rem);
+    overflow: visible;
+  }
+  .auth-access-card {
+    width: min(100%, 470px);
+    padding: clamp(1rem, 3vw, 1.4rem);
+    margin-inline: auto;
+  }
+  .auth-mobile-reference {
+    display: block;
+    margin: .65rem 0 0;
+    color: #526a7f;
+    font-size: .68rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+  }
+  .auth-access-topline { margin-bottom: .55rem; }
+  .auth-access-heading h2 { font-size: clamp(1.4rem, 4vw, 1.65rem); }
+  .auth-access-heading p { margin-bottom: .75rem; }
+  .auth-portal-footer { flex-wrap: wrap; padding: .55rem .75rem; }
+}
+@media (max-width: 430px) {
+  .auth-portal-header { min-height: 54px; gap: .3rem; padding: .35rem .55rem; }
+  .auth-portal-brand { gap: .36rem; flex: 0 1 auto; }
+  .auth-portal-mark { width: 35px; height: 35px; }
+  .auth-brand-copy strong { font-size: .84rem; white-space: nowrap; }
+  .auth-portal-institutions { flex-shrink: 1; gap: .28rem; }
+  .auth-pet-wordmark { min-width: 0; min-height: 32px; gap: .13rem; padding-right: .3rem; }
+  .auth-pet-wordmark strong { font-size: clamp(.66rem, 2.4vw, .82rem); }
+  .auth-pet-wordmark span { font-size: .53rem; }
+  .auth-ufcg-logo { width: clamp(54px, 18vw, 84px); height: auto; max-height: 35px; }
+  .auth-access-zone { padding: .6rem .55rem; }
+  .auth-access-card { padding: .9rem; }
+  .auth-access-heading h2 { font-size: 1.38rem; }
+  .auth-access-heading p { font-size: .76rem; }
+  .auth-input, .auth-primary-button, .auth-google-button { min-height: 44px; }
+  .auth-secondary-links { flex-wrap: wrap; gap: .45rem 1rem; }
+  .auth-access-note { font-size: .62rem; }
+}
+@media (max-width: 960px) and (max-height: 700px) {
+  .auth-access-zone { padding-block: .35rem; }
+  .auth-access-card { padding: .7rem .9rem; }
+  .auth-access-topline { margin-bottom: .3rem; }
+  .auth-access-heading p { margin-bottom: .4rem; }
+  .auth-access-note { display: none; }
+  .auth-portal-footer { display: none; }
+}
+
