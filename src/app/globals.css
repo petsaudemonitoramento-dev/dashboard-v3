@@ -3345,3 +3345,41 @@ input {
 @media (max-width: 700px) {
   .mae-gsap-replay { top: .6rem; right: .7rem; bottom: auto; }
 }
+
+
+/* ===== Auth MAE APS · mesma composição em todas as etapas =====
+   A rota e o formulário central mudam; fundo, marca e rodapé permanecem.
+   Sem containers com scroll independente. */
+.mae-cinema .auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: .28rem .2rem;
+  color: #f3dcff;
+  font-size: .77rem;
+  font-weight: 720;
+  text-align: center;
+  text-decoration: underline;
+  text-decoration-color: rgba(243, 220, 255, .46);
+  text-underline-offset: .2rem;
+}
+.mae-cinema .auth-back-link:hover {
+  color: #fff;
+  text-decoration-color: #fff;
+}
+.mae-cinema .auth-back-link:focus-visible {
+  outline: 3px solid #f3dcff;
+  outline-offset: 2px;
+  border-radius: 5px;
+}
+.mae-cinema-auth {
+  animation: mae-auth-center-change .28s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes mae-auth-center-change {
+  from { opacity: .3; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-cinema-auth { animation: none !important; }
+}
