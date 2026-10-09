@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
+import "@fontsource/clear-sans/400.css";
+import "@fontsource/clear-sans/500.css";
+import "@fontsource/clear-sans/700.css";
 import "./globals.css";
+import "./brand-system.css";
 
 export const metadata: Metadata = {
   applicationName: "MAE APS",
