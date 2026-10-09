@@ -57,7 +57,7 @@ export function CinematicIntro() {
           duration: 1.15,
           ease: "power2.inOut",
         }, 0.15)
-        .to(".mae-gsap-sweep", { xPercent: 155, opacity: 0.8, duration: 0.85, ease: "power2.inOut" }, 0.35)
+        .to(".mae-gsap-sweep", { xPercent: 510, opacity: 0.8, duration: 0.85, ease: "power2.inOut" }, 0.35)
         .to(".mae-gsap-sweep", { opacity: 0, duration: 0.18 }, 1.1)
         .fromTo(".mae-gsap-stage-dark",
           { autoAlpha: 0, scale: 1.06 },
