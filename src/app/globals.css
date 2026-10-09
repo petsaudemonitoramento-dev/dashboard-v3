@@ -3495,3 +3495,109 @@ input {
 @media (prefers-reduced-motion: reduce) {
   .mae-cinema-program-signature { transition: none; }
 }
+
+
+/* ===== Eixo do rodapé alinhado ao centro real do formulário =====
+   A área de SIAPS/LGPD fica no mesmo eixo X do card de acesso.
+   Trilhos laterais iguais impedem que a largura dos créditos desloque o centro.
+   Não altera a identidade ou a faixa única do rodapé. */
+@media (min-width: 1281px) {
+  .mae-cinema-footer {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 490px) minmax(0, 1fr);
+    column-gap: clamp(.6rem, 1.35vw, 1.3rem);
+  }
+  .mae-cinema-footer-identification {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .mae-cinema-footer-product { max-width: 230px; }
+  .mae-cinema-footer-details {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    justify-self: center;
+    justify-items: center;
+    text-align: center;
+  }
+  .mae-cinema-footer-technical { justify-content: center; }
+  .mae-cinema-footer-credits {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+}
+@media (min-width: 701px) and (max-width: 1280px) {
+  .mae-cinema-footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: .7rem;
+    row-gap: .18rem;
+  }
+  .mae-cinema-footer-identification {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+  .mae-cinema-footer-credits {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .mae-cinema-footer-details {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+    justify-self: center;
+    justify-items: center;
+    text-align: center;
+  }
+}
+@media (max-width: 700px) {
+  .mae-cinema-footer-details {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+    min-width: 0;
+    justify-items: center;
+    text-align: center;
+  }
+  .mae-cinema-footer-technical { justify-content: center; }
+}
+
+
+/* O conteúdo óptico SIAPS/LGPD segue a mesma largura útil (400px)
+   do formulário. Cada referência tem sua própria linha central. */
+.mae-cinema-footer-details {
+  width: min(100%, 400px);
+  max-width: 400px;
+  margin-inline: auto;
+  justify-self: center;
+  text-align: center;
+}
+.mae-cinema-footer-technical {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-items: center;
+  gap: .2rem;
+  width: 100%;
+  min-width: 0;
+}
+.mae-cinema-footer-version,
+.mae-cinema-footer-governance {
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+@media (min-width: 1281px) {
+  .mae-cinema-footer {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 400px) minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .mae-cinema-footer-details {
+    justify-self: center;
+    width: min(100%, 400px);
+  }
+}
