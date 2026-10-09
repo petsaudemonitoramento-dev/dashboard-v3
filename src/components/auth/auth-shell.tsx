@@ -76,27 +76,30 @@ export function AuthShell({
             </span>
             <span className="mae-cinema-footer-product">
               <strong>MAE APS</strong>
-              <span>PET Saúde Digital · UFCG</span>
+              <span>Monitoramento, Atenção e Estratégia na APS</span>
             </span>
           </div>
           <div className="mae-cinema-footer-details">
-            <span className="mae-cinema-footer-version">
-              <strong>SIAPS 2.0.3</strong>
-              <span>Ref. 10/09/2026</span>
-              <span>C3 · Gestação</span>
-              <span>SIAPS / SISAB</span>
-            </span>
-            <span className="mae-cinema-footer-governance">
-              <span>Privacidade orientada à</span>
-              <a
-                href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Lei Geral de Proteção de Dados Pessoais, Lei nº 13.709 de 2018"
-              >
-                LGPD (Lei 13.709/2018)
-              </a>
-            </span>
+            <div className="mae-cinema-footer-technical">
+              <span className="mae-cinema-footer-version">
+                <strong>SIAPS 2.0.3</strong>
+                <span>Ref. 10/09/2026</span>
+                <span>C3 · Gestação</span>
+                <span>SIAPS / SISAB</span>
+              </span>
+              <span className="mae-cinema-footer-governance">
+                <span>Privacidade orientada à</span>
+                <a
+                  href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Lei Geral de Proteção de Dados Pessoais, Lei nº 13.709 de 2018"
+                >
+                  LGPD (Lei 13.709/2018)
+                </a>
+              </span>
+            </div>
+            <small className="mae-cinema-footer-program">PET Saúde UFCG</small>
           </div>
           <div className="mae-cinema-footer-credits">
             <span><strong>Desenvolvimento:</strong> Lucca Araújo</span>
