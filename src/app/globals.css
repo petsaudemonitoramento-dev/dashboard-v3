@@ -3145,3 +3145,35 @@ input {
   .mae-cinematic-purple,
   .mae-cinematic-purple-logo { animation: none !important; }
 }
+
+
+/* Vídeo original do usuário: WebM VP9 + fallback MP4 H.264, ambos sem áudio.
+   A camada CSS anterior fica somente como preenchimento/fallback nas proporções móveis. */
+.mae-cinematic-video-cover {
+  animation: none;
+  transition: opacity .42s ease;
+  background: #f5eaf4;
+}
+.mae-cinematic-video-cover.is-ending {
+  opacity: 0;
+  pointer-events: none;
+}
+.mae-cinematic-video {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.mae-cinematic-video-cover .mae-cinematic-skip { z-index: 3; }
+@media (max-aspect-ratio: 10/13) {
+  /* Não cortar o nome/logotipo num celular vertical. Bordas são preenchidas
+     pelo cenário vetorial leve, que acompanha a mesma mudança de cor. */
+  .mae-cinematic-video { object-fit: contain; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-cinematic-video-cover { display: none !important; }
+}
