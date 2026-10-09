@@ -61,37 +61,31 @@ export function AuthShell({
             </div>
           </section>
         </main>
-        <footer className="mae-cinema-footer" aria-label="Identificação institucional e referências técnicas">
-          <div className="mae-cinema-footer-top">
-            <div className="mae-cinema-footer-identification">
-              <span className="mae-cinema-ufcg" aria-label="Universidade Federal de Campina Grande">
-                <Image
-                  src="/brands/ufcg-oficial.png"
-                  alt="Universidade Federal de Campina Grande — UFCG"
-                  width={1472}
-                  height={462}
-                  sizes="(max-width: 560px) 75px, 96px"
-                />
-              </span>
-              <span className="mae-cinema-footer-product">
-                <strong>MAE APS</strong>
-                <span>PET Saúde Digital · UFCG</span>
-              </span>
-            </div>
-            <div className="mae-cinema-footer-credits">
-              <span><strong>Desenvolvimento:</strong> Lucca Araújo</span>
-              <span><strong>Design:</strong> Kethilly Nayara</span>
-            </div>
+        <footer className="mae-cinema-footer" aria-label="Identificação institucional, referências técnicas e créditos">
+          <div className="mae-cinema-footer-identification">
+            <span className="mae-cinema-ufcg">
+              <Image
+                src="/brands/ufcg-oficial.png"
+                alt="Universidade Federal de Campina Grande — UFCG"
+                width={1472}
+                height={462}
+                sizes="(max-width: 560px) 67px, 94px"
+              />
+            </span>
+            <span className="mae-cinema-footer-product">
+              <strong>MAE APS</strong>
+              <span>PET Saúde Digital · UFCG</span>
+            </span>
           </div>
           <div className="mae-cinema-footer-details">
             <span className="mae-cinema-footer-version">
               <strong>SIAPS 2.0.3</strong>
-              <span>Referência: 10/09/2026</span>
-              <span>Indicador C3 · Gestação</span>
-              <span>Origem: SIAPS / SISAB</span>
+              <span>Ref. 10/09/2026</span>
+              <span>C3 · Gestação</span>
+              <span>SIAPS / SISAB</span>
             </span>
             <span className="mae-cinema-footer-governance">
-              Privacidade orientada à{" "}
+              <span>Privacidade orientada à</span>
               <a
                 href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm"
                 target="_blank"
@@ -100,13 +94,11 @@ export function AuthShell({
               >
                 LGPD (Lei 13.709/2018)
               </a>
-              <span aria-hidden="true">·</span>
-              <span>Acesso por perfis</span>
-              <span aria-hidden="true">·</span>
-              <span>Auditoria e rastreabilidade</span>
-              <span aria-hidden="true">·</span>
-              <span>Recursos de acessibilidade</span>
             </span>
+          </div>
+          <div className="mae-cinema-footer-credits">
+            <span><strong>Desenvolvimento:</strong> Lucca Araújo</span>
+            <span><strong>Design:</strong> Kethilly Nayara</span>
           </div>
         </footer>
       </div>
