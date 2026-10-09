@@ -1,93 +1,109 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 
-const VISITED_KEY = "mae-aps-cinematic-video-v1";
-const FALLBACK_TIMEOUT_MS = 11100;
+// Versão SVG + GSAP: 2,8 s, sem vídeo e sem dependência de assets rasterizados.
+const INTRO_KEY = "mae-aps-svg-gsap-v1";
+const MAX_INTRO_MS = 3600;
 
-// Reprodução do próprio vídeo enviado (WebM + MP4) com fallback vetorial.
-// Sem bibliotecas de animação e sem interferir nas rotinas de autenticação.
 export function CinematicIntro() {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const completedRef = useRef(false);
   const [visible, setVisible] = useState(true);
-  const [closing, setClosing] = useState(false);
-  const finishing = useRef(false);
 
-  const finish = useCallback(() => {
-    if (finishing.current) return;
-    finishing.current = true;
-
+  const complete = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
     try {
-      window.sessionStorage.setItem(VISITED_KEY, "1");
+      window.sessionStorage.setItem(INTRO_KEY, "played");
     } catch {
-      // O site continua funcional com armazenamento bloqueado.
+      // Acesso ao sistema independe de sessionStorage.
     }
-
-    setClosing(true);
-    window.setTimeout(() => setVisible(false), 420);
+    setVisible(false);
   }, []);
 
   useEffect(() => {
-    let seen = false;
-    try {
-      seen = window.sessionStorage.getItem(VISITED_KEY) === "1";
-    } catch {
-      // Sem acesso ao storage, o vídeo continua podendo ser pulado.
-    }
+    const root = rootRef.current;
+    if (!root) return;
 
-    if (seen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(false);
+    let played = false;
+    try {
+      played = window.sessionStorage.getItem(INTRO_KEY) === "played";
+    } catch {
+      // Navegação restrita continua permitindo pular a abertura.
+    }
+    if (played || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      complete();
       return;
     }
 
-    const fallback = window.setTimeout(finish, FALLBACK_TIMEOUT_MS);
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") finish();
-    };
+    const ctx = gsap.context(() => {
+      const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+      gsap.set(".mae-gsap-stage-dark", { autoAlpha: 0 });
+      gsap.set(".mae-gsap-white-logo", { autoAlpha: 0, scale: 0.82 });
+      gsap.set(".mae-gsap-reveal", { clipPath: "inset(0 100% 0 0)", opacity: 1 });
+      gsap.set(".mae-gsap-sweep", { xPercent: -170, opacity: 0 });
+      gsap.set(".mae-gsap-orb-a", { x: -38, y: -18, scale: 0.9 });
+      gsap.set(".mae-gsap-orb-b", { x: 35, y: 20, scale: 0.86 });
+      gsap.set(".mae-gsap-orb-c", { x: 25, y: -25 });
 
-    window.addEventListener("keydown", onEscape);
+      intro
+        .to(".mae-gsap-orb-a", { x: 26, y: 11, scale: 1.12, duration: 2.2 }, 0)
+        .to(".mae-gsap-orb-b", { x: -24, y: -12, scale: 1.09, duration: 2.1 }, 0)
+        .to(".mae-gsap-orb-c", { x: -17, y: 17, scale: 1.13, duration: 2.15 }, 0)
+        .to(".mae-gsap-reveal", {
+          clipPath: "inset(0 0% 0 0)",
+          duration: 1.15,
+          ease: "power2.inOut",
+        }, 0.15)
+        .to(".mae-gsap-sweep", { xPercent: 155, opacity: 0.8, duration: 0.85, ease: "power2.inOut" }, 0.35)
+        .to(".mae-gsap-sweep", { opacity: 0, duration: 0.18 }, 1.1)
+        .fromTo(".mae-gsap-stage-dark",
+          { autoAlpha: 0, scale: 1.06 },
+          { autoAlpha: 1, scale: 1, duration: 0.56, ease: "power2.inOut" }, 1.25)
+        .to(".mae-gsap-white-logo", { autoAlpha: 1, scale: 1, duration: 0.48, ease: "back.out(1.25)" }, 1.52)
+        .to(".mae-gsap-white-logo", {
+          y: () => -Math.min(110, window.innerHeight * 0.19),
+          scale: 0.67,
+          duration: 0.45,
+          ease: "power3.inOut",
+        }, 2.08)
+        .to(root, { autoAlpha: 0, duration: 0.28, ease: "power2.inOut" }, 2.45)
+        .call(complete, [], 2.77);
+    }, root);
+
+    const fallback = window.setTimeout(complete, MAX_INTRO_MS);
+    const skipWithKeyboard = (event: KeyboardEvent) => {
+      if (event.key === "Escape") complete();
+    };
+    window.addEventListener("keydown", skipWithKeyboard);
+
     return () => {
       window.clearTimeout(fallback);
-      window.removeEventListener("keydown", onEscape);
+      window.removeEventListener("keydown", skipWithKeyboard);
+      ctx.revert();
     };
-  }, [finish]);
+  }, [complete]);
 
   if (!visible) return null;
 
   return (
-    <div className={`mae-cinematic-cover mae-cinematic-video-cover${closing ? " is-ending" : ""}`}>
-      <div className="mae-cinematic-light" aria-hidden="true">
-        <div className="mae-cinematic-cloud mae-cinematic-cloud-a" />
-        <div className="mae-cinematic-cloud mae-cinematic-cloud-b" />
-        <div className="mae-cinematic-cloud mae-cinematic-cloud-c" />
-        <div className="mae-cinematic-light-logo">
-          <div className="mae-cinematic-drawn-logo" />
+    <div className="mae-gsap-intro" ref={rootRef}>
+      <div className="mae-gsap-stage-light" aria-hidden="true">
+        <span className="mae-gsap-orb mae-gsap-orb-a" />
+        <span className="mae-gsap-orb mae-gsap-orb-b" />
+        <span className="mae-gsap-orb mae-gsap-orb-c" />
+        <div className="mae-gsap-reveal-wrap">
+          <span className="mae-gsap-reveal" />
+          <span className="mae-gsap-sweep" />
         </div>
       </div>
-      <div className="mae-cinematic-purple" aria-hidden="true">
-        <div className="mae-cinematic-purple-logo" />
+      <div className="mae-gsap-stage-dark" aria-hidden="true">
+        <span className="mae-gsap-white-logo" />
       </div>
-
-      <video
-        className="mae-cinematic-video"
-        autoPlay
-        muted
-        playsInline
-        preload="auto"
-        aria-hidden="true"
-        onEnded={finish}
-        onError={finish}
-      >
-        <source src="/media/mae-aps-abertura.webm" type="video/webm" />
-        <source src="/media/mae-aps-abertura.mp4" type="video/mp4" />
-      </video>
-
-      <button
-        className="mae-cinematic-skip"
-        type="button"
-        onClick={finish}
-        aria-label="Pular animação e acessar o formulário"
-      >
-        Pular animação <span aria-hidden="true">→</span>
+      <button className="mae-gsap-skip" type="button" onClick={complete}>
+        Pular <span aria-hidden="true">→</span>
       </button>
     </div>
   );
