@@ -3187,51 +3187,42 @@ input {
 }
 
 
-/* ===== Identidade e referências do login MAE APS =====
-   Rodapé coeso, sem um segundo scroll e sem declarações de certificação legal.
-   Os detalhes se reorganizam e o documento pode rolar somente se indispensável
-   (zoom, teclado virtual ou telas excepcionalmente baixas). */
+/* ===== Rodapé MAE APS: uma única faixa discreta ===== */
 .mae-cinema-footer {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  row-gap: clamp(.34rem, .65dvh, .52rem);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: clamp(.8rem, 2.2vw, 2.1rem);
+  row-gap: .3rem;
   width: 100%;
   min-width: 0;
-  padding: clamp(.46rem, 1dvh, .7rem) clamp(.8rem, 2.7vw, 2.4rem) max(.55rem, env(safe-area-inset-bottom));
-  border-top: 1px solid rgba(238, 217, 255, .16);
-  background: linear-gradient(180deg, rgba(40, 5, 87, .08), rgba(22, 1, 56, .35));
-  color: rgba(241, 230, 255, .88);
-  font-size: clamp(.64rem, .78vw, .72rem);
-  line-height: 1.3;
+  margin: 0;
+  padding: .5rem clamp(.8rem, 2.8vw, 2.4rem) max(.55rem, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(238, 217, 255, .12);
+  background: rgba(26, 4, 60, .22);
+  color: rgba(236, 223, 255, .82);
+  font-size: .67rem;
+  line-height: 1.35;
   text-align: left;
-}
-.mae-cinema-footer-top,
-.mae-cinema-footer-details {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: .35rem 1.2rem;
-  min-width: 0;
 }
 .mae-cinema-footer-identification {
   display: flex;
   align-items: center;
-  gap: clamp(.5rem, 1vw, .8rem);
+  gap: .6rem;
   min-width: 0;
+  flex: 0 0 auto;
 }
 .mae-cinema-ufcg {
   display: grid;
   place-items: center;
+  width: 94px;
+  height: 31px;
   flex: 0 0 auto;
-  width: clamp(80px, 7vw, 103px);
-  height: clamp(29px, 2.6vw, 36px);
-  padding: 3px 7px;
+  padding: 3px 6px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, .96);
-  box-shadow: 0 2px 12px rgba(10, 0, 48, .16);
+  background: rgba(255,255,255,.97);
 }
 .mae-cinema-ufcg img {
   display: block;
@@ -3244,114 +3235,113 @@ input {
   display: grid;
   gap: 1px;
   min-width: 0;
+  white-space: nowrap;
 }
-.mae-cinema-footer-product strong {
-  color: white;
-  font-size: .72rem;
-  letter-spacing: .025em;
-}
-.mae-cinema-footer-product span { color: rgba(231, 219, 249, .77); }
-.mae-cinema-footer-credits {
+.mae-cinema-footer-product strong { color: #fff; font-size: .72rem; }
+.mae-cinema-footer-product span { color: rgba(230,215,250,.79); }
+.mae-cinema-footer-details {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: .15rem clamp(.7rem, 1.8vw, 1.3rem);
-}
-.mae-cinema-footer-credits strong {
-  color: rgba(245, 230, 255, .98);
-  font-weight: 700;
-}
-.mae-cinema-footer-details {
-  border-top: 1px solid rgba(239, 221, 255, .14);
-  padding-top: clamp(.33rem, .55dvh, .48rem);
-  gap: .24rem 1.1rem;
-  font-size: clamp(.6rem, .72vw, .67rem);
-  color: rgba(225, 207, 245, .86);
+  min-width: 0;
+  gap: .17rem .75rem;
+  padding: 0;
+  border: 0;
+  font-size: .64rem;
+  color: rgba(227,213,247,.87);
 }
 .mae-cinema-footer-version,
 .mae-cinema-footer-governance {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
   align-items: center;
-  gap: .17rem .48rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: .18rem .42rem;
   min-width: 0;
 }
 .mae-cinema-footer-version strong {
-  padding: .16rem .45rem;
-  border: 1px solid rgba(231, 199, 255, .29);
-  border-radius: 4px;
-  background: rgba(204, 167, 249, .13);
-  color: #fff;
-  font-weight: 750;
+  display: inline-block;
   white-space: nowrap;
+  padding: .16rem .4rem;
+  border: 1px solid rgba(235,203,255,.28);
+  border-radius: 5px;
+  color: #fff;
+  background: rgba(207,161,250,.12);
 }
 .mae-cinema-footer-governance a {
   color: #fff;
-  text-underline-offset: .14em;
-  text-decoration-color: rgba(255, 255, 255, .47);
+  text-underline-offset: .16em;
+  text-decoration-color: rgba(246,230,255,.52);
 }
 .mae-cinema-footer-governance a:hover { text-decoration-color: #fff; }
 .mae-cinema-footer-governance a:focus-visible {
-  outline: 2px solid #eed5ff;
-  outline-offset: 3px;
+  outline: 2px solid #f1ddff;
+  outline-offset: 2px;
 }
-@media (max-width: 980px) {
-  .mae-cinema-footer-top { gap: .36rem 1rem; }
-  .mae-cinema-footer-details { justify-content: flex-start; }
+.mae-cinema-footer-credits {
+  display: grid;
+  justify-content: end;
+  align-content: center;
+  gap: .15rem;
+  min-width: 0;
+  color: rgba(231,220,250,.92);
+  white-space: nowrap;
+  text-align: right;
+}
+.mae-cinema-footer-credits strong {
+  color: #fff;
+  font-weight: 700;
+}
+/* Em notebooks estreitos e mobile tudo permanece no mesmo rodapé:
+   os metadados passam para uma segunda linha somente quando indispensável. */
+@media (max-width: 1170px) {
+  .mae-cinema-footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-block: .45rem;
+  }
+  .mae-cinema-footer-identification { grid-column: 1; grid-row: 1; }
+  .mae-cinema-footer-credits { grid-column: 2; grid-row: 1; }
+  .mae-cinema-footer-details {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    gap: .18rem .7rem;
+    justify-content: center;
+  }
 }
 @media (max-width: 700px) {
   .mae-cinema-footer {
-    padding: .44rem .72rem max(.5rem, env(safe-area-inset-bottom));
-    row-gap: .35rem;
-    font-size: .62rem;
+    padding: .38rem .65rem max(.45rem, env(safe-area-inset-bottom));
+    gap: .25rem .35rem;
+    font-size: .6rem;
   }
-  .mae-cinema-footer-top {
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: .55rem;
-  }
-  .mae-cinema-footer-identification { gap: .36rem; }
-  .mae-cinema-ufcg { width: 75px; height: 29px; padding: 3px 5px; }
-  .mae-cinema-footer-product strong { font-size: .63rem; }
-  .mae-cinema-footer-product span { font-size: .57rem; }
-  .mae-cinema-footer-credits {
-    display: grid;
-    justify-items: end;
-    gap: .15rem;
-    font-size: .58rem;
-    text-align: right;
-  }
+  .mae-cinema-footer-identification { gap: .35rem; }
+  .mae-cinema-ufcg { width: 74px; height: 28px; padding: 3px 5px; }
+  .mae-cinema-footer-product strong { font-size: .64rem; }
+  .mae-cinema-footer-product span { font-size: .56rem; }
+  .mae-cinema-footer-credits { font-size: .57rem; gap: .1rem; }
   .mae-cinema-footer-details {
+    justify-content: center;
     font-size: .58rem;
-    line-height: 1.35;
-    gap: .28rem;
+    gap: .16rem .42rem;
   }
   .mae-cinema-footer-version,
-  .mae-cinema-footer-governance { gap: .1rem .35rem; }
-  .mae-cinema-footer-version strong { padding: .1rem .3rem; }
+  .mae-cinema-footer-governance { gap: .14rem .33rem; }
 }
 @media (max-width: 380px) {
-  .mae-cinema-footer-top { align-items: flex-start; }
+  .mae-cinema-ufcg { width: 66px; }
   .mae-cinema-footer-product span { display: none; }
-  .mae-cinema-ufcg { width: 67px; }
-  .mae-cinema-footer-credits { font-size: .55rem; }
+  .mae-cinema-footer-credits { font-size: .54rem; }
 }
-@media (max-height: 710px) {
-  .mae-cinema-footer { row-gap: .25rem; padding-top: .34rem; }
-  .mae-cinema-footer-details { padding-top: .25rem; }
+@media (max-height: 480px) {
+  .mae-cinema-footer { display: grid; }
 }
-/* Ação de rever a animação não pode cobrir texto nem links no rodapé. */
+/* A ação para rever a abertura fica distante do rodapé. */
 .mae-gsap-replay {
   top: clamp(.65rem, 1.8dvh, 1.2rem);
   right: clamp(.65rem, 2.5vw, 2rem);
   bottom: auto;
 }
 @media (max-width: 700px) {
-  .mae-gsap-replay {
-    top: .6rem;
-    right: .7rem;
-    bottom: auto;
-  }
+  .mae-gsap-replay { top: .6rem; right: .7rem; bottom: auto; }
 }
