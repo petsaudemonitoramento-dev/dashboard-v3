@@ -1,6 +1,7 @@
 import type { EChartsOption } from "echarts";
 
 import { C3_COMPONENTS } from "@/lib/analytics/c3";
+import { MAE_PALETTE } from "@/lib/design/mae-brand";
 
 type ComparisonRow = { id: string; name: string; value: number | null };
 type EvolutionRow = { month: string; value: number | null };
@@ -35,17 +36,17 @@ export function createDashboardCharts({
   evolution: EvolutionRow[];
 }) {
   const baseAxis = {
-    axisLabel: { color: "#526477" },
-    axisLine: { lineStyle: { color: "#cbd5e1" } },
+    axisLabel: { color: MAE_PALETTE.mutedPurple },
+    axisLine: { lineStyle: { color: "#D9CDEB" } },
   };
   const evolutionOption: EChartsOption = {
     grid: { bottom: 44, left: 48, right: 24, top: 30 },
     series: [{
       animationDuration: 650,
-      areaStyle: { color: "rgba(11,114,231,.10)" },
+      areaStyle: { color: "rgba(171,135,243,.15)" },
       data: evolution.map((item) => item.value),
-      itemStyle: { color: "#17b6b2" },
-      lineStyle: { color: "#0b72e7", width: 4 },
+      itemStyle: { color: MAE_PALETTE.lilac },
+      lineStyle: { color: MAE_PALETTE.mutedPurple, width: 4 },
       smooth: true,
       symbolSize: 9,
       type: "line",
@@ -63,7 +64,7 @@ export function createDashboardCharts({
     series: [{
       animationDuration: 650,
       data: Object.values(componentTotals),
-      itemStyle: { borderRadius: [6, 6, 0, 0], color: "#16a6a1" },
+      itemStyle: { borderRadius: [6, 6, 0, 0], color: MAE_PALETTE.mutedPurple },
       type: "bar",
     }],
     xAxis: { ...baseAxis, data: Object.keys(C3_COMPONENTS), type: "category" },
@@ -74,13 +75,13 @@ export function createDashboardCharts({
     series: [{
       animationDuration: 650,
       data: comparison.map((item) => item.value),
-      itemStyle: { borderRadius: [0, 6, 6, 0], color: "#ff9f43" },
+      itemStyle: { borderRadius: [0, 6, 6, 0], color: MAE_PALETTE.orange },
       type: "bar",
     }],
     tooltip: { axisPointer: { type: "shadow" }, trigger: "axis" },
     xAxis: { ...baseAxis, max: 100, min: 0, type: "value" },
     yAxis: {
-      axisLabel: { color: "#526477", overflow: "truncate", width: 130 },
+      axisLabel: { color: MAE_PALETTE.mutedPurple, overflow: "truncate", width: 130 },
       data: comparison.map((item) => item.name),
       type: "category",
     },

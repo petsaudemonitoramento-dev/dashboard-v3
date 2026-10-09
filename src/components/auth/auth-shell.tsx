@@ -109,6 +109,27 @@ export function AuthShell({
             <span><strong>Desenvolvimento:</strong> Lucca Araújo</span>
             <span><strong>Design:</strong> Kethilly Nayara</span>
           </div>
+          <div className="mae-cinema-footer-mobile" aria-label="Informações e créditos do MAE APS">
+            <div className="mae-cinema-footer-mobile-meta">
+              <span className="mae-cinema-footer-mobile-version">SIAPS 2.0.3</span>
+              <span>C3 · Gestação</span>
+              <a
+                href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Consultar a Lei Geral de Proteção de Dados, Lei 13.709 de 2018"
+              >LGPD</a>
+            </div>
+            <div className="mae-cinema-footer-mobile-credits">
+              <span><strong>Dev.</strong> Lucca Araújo</span>
+              <span><strong>Design</strong> Kethilly Nayara</span>
+            </div>
+            <details className="mae-cinema-footer-mobile-extra">
+              <summary>Referências técnicas</summary>
+              <p>SIAPS 2.0.3 · Ref. 10/09/2026 · SIAPS / SISAB</p>
+              <p>Privacidade orientada à LGPD (Lei 13.709/2018)</p>
+            </details>
+          </div>
         </footer>
       </div>
     );

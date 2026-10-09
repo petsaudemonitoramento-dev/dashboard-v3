@@ -1,0 +1,324 @@
+/*
+ * MAE APS — camada de identidade visual, 2026
+ * Fonte de verdade: Manual de Identidade Visual, pp. 20–36.
+ * Paleta oficial: roxo-escuro, roxo acinzentado, lilás, creme, azul e laranja.
+ * O vermelho, amarelo e verde de estados clínicos continuam sem remapeamento:
+ * uma cor institucional não pode mudar o significado de um alerta.
+ *
+ * Tipografia: Clear Sans (licença Apache-2.0) para interface;
+ * Garet (títulos), quando existir licença web e arquivo autorizado.
+ * Caso Garet não esteja instalado, títulos usam Clear Sans.
+ */
+:root {
+  --mae-purple: #280063;
+  --mae-purple-mid: #5C4798;
+  --mae-lilac: #AB87F3;
+  --mae-cream: #F9F3EF;
+  --mae-blue: #284FD8;
+  --mae-orange: #F44E04;
+  --mae-purple-soft: #EFE8FC;
+  --mae-purple-softer: #F7F3FC;
+  --mae-line: #DED3ED;
+  --mae-ink: #281C42;
+  --mae-muted: #605677;
+  --mae-focus: #AB87F3;
+  --mae-font-body: "Clear Sans", "Segoe UI", Arial, sans-serif;
+  --mae-font-display: "Garet", "Clear Sans", "Segoe UI", Arial, sans-serif;
+
+  /* Compatibilidade com componentes legados, sem trocar cores de risco. */
+  --navy: var(--mae-purple);
+  --blue: var(--mae-blue);
+  --aqua: var(--mae-lilac);
+  --ink: var(--mae-ink);
+  --surface: var(--mae-cream);
+  --muted: var(--mae-muted);
+  --border: var(--mae-line);
+}
+html { accent-color: var(--mae-purple-mid); }
+body {
+  font-family: var(--mae-font-body);
+  background: var(--mae-cream);
+  color: var(--mae-ink);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea, option { font-family: inherit; }
+:where(h1, h2, h3, .brand strong, .management-brand strong,
+  .dashboard-welcome h1, .hero-panel h1, .mae-cinema-auth h1) {
+  font-family: var(--mae-font-display);
+}
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: var(--mae-focus);
+  outline-offset: 3px;
+}
+
+/* Área administrativa e telas do sistema */
+.app-shell {
+  background: radial-gradient(circle at top right, #EEE5FB 0, transparent 29rem), var(--mae-cream);
+}
+.app-header {
+  background: rgba(40,0,99,.97);
+  box-shadow: 0 7px 26px rgba(40,0,99,.16);
+}
+.brand-mark { background: linear-gradient(135deg, var(--mae-purple-mid), var(--mae-purple)); }
+.brand small { color: #E0D5F0; }
+.main-nav a { color: #EEE6FB; }
+.main-nav a:hover, .main-nav a[aria-current="page"] { background: rgba(171,135,243,.19); }
+.skip-link { color: var(--mae-purple); }
+.user-popover, .territory-dialog { color: var(--mae-ink); }
+.user-popover button { color: var(--mae-purple); background: var(--mae-purple-soft); }
+.app-footer, .management-footer { color: var(--mae-muted); }
+.app-footer strong, .management-footer strong { color: var(--mae-purple); }
+.hero-panel {
+  background: linear-gradient(118deg, var(--mae-purple) 0%, var(--mae-purple-mid) 69%, #7055B5 100%);
+  box-shadow: 0 18px 45px rgba(40,0,99,.16);
+}
+.hero-panel p { color: #E7DDF6; }
+.hero-panel .eyebrow { color: #E2CEFF; }
+.eyebrow, .dashboard-overline { color: var(--mae-purple-mid); }
+.breadcrumbs a { color: var(--mae-purple-mid); }
+.primary-button, .dashboard-filter-actions button {
+  background: var(--mae-purple);
+  color: white;
+}
+.primary-button:hover, .dashboard-filter-actions button:hover { background: var(--mae-purple-mid); }
+.badge { color: var(--mae-purple); background: var(--mae-purple-soft); }
+
+/* Navegação da Gestão */
+.management-shell {
+  background:
+    radial-gradient(circle at 87% 7%, rgba(171,135,243,.13), transparent 26rem),
+    linear-gradient(180deg, #FCFAFF 0%, var(--mae-cream) 100%);
+}
+.management-topbar {
+  border-bottom-color: var(--mae-line);
+  box-shadow: 0 3px 20px rgba(40,0,99,.06);
+}
+.management-brand, .management-brand strong { color: var(--mae-purple); }
+.management-brand small { color: var(--mae-purple-mid); }
+.management-brand em, .management-user-copy small { color: var(--mae-muted); }
+.management-brand-mark { background: linear-gradient(135deg, var(--mae-purple), var(--mae-purple-mid)); }
+.management-sidebar {
+  background: linear-gradient(180deg, #280063 0%, #3A1478 100%);
+  box-shadow: 9px 0 28px rgba(40,0,99,.09);
+}
+.management-sidebar nav a { color: #EAE0FA; }
+.management-sidebar nav a:hover { background: rgba(171,135,243,.18); }
+.management-sidebar nav a.active {
+  background: linear-gradient(95deg, var(--mae-purple-mid), #785AC4);
+  box-shadow: 0 8px 20px rgba(28,0,75,.25);
+  color: white;
+}
+.management-sidebar-note { color: #F1E8FF; }
+.management-sidebar-note small { color: #D2BDF5; }
+.management-nav-label { color: #D0BDF2; }
+.management-user summary, .management-user-popover { color: var(--mae-purple); }
+.management-user summary > span:first-child { color: var(--mae-purple); background: var(--mae-purple-soft); }
+.management-user-popover {
+  border-color: var(--mae-line);
+  box-shadow: 0 16px 45px rgba(40,0,99,.15);
+}
+.management-user-popover button { color: var(--mae-purple); background: var(--mae-purple-soft); }
+
+/* Dashboard, filtros, indicadores, tabelas e importação */
+.dashboard-welcome h1, .panel-heading h2, .metric-card strong { color: var(--mae-purple); }
+.dashboard-welcome p, .panel-heading p, .dashboard-date-block,
+.dashboard-date-block strong, .dashboard-filter-grid label { color: var(--mae-muted); }
+.dashboard-scope-chips span {
+  border-color: var(--mae-line);
+  color: var(--mae-purple-mid);
+  background: #fff;
+}
+:where(.panel, .filter-bar, .metric-card, .dashboard-filter-grid) {
+  border-color: var(--mae-line);
+  box-shadow: 0 8px 28px rgba(40,0,99,.055);
+}
+.metric-card::before { background: var(--accent, var(--mae-purple-mid)); }
+.accent-blue { --accent: var(--mae-blue); }
+.accent-aqua { --accent: var(--mae-lilac); }
+/* Laranja/verde mantidos quando sinalizam grupos distintos ou resultados. */
+.chart-grid, .metric-grid { color: var(--mae-ink); }
+.dashboard-filter-grid select, .dashboard-filter-grid input,
+.filter-bar select, .filter-bar input, .field {
+  color: var(--mae-ink);
+  border-color: #B8A7D4;
+}
+.dashboard-filter-grid select:focus, .dashboard-filter-grid input:focus {
+  border-color: var(--mae-purple-mid);
+  box-shadow: 0 0 0 3px rgba(171,135,243,.19);
+}
+.data-table th { color: var(--mae-purple-mid); border-bottom-color: var(--mae-line); }
+.data-table td { border-bottom-color: #ECE5F4; }
+.data-table tbody tr:hover { background: var(--mae-purple-softer); }
+.mae-chart details {
+  border-color: var(--mae-line);
+  background: var(--mae-purple-softer);
+}
+.mae-chart summary, .mae-chart a { color: var(--mae-purple); }
+.upload-dropzone {
+  border-color: var(--mae-lilac);
+  background: #F8F3FF;
+}
+.upload-dropzone:hover { border-color: var(--mae-purple-mid); }
+.upload-dropzone :is(.text-sky-700, .text-sky-800) { color: var(--mae-purple); }
+
+/* Nome, identidade e formulário autenticador preservados; só tipografia atualizada. */
+.mae-cinema { font-family: var(--mae-font-body); }
+.mae-cinema-auth :is(h1, h2) { font-family: var(--mae-font-display); }
+.mae-cinema-footer-product strong { font-family: var(--mae-font-display); }
+
+/* ===== Mobile: rodapé deliberadamente reduzido, sem ocultar créditos ===== */
+.mae-cinema-footer-mobile { display: none; }
+@media (max-width: 700px) {
+  .mae-cinema-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    padding: .55rem .8rem max(.65rem, env(safe-area-inset-bottom));
+    text-align: center;
+    border-top: 1px solid rgba(241,224,255,.16);
+  }
+  .mae-cinema-footer-identification {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .65rem;
+    width: 100%;
+    max-width: 360px;
+    min-width: 0;
+    text-align: left;
+  }
+  .mae-cinema-ufcg { width: 70px; height: 30px; flex: none; }
+  .mae-cinema-footer-product { max-width: 240px; text-align: left; }
+  .mae-cinema-footer-product strong { font-size: .75rem; }
+  .mae-cinema-footer-product span {
+    display: block;
+    font-size: .7rem;
+    line-height: 1.28;
+    overflow-wrap: anywhere;
+  }
+  .mae-cinema-footer-details,
+  .mae-cinema-footer-credits { display: none; }
+  .mae-cinema-footer-mobile {
+    display: grid;
+    justify-items: center;
+    gap: .42rem;
+    width: 100%;
+    max-width: 360px;
+    min-width: 0;
+  }
+  .mae-cinema-footer-mobile-meta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .3rem .6rem;
+    color: #E8D8FA;
+    font-size: .71rem;
+    line-height: 1.3;
+  }
+  .mae-cinema-footer-mobile-version {
+    padding: .14rem .4rem;
+    border: 1px solid rgba(224,195,255,.38);
+    border-radius: .32rem;
+    background: rgba(171,135,243,.13);
+    color: white;
+    font-weight: 700;
+  }
+  .mae-cinema-footer-mobile-meta a { color: white; text-underline-offset: .2em; }
+  .mae-cinema-footer-mobile-credits {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .12rem .7rem;
+    font-size: .71rem;
+    line-height: 1.3;
+    color: #E4D6F4;
+  }
+  .mae-cinema-footer-mobile-credits strong { color: white; }
+  .mae-cinema-footer-mobile-extra {
+    width: 100%;
+    color: #E1D2F1;
+    font-size: .71rem;
+    line-height: 1.4;
+  }
+  .mae-cinema-footer-mobile-extra summary {
+    margin-inline: auto;
+    width: fit-content;
+    cursor: pointer;
+    color: #E1D2F1;
+    text-underline-offset: .15rem;
+    list-style-position: inside;
+  }
+  .mae-cinema-footer-mobile-extra summary:focus-visible {
+    outline: 2px solid var(--mae-lilac);
+  }
+  .mae-cinema-footer-mobile-extra p { margin: .3rem 0 0; }
+}
+@media (max-width: 365px) {
+  .mae-cinema-footer-identification { gap: .45rem; }
+  .mae-cinema-footer-product span { font-size: .63rem; }
+  .mae-cinema-footer-mobile-credits { font-size: .69rem; }
+}
+@media (max-height: 640px) and (max-width: 700px) {
+  /* Login permanece alcançável: rolagem do DOCUMENTO se necessária,
+     nunca painéis internos com barras sobrepostas. */
+  .mae-cinema-footer { gap: .25rem; }
+}
+
+
+/* Tailwind em páginas de administração, território e importação:
+   substitui somente cores decorativas azuis pela identidade; status clínicos intactos. */
+:is(.app-shell, .management-shell) :is(
+  [class~="text-sky-700"], [class~="text-sky-800"],
+  [class~="text-sky-900"], [class~="text-blue-700"],
+  [class~="text-blue-800"], [class~="text-indigo-700"]
+) { color: var(--mae-purple); }
+:is(.app-shell, .management-shell) :is(
+  [class~="bg-sky-50"], [class~="bg-blue-50"],
+  [class~="bg-indigo-50"], [class~="bg-sky-50/60"]
+) { background-color: var(--mae-purple-softer); }
+:is(.app-shell, .management-shell) :is(
+  [class~="border-sky-200"], [class~="border-sky-300"],
+  [class~="border-slate-200"], [class~="border-blue-200"]
+) { border-color: var(--mae-line); }
+:is(.app-shell, .management-shell) :is(
+  [class~="text-cyan-300"], [class~="text-blue-300"]
+) { color: #D7BCFF; }
+:is(.app-shell, .management-shell) :is(
+  [class~="bg-blue-600"], [class~="bg-sky-600"],
+  [class~="bg-indigo-600"]
+) { background-color: var(--mae-purple); }
+:is(.app-shell, .management-shell) :is(
+  [class~="bg-blue-600"], [class~="bg-sky-600"], [class~="bg-indigo-600"]
+):hover { background-color: var(--mae-purple-mid); }
+@media print {
+  /* Contraste e legibilidade de impressões ficam independentes do roxo de fundo. */
+  body { background: white; color: black; }
+  .mae-cinema-program-signature { color: black; background: white; }
+}
+
+
+/* Identidade de cabeçalhos autenticados (Gestão, Leitura e Administração):
+   símbolo vetorial original da Prancheta 30_4 + nome textual acessível. */
+.management-brand-symbol {
+  display: block;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 62px;
+  object-fit: contain;
+}
+.management-brand, .management-brand-copy { min-width: 0; }
+.mae-admin-brand-symbol {
+  display: block;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 46px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+@media (max-width: 560px) {
+  .management-brand-symbol { width: 37px; height: 51px; }
+  .mae-admin-brand-symbol { width: 27px; height: 38px; }
+}
