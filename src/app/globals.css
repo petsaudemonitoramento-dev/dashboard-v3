@@ -2977,131 +2977,6 @@ input {
 }
 .mae-cinema-footer-meta { text-align: right; }
 
-/* Abertura: fundo desfocado lilás -> logo desenhada -> roxo com marca branca. */
-.mae-cinematic-cover {
-  position: fixed;
-  z-index: 1000;
-  inset: 0;
-  overflow: hidden;
-  background: #f9eff7;
-  animation: mae-splash-disappear 7.2s linear both;
-}
-.mae-cinematic-light,
-.mae-cinematic-purple {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-.mae-cinematic-light {
-  background: linear-gradient(105deg, #e8d9eb 0%, #fff9f7 38%, #f4e6f2 70%, #ece0f0 100%);
-}
-.mae-cinematic-cloud {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(clamp(38px, 9vw, 125px));
-  animation: mae-cloud-travel 5.6s ease-in-out both;
-}
-.mae-cinematic-cloud-a {
-  width: 55vw;
-  height: 82vh;
-  left: -23vw;
-  top: -39vh;
-  background: #62238f;
-  opacity: .92;
-}
-.mae-cinematic-cloud-b {
-  width: 52vw;
-  height: 70vh;
-  right: -18vw;
-  bottom: -39vh;
-  background: #4f1583;
-  opacity: .94;
-  animation-direction: reverse;
-}
-.mae-cinematic-cloud-c {
-  width: 35vw;
-  height: 45vh;
-  right: -11vw;
-  top: -28vh;
-  background: #722b9c;
-  opacity: .75;
-  animation-duration: 5.1s;
-}
-.mae-cinematic-light-logo,
-.mae-cinematic-purple-logo {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(56vw, 505px);
-  max-width: calc(100% - 2rem);
-  aspect-ratio: 1610 / 635;
-  transform: translate(-50%, -50%);
-}
-.mae-cinematic-drawn-logo,
-.mae-cinematic-purple-logo {
-  background: #321064;
-  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
-  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
-}
-.mae-cinematic-drawn-logo {
-  position: absolute;
-  inset: 0;
-  clip-path: inset(0 100% 0 0);
-  animation: mae-ink-draw 5.7s cubic-bezier(.35,.05,.45,1) both;
-}
-.mae-cinematic-purple {
-  opacity: 0;
-  background:
-    radial-gradient(ellipse at 3% 3%, rgba(134,40,200,.34), transparent 42%),
-    radial-gradient(ellipse at 97% 97%, rgba(126,28,174,.44), transparent 46%),
-    linear-gradient(140deg, #290658, #430c7d 47%, #2b055c 100%);
-  animation: mae-purple-enter 6.45s ease-in-out both;
-}
-.mae-cinematic-purple-logo {
-  background: #fff;
-  top: 50%;
-  filter: drop-shadow(0 0 12px rgba(247,235,255,.28));
-  animation: mae-purple-logo-rise 7.2s ease-in-out both;
-}
-.mae-cinematic-skip {
-  position: absolute;
-  z-index: 10;
-  top: max(1rem, env(safe-area-inset-top));
-  right: max(1rem, env(safe-area-inset-right));
-  padding: .56rem .88rem;
-  border: 1px solid rgba(81,33,121,.21);
-  border-radius: 999px;
-  background: rgba(255,255,255,.77);
-  color: #3a156e;
-  font-size: .75rem;
-  font-weight: 750;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(35,5,75,.08);
-}
-.mae-cinematic-skip:hover { background: white; }
-@keyframes mae-ink-draw {
-  0%, 13% { clip-path: inset(0 100% 0 0); opacity: 1; }
-  28% { clip-path: inset(0 72% 0 0); opacity: 1; }
-  67%, 100% { clip-path: inset(0 0 0 0); opacity: 1; }
-}
-@keyframes mae-cloud-travel {
-  0% { transform: translate3d(-4%, -5%, 0) scale(.9); }
-  100% { transform: translate3d(7%, 3%, 0) scale(1.14); }
-}
-@keyframes mae-purple-enter {
-  0%, 78% { opacity: 0; }
-  91%, 100% { opacity: 1; }
-}
-@keyframes mae-purple-logo-rise {
-  0%, 84% { top: 50%; transform: translate(-50%, -50%) scale(1); }
-  100% { top: 20%; transform: translate(-50%, -50%) scale(.72); }
-}
-@keyframes mae-splash-disappear {
-  0%, 91% { opacity: 1; visibility: visible; }
-  99% { opacity: 0; visibility: visible; }
-  100% { opacity: 0; visibility: hidden; }
-}
-
 @media (max-width: 700px) {
   .mae-cinema-main { padding-inline: .8rem; }
   .mae-cinema-center { width: min(100%, 390px); }
@@ -3146,34 +3021,167 @@ input {
   .mae-cinematic-purple-logo { animation: none !important; }
 }
 
-
-/* Vídeo original do usuário: WebM VP9 + fallback MP4 H.264, ambos sem áudio.
-   A camada CSS anterior fica somente como preenchimento/fallback nas proporções móveis. */
-.mae-cinematic-video-cover {
-  animation: none;
-  transition: opacity .42s ease;
-  background: #f5eaf4;
+/* ===== Animação nativa SVG + GSAP · 2,8 s · MAE APS =====
+   Sem vídeo. Transformações e opacidade via GSAP; marca vetorial do Drive.
+   Única camada sobre o login, sem barras de rolagem internas. */
+.mae-gsap-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  isolation: isolate;
+  overflow: hidden;
+  background: #f3e6f2;
 }
-.mae-cinematic-video-cover.is-ending {
-  opacity: 0;
-  pointer-events: none;
-}
-.mae-cinematic-video {
+.mae-gsap-stage-light,
+.mae-gsap-stage-dark {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  overflow: hidden;
+}
+.mae-gsap-stage-light {
+  background:
+    radial-gradient(ellipse at 46% 53%, #fffafc 0%, #f8f0f7 36%, transparent 74%),
+    linear-gradient(115deg, #e4cce7 0%, #f5ecf5 45%, #ebd8ed 100%);
+}
+.mae-gsap-orb {
+  position: absolute;
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  filter: blur(clamp(34px, 6.4vw, 94px));
+}
+.mae-gsap-orb-a {
+  left: -26vw;
+  top: -43vh;
+  width: max(65vw, 440px);
+  height: max(86vh, 470px);
+  background: #6d299d;
+  opacity: .81;
+}
+.mae-gsap-orb-b {
+  right: -29vw;
+  bottom: -44vh;
+  width: max(66vw, 430px);
+  height: max(90vh, 460px);
+  background: #64218d;
+  opacity: .84;
+}
+.mae-gsap-orb-c {
+  right: -27vw;
+  top: -41vh;
+  width: max(53vw, 380px);
+  height: max(64vh, 340px);
+  background: #9955bd;
+  opacity: .57;
+}
+.mae-gsap-reveal-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(230px, 41vw, 510px);
+  aspect-ratio: 1610 / 635;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+}
+.mae-gsap-reveal,
+.mae-gsap-sweep,
+.mae-gsap-white-logo {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+.mae-gsap-reveal {
+  clip-path: inset(0 100% 0 0);
+  background: #43136f;
+  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  will-change: clip-path;
+}
+.mae-gsap-sweep {
+  width: 24%;
+  left: 0;
+  right: auto;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.48), transparent);
+  filter: blur(12px);
+  mix-blend-mode: screen;
   pointer-events: none;
 }
-.mae-cinematic-video-cover .mae-cinematic-skip { z-index: 3; }
-@media (max-aspect-ratio: 10/13) {
-  /* Não cortar o nome/logotipo num celular vertical. Bordas são preenchidas
-     pelo cenário vetorial leve, que acompanha a mesma mudança de cor. */
-  .mae-cinematic-video { object-fit: contain; }
+.mae-gsap-stage-dark {
+  background:
+    radial-gradient(ellipse at 2% 0%, rgba(135,57,203,.45), transparent 45%),
+    radial-gradient(ellipse at 98% 100%, rgba(107,29,171,.49), transparent 52%),
+    linear-gradient(125deg, #26054f 0%, #471083 50%, #2c075b 100%);
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity, transform;
+}
+.mae-gsap-white-logo {
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  width: clamp(230px, 41vw, 510px);
+  aspect-ratio: 1610 / 635;
+  background: #fff;
+  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 8px 32px rgba(255,255,255,.16));
+  will-change: opacity, transform;
+}
+.mae-gsap-skip {
+  position: absolute;
+  z-index: 10;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  padding: .53rem .92rem;
+  border: 1px solid rgba(83,24,122,.19);
+  border-radius: 999px;
+  background: rgba(255,255,255,.86);
+  color: #3f156f;
+  box-shadow: 0 5px 24px rgba(33,5,70,.1);
+  font-size: .77rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mae-gsap-skip:hover { background: #fff; }
+.mae-gsap-skip:focus-visible { outline: 3px solid #b88bea; outline-offset: 3px; }
+@media (max-width: 700px) {
+  .mae-gsap-reveal-wrap,
+  .mae-gsap-white-logo { width: min(82vw, 380px); }
+  .mae-gsap-orb-a { left: -70vw; width: 110vw; }
+  .mae-gsap-orb-b { right: -70vw; width: 118vw; }
+  .mae-gsap-orb-c { right: -64vw; width: 100vw; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mae-cinematic-video-cover { display: none !important; }
+  .mae-gsap-intro { display: none !important; }
+}
+
+/* Permite rever a marca quando a sessão já está autenticada visualmente. */
+.mae-gsap-replay {
+  position: absolute;
+  z-index: 5;
+  right: clamp(.75rem, 2.5vw, 2rem);
+  bottom: clamp(2rem, 4dvh, 3rem);
+  border: 1px solid rgba(242,227,255,.2);
+  border-radius: 999px;
+  padding: .34rem .65rem;
+  color: rgba(239,226,255,.82);
+  background: rgba(35,7,77,.15);
+  font-size: .67rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mae-gsap-replay:hover,
+.mae-gsap-replay:focus-visible {
+  color: #fff;
+  background: rgba(255,255,255,.15);
+}
+@media (max-width: 700px) {
+  .mae-gsap-replay {
+    right: .7rem;
+    bottom: .65rem;
+    font-size: .61rem;
+  }
 }
