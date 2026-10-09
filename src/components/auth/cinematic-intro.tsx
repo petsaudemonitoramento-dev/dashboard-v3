@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
 // Versão SVG + GSAP: 2,8 s, sem vídeo e sem dependência de assets rasterizados.
-const INTRO_KEY = "mae-aps-svg-gsap-v1";
+const INTRO_KEY = "mae-aps-svg-gsap-logo-completa-v2";
 const MAX_INTRO_MS = 3600;
 
 export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: boolean }) {

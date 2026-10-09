@@ -3079,8 +3079,8 @@ input {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: clamp(230px, 41vw, 510px);
-  aspect-ratio: 1610 / 635;
+  width: min(48vw, 610px, calc(59dvh * 1.433));
+  aspect-ratio: 1340 / 935;
   transform: translate(-50%, -50%);
   overflow: hidden;
 }
@@ -3093,9 +3093,9 @@ input {
 }
 .mae-gsap-reveal {
   clip-path: inset(0 100% 0 0);
-  background: #43136f;
-  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
-  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  background: #280063;
+  -webkit-mask: url("/brands/mae-aps-abertura-completa.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-abertura-completa.svg") center / contain no-repeat;
   will-change: clip-path;
 }
 .mae-gsap-sweep {
@@ -3121,11 +3121,11 @@ input {
   inset: auto;
   left: 50%;
   top: 50%;
-  width: clamp(230px, 41vw, 510px);
-  aspect-ratio: 1610 / 635;
+  width: min(48vw, 610px, calc(59dvh * 1.433));
+  aspect-ratio: 1340 / 935;
   background: #fff;
-  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
-  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  -webkit-mask: url("/brands/mae-aps-abertura-completa.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-abertura-completa.svg") center / contain no-repeat;
   transform: translate(-50%, -50%);
   filter: drop-shadow(0 8px 32px rgba(255,255,255,.16));
   will-change: opacity, transform;
@@ -3149,7 +3149,7 @@ input {
 .mae-gsap-skip:focus-visible { outline: 3px solid #b88bea; outline-offset: 3px; }
 @media (max-width: 700px) {
   .mae-gsap-reveal-wrap,
-  .mae-gsap-white-logo { width: min(82vw, 380px); }
+  .mae-gsap-white-logo { width: min(88vw, 440px, calc(58dvh * 1.433)); }
   .mae-gsap-orb-a { left: -70vw; width: 110vw; }
   .mae-gsap-orb-b { right: -70vw; width: 118vw; }
   .mae-gsap-orb-c { right: -64vw; width: 100vw; }
