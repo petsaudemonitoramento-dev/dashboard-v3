@@ -28,6 +28,7 @@
     "test:load:cloud": "k6 run tests/load/supabase-cloud.js"
   },
   "dependencies": {
+    "@fontsource/clear-sans": "5.2.5",
     "@sentry/nextjs": "10.75.2",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.116.0",
