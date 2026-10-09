@@ -60,8 +60,9 @@ export function ManagementShell({ children, email, role }: Props) {
             priority
           />
           <span className="management-brand-copy">
-            <strong>Cuidado na Gestação na APS</strong>
-            <small>Módulo da Gestão</small>
+            <strong>MAE APS</strong>
+            <small>Monitoramento, Atenção e Estratégia na APS</small>
+            <em>Módulo da Gestão</em>
           </span>
         </Link>
 
