@@ -10,6 +10,7 @@ const MAX_INTRO_MS = 3600;
 export function CinematicIntro() {
   const rootRef = useRef<HTMLDivElement>(null);
   const completedRef = useRef(false);
+  const replayRequestedRef = useRef(false);
   const [visible, setVisible] = useState(true);
 
   const complete = useCallback(() => {
@@ -23,7 +24,10 @@ export function CinematicIntro() {
     setVisible(false);
   }, []);
 
+  const replay = () => { completedRef.current = false; replayRequestedRef.current = true; setVisible(true); };
+
   useEffect(() => {
+    if (!visible) return;
     const root = rootRef.current;
     if (!root) return;
 
@@ -33,7 +37,9 @@ export function CinematicIntro() {
     } catch {
       // Navegação restrita continua permitindo pular a abertura.
     }
-    if (played || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const replayNow = replayRequestedRef.current;
+    replayRequestedRef.current = false;
+    if ((!replayNow && played) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       complete();
       return;
     }
@@ -84,9 +90,9 @@ export function CinematicIntro() {
       window.removeEventListener("keydown", skipWithKeyboard);
       ctx.revert();
     };
-  }, [complete]);
+  }, [complete, visible]);
 
-  if (!visible) return null;
+  if (!visible) return <button type="button" className="mae-gsap-replay" onClick={replay}>↻ Rever abertura</button>;
 
   return (
     <div className="mae-gsap-intro" ref={rootRef}>
