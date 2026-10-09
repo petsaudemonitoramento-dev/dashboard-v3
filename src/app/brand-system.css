@@ -266,3 +266,35 @@ button, input, select, textarea, option { font-family: inherit; }
      nunca painéis internos com barras sobrepostas. */
   .mae-cinema-footer { gap: .25rem; }
 }
+
+
+/* Tailwind em páginas de administração, território e importação:
+   substitui somente cores decorativas azuis pela identidade; status clínicos intactos. */
+:is(.app-shell, .management-shell) :is(
+  [class~="text-sky-700"], [class~="text-sky-800"],
+  [class~="text-sky-900"], [class~="text-blue-700"],
+  [class~="text-blue-800"], [class~="text-indigo-700"]
+) { color: var(--mae-purple); }
+:is(.app-shell, .management-shell) :is(
+  [class~="bg-sky-50"], [class~="bg-blue-50"],
+  [class~="bg-indigo-50"], [class~="bg-sky-50/60"]
+) { background-color: var(--mae-purple-softer); }
+:is(.app-shell, .management-shell) :is(
+  [class~="border-sky-200"], [class~="border-sky-300"],
+  [class~="border-slate-200"], [class~="border-blue-200"]
+) { border-color: var(--mae-line); }
+:is(.app-shell, .management-shell) :is(
+  [class~="text-cyan-300"], [class~="text-blue-300"]
+) { color: #D7BCFF; }
+:is(.app-shell, .management-shell) :is(
+  [class~="bg-blue-600"], [class~="bg-sky-600"],
+  [class~="bg-indigo-600"]
+) { background-color: var(--mae-purple); }
+:is(.app-shell, .management-shell) :is(
+  [class~="bg-blue-600"], [class~="bg-sky-600"], [class~="bg-indigo-600"]
+):hover { background-color: var(--mae-purple-mid); }
+@media print {
+  /* Contraste e legibilidade de impressões ficam independentes do roxo de fundo. */
+  body { background: white; color: black; }
+  .mae-cinema-program-signature { color: black; background: white; }
+}
