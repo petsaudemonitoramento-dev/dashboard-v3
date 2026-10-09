@@ -40,3 +40,16 @@ As cores de **alerta, erro, sucesso, risco, incompletude ou comparação clínic
 3. Testar 320×568, 375×667, 390×844, 768×1024, 1366×768 e desktop grande; no zoom 200%; com teclado móvel ativo.
 4. Inspecionar contrastes, focus-visible, links LGPD, seleção de filtros, gráficos (inclusive visualização tabular), cores de alertas e todos os controles de autenticação.
 5. Não fazer deploy de produção enquanto a cota da Vercel não for restaurada e a validação automática de dependências não for analisada.
+
+
+## Favicon oficial — Prancheta 30_4.svg
+
+Fonte: arquivo `Cópia de Prancheta 30_4.svg` recebido via Google Drive, pasta Símbolo (arquivo original de 2 MB com fundo desfocado embutido).
+
+Foi preservado **o único traçado vetorial original** do símbolo e descartada apenas a imagem de fundo desfocado, que não se aplica a um favicon. O recorte quadrado é opticamente centralizado, sem distorção: fundo `#F9F3EF` com cantos arredondados, símbolo `#280063`.
+
+Arquivos a publicar em `public/brands/`: `mae-aps-favicon.svg` (versão principal), `mae-aps-favicon-16x16.png`, `mae-aps-favicon-32x32.png`, `mae-aps-favicon-48x48.png`, `mae-aps-apple-touch-icon.png` (180×180), `mae-aps-android-icon-192.png` e `mae-aps-android-icon-512.png`. Um `public/favicon.ico` suporta navegadores antigos. O `src/app/layout.tsx` aponta explicitamente para os novos arquivos.
+
+**Para validação antes da publicação:** confirmar a leitura em abas claras/escuras, 16×16 e 32×32, toque em adicionar à tela de início no iOS, dispositivos Android e cache de favicon após atualização. Se a versão antiga permanecer por cache, usar novo perfil/aba privada. Não apagar os ícones legados até comprovar que nenhuma outra página depende deles.
+
+Testes de estrutura e integridade dos arquivos: `tests/design/mae-favicon.test.ts`.
