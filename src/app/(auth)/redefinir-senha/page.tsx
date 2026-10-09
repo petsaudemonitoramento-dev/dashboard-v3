@@ -4,6 +4,8 @@ import { UpdatePasswordForm } from "@/components/auth/auth-forms";
 export default function UpdatePasswordPage() {
   return (
     <AuthShell
+      cinematic
+      introOnLoad={false}
       eyebrow="Segurança"
       title="Nova senha"
       description="Defina uma nova senha para concluir a recuperação do acesso."

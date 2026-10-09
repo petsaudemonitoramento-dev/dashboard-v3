@@ -7,11 +7,11 @@ import gsap from "gsap";
 const INTRO_KEY = "mae-aps-svg-gsap-v1";
 const MAX_INTRO_MS = 3600;
 
-export function CinematicIntro() {
+export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const completedRef = useRef(false);
   const replayRequestedRef = useRef(false);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(initialPlayback);
 
   const complete = useCallback(() => {
     if (completedRef.current) return;
