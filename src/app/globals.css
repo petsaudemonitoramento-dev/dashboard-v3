@@ -2790,3 +2790,390 @@ input {
   .mae-auth-intro-playing .auth-portal-logo,
   .mae-auth-intro-playing .auth-hero-identity img { animation: none !important; }
 }
+
+
+/* ===== MAE APS · login cinematográfico 100% viewport (referência do vídeo) =====
+   A composição é UMA tela inteira, sem painéis de scroll internos.
+   Apenas o documento pode rolar como fallback para teclado, zoom e celulares baixos.
+   Apenas /entrar recebe estas regras: outros formulários não mudam. */
+.mae-cinema {
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: clip;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  color: #fff;
+  background:
+    radial-gradient(ellipse 72% 50% at 8% 8%, #4e138f 0%, transparent 70%),
+    radial-gradient(ellipse 55% 60% at 96% 92%, #5e1796 0%, transparent 74%),
+    linear-gradient(135deg, #280653 0%, #3b0879 53%, #27064e 100%);
+}
+.mae-cinema-ambient {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.mae-cinema-light-one,
+.mae-cinema-light-two {
+  position: absolute;
+  width: 52vmax;
+  height: 52vmax;
+  border-radius: 50%;
+  filter: blur(85px);
+  opacity: .2;
+  pointer-events: none;
+}
+.mae-cinema-light-one {
+  left: -31vmax;
+  top: -30vmax;
+  background: #8234c9;
+}
+.mae-cinema-light-two {
+  right: -35vmax;
+  bottom: -30vmax;
+  background: #b22ebe;
+}
+.mae-cinema-main {
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(.5rem, 1.7dvh, 1.4rem) clamp(.8rem, 4vw, 2.5rem);
+  overflow: visible;
+}
+.mae-cinema-center {
+  width: min(100%, 400px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(.4rem, 1.25dvh, .95rem);
+}
+.mae-cinema-brand {
+  width: clamp(170px, 25vw, 288px);
+  aspect-ratio: 1610 / 635;
+  background: #fff;
+  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  filter: drop-shadow(0 0 12px rgba(239,220,255,.25));
+  flex: 0 0 auto;
+}
+.mae-cinema-auth {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(241,223,255,.27);
+  border-radius: clamp(16px, 2.3vw, 24px);
+  background: rgba(31, 8, 79, .39);
+  box-shadow: 0 20px 55px rgba(17,0,47,.24), inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: clamp(.85rem, 1.95dvh, 1.2rem) clamp(1rem, 2.3vw, 1.5rem);
+}
+.mae-cinema-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  margin-bottom: .35rem;
+}
+.mae-cinema .auth-system-status {
+  color: #e4fff5;
+  border-color: rgba(190,240,219,.26);
+  background: rgba(16,135,111,.2);
+}
+.mae-cinema-auth h1 {
+  margin: 0;
+  color: #fff;
+  text-align: center;
+  font-size: clamp(1.13rem, 2.1vw, 1.45rem);
+  font-weight: 760;
+  letter-spacing: -.025em;
+}
+.mae-cinema-description {
+  margin: .25rem 0 .78rem;
+  color: #e5d8f9;
+  font-size: clamp(.7rem, 1.22vw, .8rem);
+  line-height: 1.35;
+  text-align: center;
+}
+.mae-cinema .auth-signin-stack,
+.mae-cinema .auth-form { gap: clamp(.44rem, 1dvh, .67rem); }
+.mae-cinema .auth-field {
+  color: #f5edff;
+  gap: .28rem;
+  font-size: .75rem;
+}
+.mae-cinema .auth-input {
+  width: 100%;
+  min-height: 43px;
+  padding: 0 .85rem;
+  border: 1px solid rgba(237,224,255,.6);
+  border-radius: 9px;
+  background: rgba(255,255,255,.98);
+  color: #271050;
+  font-size: .9rem;
+}
+.mae-cinema .auth-input::placeholder { color: #766c8e; }
+.mae-cinema .auth-input:focus-visible {
+  outline: 3px solid #e3c4ff;
+  outline-offset: 2px;
+}
+.mae-cinema .auth-primary-button {
+  width: 100%;
+  min-height: 43px;
+  color: #300d66;
+  background: linear-gradient(110deg, #f4e9ff, #dac4ff);
+  border: 1px solid #f1dfff;
+  box-shadow: 0 6px 18px rgba(12,0,36,.21);
+  font-size: .88rem;
+}
+.mae-cinema .auth-primary-button:hover:not(:disabled) {
+  background: #fff;
+  color: #320d69;
+}
+.mae-cinema .auth-google-button {
+  min-height: 42px;
+  color: #321d53;
+  background: #fff;
+  border-color: #f2e7ff;
+  font-size: .84rem;
+}
+.mae-cinema .auth-google-button:hover { background: #f2e8ff; }
+.mae-cinema .auth-divider { color: rgba(245,237,255,.77); }
+.mae-cinema .auth-divider::before,
+.mae-cinema .auth-divider::after { background: rgba(239,222,255,.28); }
+.mae-cinema .auth-secondary-links {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .35rem .75rem;
+}
+.mae-cinema .auth-secondary-links a {
+  color: #f0deff;
+  font-size: .72rem;
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,.35);
+}
+.mae-cinema .auth-secondary-links a:hover { color: #fff; }
+.mae-cinema .auth-secondary-links a:focus-visible,
+.mae-cinematic-skip:focus-visible {
+  outline: 3px solid #f3d7ff;
+  outline-offset: 3px;
+}
+.mae-cinema-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .4rem 1.5rem;
+  padding: .35rem clamp(.9rem, 3.2vw, 2.5rem) .55rem;
+  color: rgba(241,226,255,.72);
+  font-size: clamp(.58rem, .9vw, .68rem);
+}
+.mae-cinema-footer-meta { text-align: right; }
+
+/* Abertura: fundo desfocado lilás -> logo desenhada -> roxo com marca branca. */
+.mae-cinematic-cover {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  overflow: hidden;
+  background: #f9eff7;
+  animation: mae-splash-disappear 7.2s linear both;
+}
+.mae-cinematic-light,
+.mae-cinematic-purple {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.mae-cinematic-light {
+  background: linear-gradient(105deg, #e8d9eb 0%, #fff9f7 38%, #f4e6f2 70%, #ece0f0 100%);
+}
+.mae-cinematic-cloud {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(clamp(38px, 9vw, 125px));
+  animation: mae-cloud-travel 5.6s ease-in-out both;
+}
+.mae-cinematic-cloud-a {
+  width: 55vw;
+  height: 82vh;
+  left: -23vw;
+  top: -39vh;
+  background: #62238f;
+  opacity: .92;
+}
+.mae-cinematic-cloud-b {
+  width: 52vw;
+  height: 70vh;
+  right: -18vw;
+  bottom: -39vh;
+  background: #4f1583;
+  opacity: .94;
+  animation-direction: reverse;
+}
+.mae-cinematic-cloud-c {
+  width: 35vw;
+  height: 45vh;
+  right: -11vw;
+  top: -28vh;
+  background: #722b9c;
+  opacity: .75;
+  animation-duration: 5.1s;
+}
+.mae-cinematic-light-logo,
+.mae-cinematic-purple-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(56vw, 505px);
+  max-width: calc(100% - 2rem);
+  aspect-ratio: 1610 / 635;
+  transform: translate(-50%, -50%);
+}
+.mae-cinematic-drawn-logo,
+.mae-cinematic-purple-logo {
+  background: #321064;
+  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+}
+.mae-cinematic-drawn-logo {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 100% 0 0);
+  animation: mae-ink-draw 5.7s cubic-bezier(.35,.05,.45,1) both;
+}
+.mae-cinematic-purple {
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 3% 3%, rgba(134,40,200,.34), transparent 42%),
+    radial-gradient(ellipse at 97% 97%, rgba(126,28,174,.44), transparent 46%),
+    linear-gradient(140deg, #290658, #430c7d 47%, #2b055c 100%);
+  animation: mae-purple-enter 6.45s ease-in-out both;
+}
+.mae-cinematic-purple-logo {
+  background: #fff;
+  top: 50%;
+  filter: drop-shadow(0 0 12px rgba(247,235,255,.28));
+  animation: mae-purple-logo-rise 7.2s ease-in-out both;
+}
+.mae-cinematic-skip {
+  position: absolute;
+  z-index: 10;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  padding: .56rem .88rem;
+  border: 1px solid rgba(81,33,121,.21);
+  border-radius: 999px;
+  background: rgba(255,255,255,.77);
+  color: #3a156e;
+  font-size: .75rem;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(35,5,75,.08);
+}
+.mae-cinematic-skip:hover { background: white; }
+@keyframes mae-ink-draw {
+  0%, 13% { clip-path: inset(0 100% 0 0); opacity: 1; }
+  28% { clip-path: inset(0 72% 0 0); opacity: 1; }
+  67%, 100% { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+@keyframes mae-cloud-travel {
+  0% { transform: translate3d(-4%, -5%, 0) scale(.9); }
+  100% { transform: translate3d(7%, 3%, 0) scale(1.14); }
+}
+@keyframes mae-purple-enter {
+  0%, 78% { opacity: 0; }
+  91%, 100% { opacity: 1; }
+}
+@keyframes mae-purple-logo-rise {
+  0%, 84% { top: 50%; transform: translate(-50%, -50%) scale(1); }
+  100% { top: 20%; transform: translate(-50%, -50%) scale(.72); }
+}
+@keyframes mae-splash-disappear {
+  0%, 91% { opacity: 1; visibility: visible; }
+  99% { opacity: 0; visibility: visible; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+@media (max-width: 700px) {
+  .mae-cinema-main { padding-inline: .8rem; }
+  .mae-cinema-center { width: min(100%, 390px); }
+  .mae-cinema-brand { width: clamp(170px, 52vw, 248px); }
+  .mae-cinema-auth { padding: .88rem 1rem; }
+  .mae-cinema-footer { justify-content: center; text-align: center; }
+  .mae-cinema-footer-meta { display: none; }
+  .mae-cinematic-light-logo,
+  .mae-cinematic-purple-logo { width: min(82vw, 370px); }
+  .mae-cinematic-cloud { filter: blur(44px); }
+  .mae-cinematic-cloud-a { width: 90vw; left: -45vw; }
+  .mae-cinematic-cloud-b { width: 94vw; right: -44vw; }
+}
+@media (max-height: 740px) {
+  .mae-cinema-main { padding-block: .5rem; }
+  .mae-cinema-center { gap: .25rem; }
+  .mae-cinema-brand { width: clamp(145px, 19vw, 218px); }
+  .mae-cinema-auth { padding-block: .65rem; }
+  .mae-cinema-description { margin: .2rem 0 .45rem; font-size: .72rem; }
+  .mae-cinema .auth-signin-stack,
+  .mae-cinema .auth-form { gap: .43rem; }
+  .mae-cinema .auth-input,
+  .mae-cinema .auth-primary-button,
+  .mae-cinema .auth-google-button { min-height: 40px; }
+}
+@media (max-width: 700px) and (max-height: 700px) {
+  .mae-cinema-brand { width: min(54vw, 186px); }
+  .mae-cinema-footer { padding-block: .25rem; }
+}
+@media (max-height: 480px) {
+  .mae-cinema { height: auto; }
+  .mae-cinema-main { padding-block: .75rem; }
+  .mae-cinema-brand { width: 160px; }
+  .mae-cinema-footer { display: none; }
+}
+/* Escolha de acessibilidade: não esconder botões quando zoom/teclado reduzirem o viewport. */
+@media (prefers-reduced-motion: reduce) {
+  .mae-cinematic-cover { display: none !important; }
+  .mae-cinematic-cloud,
+  .mae-cinematic-drawn-logo,
+  .mae-cinematic-purple,
+  .mae-cinematic-purple-logo { animation: none !important; }
+}
+
+
+/* Vídeo original do usuário: WebM VP9 + fallback MP4 H.264, ambos sem áudio.
+   A camada CSS anterior fica somente como preenchimento/fallback nas proporções móveis. */
+.mae-cinematic-video-cover {
+  animation: none;
+  transition: opacity .42s ease;
+  background: #f5eaf4;
+}
+.mae-cinematic-video-cover.is-ending {
+  opacity: 0;
+  pointer-events: none;
+}
+.mae-cinematic-video {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.mae-cinematic-video-cover .mae-cinematic-skip { z-index: 3; }
+@media (max-aspect-ratio: 10/13) {
+  /* Não cortar o nome/logotipo num celular vertical. Bordas são preenchidas
+     pelo cenário vetorial leve, que acompanha a mesma mudança de cor. */
+  .mae-cinematic-video { object-fit: contain; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-cinematic-video-cover { display: none !important; }
+}
