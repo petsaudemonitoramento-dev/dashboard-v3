@@ -53,3 +53,13 @@ Arquivos a publicar em `public/brands/`: `mae-aps-favicon.svg` (versão principa
 **Para validação antes da publicação:** confirmar a leitura em abas claras/escuras, 16×16 e 32×32, toque em adicionar à tela de início no iOS, dispositivos Android e cache de favicon após atualização. Se a versão antiga permanecer por cache, usar novo perfil/aba privada. Não apagar os ícones legados até comprovar que nenhuma outra página depende deles.
 
 Testes de estrutura e integridade dos arquivos: `tests/design/mae-favicon.test.ts`.
+
+
+## Marca do cabeçalho após autenticação
+
+Os cabeçalhos da **Gestão/Leitura** e da **Administração** utilizam o mesmo símbolo vetorial oficial da *Prancheta 30_4.svg* da pasta Símbolo no Drive, em `public/brands/mae-aps-simbolo-cabecalho.svg` (transparente, otimizado a partir do vetor original), acompanhado do texto **MAE APS — Monitoramento, Atenção e Estratégia na APS**.
+
+- Gestão/Leitura: símbolo roxo sobre topo claro, substituindo `mae-aps-wordmark.webp` apenas na composição visual; vínculo de navegação para o início mantido.
+- Administração: símbolo branco pela apresentação CSS sobre o topo roxo, substituindo o ícone provisório textual “MAE”.
+- Em celulares, o símbolo diminui proporcionalmente sem perder sua margem livre. A logo completa da abertura cinematográfica, o favicon e o logo da UFCG não mudaram neste ajuste.
+- Teste de regressão: `tests/design/mae-favicon.test.ts`.
