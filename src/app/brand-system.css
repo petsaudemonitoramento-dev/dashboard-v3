@@ -298,3 +298,27 @@ button, input, select, textarea, option { font-family: inherit; }
   body { background: white; color: black; }
   .mae-cinema-program-signature { color: black; background: white; }
 }
+
+
+/* Identidade de cabeçalhos autenticados (Gestão, Leitura e Administração):
+   símbolo vetorial original da Prancheta 30_4 + nome textual acessível. */
+.management-brand-symbol {
+  display: block;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 62px;
+  object-fit: contain;
+}
+.management-brand, .management-brand-copy { min-width: 0; }
+.mae-admin-brand-symbol {
+  display: block;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 46px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+@media (max-width: 560px) {
+  .management-brand-symbol { width: 37px; height: 51px; }
+  .mae-admin-brand-symbol { width: 27px; height: 38px; }
+}
