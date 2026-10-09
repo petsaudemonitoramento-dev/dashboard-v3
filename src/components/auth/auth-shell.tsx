@@ -12,6 +12,7 @@ import {
 
 import { SystemStatus } from "@/components/auth/system-status";
 import { AuthIntroSession } from "@/components/auth/auth-intro-session";
+import { CinematicIntro } from "@/components/auth/cinematic-intro";
 
 const assuranceItems = [
   { label: "Privacidade orientada à LGPD", icon: ShieldCheck },
@@ -27,12 +28,47 @@ export function AuthShell({
   title,
   description,
   children,
+  cinematic = false,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   children: React.ReactNode;
+  cinematic?: boolean;
 }) {
+  // Somente /entrar utiliza o cenário cinematográfico.
+  // Recuperação de senha e cadastro preservam a estrutura institucional.
+  if (cinematic) {
+    return (
+      <div className="mae-cinema">
+        <CinematicIntro />
+        <div className="mae-cinema-ambient" aria-hidden="true">
+          <div className="mae-cinema-light-one" />
+          <div className="mae-cinema-light-two" />
+        </div>
+        <main className="mae-cinema-main" id="conteudo">
+          <section className="mae-cinema-center" aria-labelledby="auth-access-title">
+            <div
+              className="mae-cinema-brand"
+              role="img"
+              aria-label="MAE APS — Monitoramento, Atenção e Estratégia na Atenção Primária à Saúde"
+            />
+            <div className="mae-cinema-auth">
+              <div className="mae-cinema-status"><SystemStatus /></div>
+              <h1 id="auth-access-title">{title}</h1>
+              <p className="mae-cinema-description">{description}</p>
+              {children}
+            </div>
+          </section>
+        </main>
+        <footer className="mae-cinema-footer">
+          <span>MAE APS · PET Saúde Digital UFCG</span>
+          <span className="mae-cinema-footer-meta">Acesso institucional protegido</span>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="auth-portal">
       <AuthIntroSession />
