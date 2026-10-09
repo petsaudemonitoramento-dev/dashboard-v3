@@ -32,6 +32,20 @@ describe("Ícones MAE APS — Prancheta 30_4", () => {
     expect(img.readUInt32BE(20)).toBe(size);
   });
 
+  it("usa o mesmo símbolo oficial nos cabeçalhos após o login", () => {
+    const headerSymbol = readFileSync(join(assets, "mae-aps-simbolo-cabecalho.svg"), "utf8");
+    expect(headerSymbol).toContain('viewBox="128 42 560 740"');
+    expect(headerSymbol).toContain('fill="#280063"');
+    expect(headerSymbol).not.toContain("<image");
+    expect(headerSymbol).not.toContain("<rect");
+    const management = readFileSync(join(process.cwd(), "src/components/layout/management-shell.tsx"), "utf8");
+    const administration = readFileSync(join(process.cwd(), "src/app/(sistema)/sistema/layout.tsx"), "utf8");
+    expect(management).toContain("/brands/mae-aps-simbolo-cabecalho.svg");
+    expect(administration).toContain("/brands/mae-aps-simbolo-cabecalho.svg");
+    expect(management).not.toContain("/brands/mae-aps-wordmark.webp");
+    expect(administration).not.toContain('className="brand-mark">MAE');
+  });
+
   it("fornece um favicon.ico com entradas para navegadores legados", () => {
     const ico = readFileSync(join(root, "favicon.ico"));
     expect(ico.readUInt16LE(0)).toBe(0);
