@@ -52,11 +52,11 @@ export function ManagementShell({ children, email, role }: Props) {
       <header className="management-topbar">
         <Link href="/sistema/gestao" className="management-brand">
           <Image
-            className="h-[62px] w-[75px] shrink-0 object-contain"
-            src="/brands/mae-aps-wordmark.webp"
-            alt="MAE APS"
-            width={420}
-            height={347}
+            className="management-brand-symbol"
+            src="/brands/mae-aps-simbolo-cabecalho.svg"
+            alt=""
+            width={560}
+            height={740}
             priority
           />
           <span className="management-brand-copy">
