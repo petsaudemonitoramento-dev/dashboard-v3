@@ -29,19 +29,21 @@ export function AuthShell({
   description,
   children,
   cinematic = false,
+  introOnLoad = true,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   children: React.ReactNode;
   cinematic?: boolean;
+  introOnLoad?: boolean;
 }) {
-  // Somente /entrar utiliza o cenário cinematográfico.
-  // Recuperação de senha e cadastro preservam a estrutura institucional.
+  // Todas as etapas de acesso compartilham a mesma cena;
+  // apenas o conteúdo central muda de acordo com a rota.
   if (cinematic) {
     return (
       <div className="mae-cinema">
-        <CinematicIntro />
+        <CinematicIntro initialPlayback={introOnLoad} />
         <div className="mae-cinema-ambient" aria-hidden="true">
           <div className="mae-cinema-light-one" />
           <div className="mae-cinema-light-two" />
