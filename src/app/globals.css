@@ -3564,3 +3564,40 @@ input {
   }
   .mae-cinema-footer-technical { justify-content: center; }
 }
+
+
+/* O conteúdo óptico SIAPS/LGPD segue a mesma largura útil (400px)
+   do formulário. Cada referência tem sua própria linha central. */
+.mae-cinema-footer-details {
+  width: min(100%, 400px);
+  max-width: 400px;
+  margin-inline: auto;
+  justify-self: center;
+  text-align: center;
+}
+.mae-cinema-footer-technical {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-items: center;
+  gap: .2rem;
+  width: 100%;
+  min-width: 0;
+}
+.mae-cinema-footer-version,
+.mae-cinema-footer-governance {
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+@media (min-width: 1281px) {
+  .mae-cinema-footer {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 400px) minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .mae-cinema-footer-details {
+    justify-self: center;
+    width: min(100%, 400px);
+  }
+}
