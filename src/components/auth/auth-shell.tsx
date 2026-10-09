@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { SystemStatus } from "@/components/auth/system-status";
+import { AuthIntroSession } from "@/components/auth/auth-intro-session";
 
 const assuranceItems = [
   { label: "Privacidade orientada à LGPD", icon: ShieldCheck },
@@ -34,14 +35,19 @@ export function AuthShell({
 }) {
   return (
     <div className="auth-portal">
+      <AuthIntroSession />
       <header className="auth-portal-header">
         <Link href="/entrar" className="auth-portal-brand" aria-label="MAE APS">
-          <span className="auth-portal-mark" aria-hidden="true">
-            <i />
-            <b>MAE</b>
-          </span>
+          <Image
+            className="auth-portal-logo"
+            src="/brands/mae-aps-horizontal-azul.svg"
+            alt=""
+            width={1610}
+            height={635}
+            priority
+            unoptimized
+          />
           <span className="auth-brand-copy">
-            <strong>MAE APS</strong>
             <small>Monitoramento, Atenção e Estratégia na APS</small>
           </span>
         </Link>
@@ -66,6 +72,15 @@ export function AuthShell({
         <section className="auth-portal-context" aria-labelledby="auth-product-title">
           <div className="auth-context-glow" aria-hidden="true" />
           <div className="auth-context-grid" aria-hidden="true" />
+          <div className="auth-hero-identity" aria-hidden="true">
+            <Image
+              src="/brands/mae-aps-simbolo-branco.svg"
+              alt=""
+              width={684}
+              height={910}
+              unoptimized
+            />
+          </div>
 
           <div className="auth-context-content">
             <span className="auth-context-kicker">
