@@ -194,8 +194,8 @@ button, input, select, textarea, option { font-family: inherit; }
   .mae-cinema-footer-product strong { font-size: .75rem; }
   .mae-cinema-footer-product span {
     display: block;
-    font-size: .67rem;
-    line-height: 1.25;
+    font-size: .7rem;
+    line-height: 1.28;
     overflow-wrap: anywhere;
   }
   .mae-cinema-footer-details,
@@ -232,7 +232,7 @@ button, input, select, textarea, option { font-family: inherit; }
     flex-wrap: wrap;
     justify-content: center;
     gap: .12rem .7rem;
-    font-size: .65rem;
+    font-size: .71rem;
     line-height: 1.3;
     color: #E4D6F4;
   }
@@ -240,7 +240,7 @@ button, input, select, textarea, option { font-family: inherit; }
   .mae-cinema-footer-mobile-extra {
     width: 100%;
     color: #E1D2F1;
-    font-size: .67rem;
+    font-size: .71rem;
     line-height: 1.4;
   }
   .mae-cinema-footer-mobile-extra summary {
@@ -259,7 +259,7 @@ button, input, select, textarea, option { font-family: inherit; }
 @media (max-width: 365px) {
   .mae-cinema-footer-identification { gap: .45rem; }
   .mae-cinema-footer-product span { font-size: .63rem; }
-  .mae-cinema-footer-mobile-credits { font-size: .63rem; }
+  .mae-cinema-footer-mobile-credits { font-size: .69rem; }
 }
 @media (max-height: 640px) and (max-width: 700px) {
   /* Login permanece alcançável: rolagem do DOCUMENTO se necessária,
