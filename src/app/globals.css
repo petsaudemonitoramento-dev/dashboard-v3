@@ -3383,3 +3383,65 @@ input {
 @media (prefers-reduced-motion: reduce) {
   .mae-cinema-auth { animation: none !important; }
 }
+
+
+/* Rodapé: nome completo junto da UFCG e assinatura PET mínima sob SIAPS/LGPD. */
+.mae-cinema-footer-product {
+  white-space: normal;
+  min-width: 0;
+  max-width: 245px;
+  gap: .12rem;
+}
+.mae-cinema-footer-product strong {
+  font-size: .76rem;
+  line-height: 1.1;
+}
+.mae-cinema-footer-product span {
+  display: block;
+  color: rgba(237, 224, 255, .87);
+  font-size: .62rem;
+  line-height: 1.24;
+  text-wrap: pretty;
+}
+.mae-cinema-footer-details {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: .17rem;
+  text-align: center;
+}
+.mae-cinema-footer-technical {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: .75rem;
+  row-gap: .12rem;
+  min-width: 0;
+}
+.mae-cinema-footer-program {
+  display: block;
+  color: rgba(224, 203, 245, .66);
+  font-size: .55rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: .02em;
+}
+@media (max-width: 1170px) {
+  .mae-cinema-footer-details { justify-items: center; }
+  .mae-cinema-footer-technical { column-gap: .65rem; }
+}
+@media (max-width: 700px) {
+  .mae-cinema-footer-product { max-width: 158px; }
+  .mae-cinema-footer-product span {
+    display: block;
+    font-size: .56rem;
+    line-height: 1.2;
+  }
+  .mae-cinema-footer-technical { column-gap: .44rem; }
+  .mae-cinema-footer-program { font-size: .52rem; }
+}
+@media (max-width: 380px) {
+  .mae-cinema-footer-product { max-width: 130px; }
+  .mae-cinema-footer-product span { display: block; font-size: .52rem; }
+}
