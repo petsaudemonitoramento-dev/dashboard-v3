@@ -3092,6 +3092,7 @@ input {
   inset: 0;
 }
 .mae-gsap-reveal {
+  clip-path: inset(0 100% 0 0);
   background: #43136f;
   -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
   mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
@@ -3155,4 +3156,32 @@ input {
 }
 @media (prefers-reduced-motion: reduce) {
   .mae-gsap-intro { display: none !important; }
+}
+
+/* Permite rever a marca quando a sessão já está autenticada visualmente. */
+.mae-gsap-replay {
+  position: absolute;
+  z-index: 5;
+  right: clamp(.75rem, 2.5vw, 2rem);
+  bottom: clamp(2rem, 4dvh, 3rem);
+  border: 1px solid rgba(242,227,255,.2);
+  border-radius: 999px;
+  padding: .34rem .65rem;
+  color: rgba(239,226,255,.82);
+  background: rgba(35,7,77,.15);
+  font-size: .67rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mae-gsap-replay:hover,
+.mae-gsap-replay:focus-visible {
+  color: #fff;
+  background: rgba(255,255,255,.15);
+}
+@media (max-width: 700px) {
+  .mae-gsap-replay {
+    right: .7rem;
+    bottom: .65rem;
+    font-size: .61rem;
+  }
 }
