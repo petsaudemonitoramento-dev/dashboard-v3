@@ -44,6 +44,11 @@ export function AuthShell({
     return (
       <div className="mae-cinema">
         <CinematicIntro initialPlayback={introOnLoad} />
+        <div className="mae-cinema-program-signature" aria-label="PET Saúde Digital da UFCG">
+          <span>PET Saúde Digital</span>
+          <span className="mae-cinema-program-separator" aria-hidden="true">·</span>
+          <span>UFCG</span>
+        </div>
         <div className="mae-cinema-ambient" aria-hidden="true">
           <div className="mae-cinema-light-one" />
           <div className="mae-cinema-light-two" />
@@ -99,7 +104,6 @@ export function AuthShell({
                 </a>
               </span>
             </div>
-            <small className="mae-cinema-footer-program">PET Saúde UFCG</small>
           </div>
           <div className="mae-cinema-footer-credits">
             <span><strong>Desenvolvimento:</strong> Lucca Araújo</span>
