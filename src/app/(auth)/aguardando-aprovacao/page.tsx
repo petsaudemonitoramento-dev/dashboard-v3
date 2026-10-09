@@ -31,6 +31,8 @@ export default async function WaitingPage({
   const content = MESSAGES[status] ?? MESSAGES["sem-perfil"];
   return (
     <AuthShell
+      cinematic
+      introOnLoad={false}
       eyebrow="Situação do acesso"
       title={content.title}
       description={content.description}
