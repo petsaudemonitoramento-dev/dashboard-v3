@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-// Não existe modo replaceExisting: publicar dados idênticos é idempotente;
+// A substituição global de competências foi eliminada; idênticos são idempotentes;
 // valores diferentes exigem conciliação, sem sobrescrita silenciosa.
 const payloadSchema = z.object({
   mode: z.enum(["check", "publish"]),
