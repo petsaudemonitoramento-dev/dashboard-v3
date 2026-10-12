@@ -4,7 +4,7 @@ import { pointsFromComponents, type C3Components } from "@/lib/analytics/c3";
 import { SIAPS_ROW_LIMIT_MESSAGE, SIAPS_XLSX_TOO_LARGE_MESSAGE } from "@/lib/siaps/errors";
 import { MAX_SIAPS_ROWS, MAX_SIAPS_XLSX_BYTES } from "@/lib/siaps/limits";
 import { COMPONENT_CODES } from "@/lib/siaps/parser-constants";
-import { discoverSiapsSchema, MAX_HEADER_SCAN_ROWS_V2, type SheetScan } from "@/lib/siaps/discovery";
+import { discoverSiapsSchema, MAX_HEADER_SCAN_ROWS_V2, MAX_IMPORT_SHEETS, type SheetScan } from "@/lib/siaps/discovery";
 
 export const SIAPS_PARSER_VERSION = "mae-aps-c3/2.0.0";
 export { MAX_SIAPS_XLSX_BYTES as MAX_SIAPS_FILE_BYTES } from "@/lib/siaps/limits";
@@ -34,15 +34,6 @@ export type SiapsParseResult = {
   schema?: Pick<SheetScan, "headerSignature" | "unknownColumns" | "duplicateFields" | "missingFields">;
 };
 
-function normalize(value: unknown) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^A-Za-z0-9]+/g, " ")
-    .trim()
-    .toUpperCase();
-}
-
 function digits(value: unknown) {
   return String(value ?? "").replace(/\D/g, "");
 }
@@ -56,10 +47,6 @@ function numberValue(value: unknown): number | null {
     : raw;
   const parsed = Number(normalized.replace("%", ""));
   return Number.isFinite(parsed) ? parsed : null;
-}
-
-function findColumn(headers: string[], aliases: string[]) {
-  return headers.findIndex((header) => aliases.some((alias) => header === alias || header.startsWith(`${alias} `)));
 }
 
 function detectCompetency(matrix: unknown[][], filename: string): string | null {
@@ -89,6 +76,9 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
   }
   if (!workbook.SheetNames.length) {
     return { competency: null, rows: [], errors: ["A planilha não contém abas legíveis."], warnings: [], headerRow: null };
+  }
+  if (workbook.SheetNames.length > MAX_IMPORT_SHEETS) {
+    return { competency: null, rows: [], errors: ["O arquivo possui abas demais para leitura segura."], warnings: [], headerRow: null };
   }
   const sheets = workbook.SheetNames.map(name => ({
     name,
