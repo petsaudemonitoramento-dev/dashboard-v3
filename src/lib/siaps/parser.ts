@@ -3,11 +3,12 @@ import * as XLSX from "xlsx";
 import { pointsFromComponents, type C3Components } from "@/lib/analytics/c3";
 import { SIAPS_ROW_LIMIT_MESSAGE, SIAPS_XLSX_TOO_LARGE_MESSAGE } from "@/lib/siaps/errors";
 import { MAX_SIAPS_ROWS, MAX_SIAPS_XLSX_BYTES } from "@/lib/siaps/limits";
+import { COMPONENT_CODES } from "@/lib/siaps/parser-constants";
+import { discoverSiapsSchema, MAX_HEADER_SCAN_ROWS_V2, type SheetScan } from "@/lib/siaps/discovery";
 
-export const SIAPS_PARSER_VERSION = "mae-aps-c3/1.0.0";
+export const SIAPS_PARSER_VERSION = "mae-aps-c3/2.0.0";
 export { MAX_SIAPS_XLSX_BYTES as MAX_SIAPS_FILE_BYTES } from "@/lib/siaps/limits";
-export const COMPONENT_CODES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"] as const;
-const MAX_HEADER_SCAN_ROWS = 50;
+export { COMPONENT_CODES } from "@/lib/siaps/parser-constants";
 
 export type SiapsC3Row = {
   fileRow: number;
@@ -29,6 +30,8 @@ export type SiapsParseResult = {
   errors: string[];
   warnings: string[];
   headerRow: number | null;
+  sheetName?: string;
+  schema?: Pick<SheetScan, "headerSignature" | "unknownColumns" | "duplicateFields" | "missingFields">;
 };
 
 function normalize(value: unknown) {
@@ -74,48 +77,33 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
     return { competency: null, rows: [], errors: [SIAPS_XLSX_TOO_LARGE_MESSAGE], warnings: [], headerRow: null };
   }
 
-  const workbook = XLSX.read(buffer, {
-    type: "array", cellDates: true, cellFormula: false, bookDeps: false,
-    bookFiles: false, bookVBA: false,
-    // Read just enough rows to distinguish the supported maximum from an
-    // oversized worksheet without expanding an arbitrarily large sheet.
-    sheetRows: MAX_SIAPS_ROWS + MAX_HEADER_SCAN_ROWS + 2,
-  });
+  let workbook: XLSX.WorkBook;
+  try {
+    workbook = XLSX.read(buffer, {
+      type: "array", cellDates: true, cellFormula: false, bookDeps: false,
+      bookFiles: false, bookVBA: false,
+      sheetRows: MAX_SIAPS_ROWS + MAX_HEADER_SCAN_ROWS_V2 + 2,
+    });
+  } catch {
+    return { competency: null, rows: [], errors: ["Arquivo XLSX inválido ou corrompido."], warnings: [], headerRow: null };
+  }
   if (!workbook.SheetNames.length) {
     return { competency: null, rows: [], errors: ["A planilha não contém abas legíveis."], warnings: [], headerRow: null };
   }
-  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-  const matrix = XLSX.utils.sheet_to_json<unknown[]>(firstSheet, { header: 1, defval: "", raw: false });
+  const sheets = workbook.SheetNames.map(name => ({
+    name,
+    matrix: XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[name]!, { header: 1, defval: "", raw: false }),
+  }));
+  const discovery = discoverSiapsSchema(sheets);
+  if (!discovery.selected) {
+    return { competency: detectCompetency(sheets[0]?.matrix ?? [], filename), rows: [], errors: discovery.errors, warnings: discovery.warnings, headerRow: null };
+  }
+  const candidate = discovery.selected;
+  const matrix = sheets.find(sheet => sheet.name === candidate.sheetName)!.matrix;
+  const headerIndex = candidate.headerRow - 1;
+  const indexes = { ...candidate.indexes, components: Object.fromEntries(COMPONENT_CODES.map(code => [code, candidate.indexes[code]])) as Record<(typeof COMPONENT_CODES)[number], number> };
+  const warnings = [...discovery.warnings];
   const errors: string[] = [];
-  const warnings: string[] = [];
-  const headerIndex = matrix.slice(0, MAX_HEADER_SCAN_ROWS).findIndex((row) => {
-    const cells = row.map(normalize);
-    return cells.some((cell) => cell === "CNES") && cells.some((cell) => cell === "INE");
-  });
-
-  if (headerIndex < 0) {
-    return { competency: detectCompetency(matrix, filename), rows: [], errors: ["Cabeçalho SIAPS com CNES e INE não encontrado."], warnings, headerRow: null };
-  }
-
-  const headers = matrix[headerIndex].map(normalize);
-  const indexes = {
-    cnes: findColumn(headers, ["CNES"]),
-    establishment: findColumn(headers, ["ESTABELECIMENTO", "UNIDADE", "UBS"]),
-    establishmentType: findColumn(headers, ["TIPO ESTABELECIMENTO", "TIPO DE ESTABELECIMENTO"]),
-    ine: findColumn(headers, ["INE"]),
-    team: findColumn(headers, ["EQUIPE", "NOME DA EQUIPE"]),
-    teamType: findColumn(headers, ["TIPO EQUIPE", "TIPO DE EQUIPE"]),
-    points: findColumn(headers, ["PONTOS TOTAL", "PONTUACAO TOTAL", "TOTAL DE PONTOS", "PONTOS"]),
-    denominator: findColumn(headers, ["DENOMINADOR", "POPULACAO ELEGIVEL"]),
-    ratio: findColumn(headers, ["RAZAO OFICIAL", "RESULTADO", "INDICADOR", "C3"]),
-    components: Object.fromEntries(COMPONENT_CODES.map((code) => [code, findColumn(headers, [code])])) as Record<(typeof COMPONENT_CODES)[number], number>,
-  };
-
-  const required = [indexes.cnes, indexes.ine, indexes.points, indexes.denominator, ...Object.values(indexes.components)];
-  if (required.some((index) => index < 0)) {
-    errors.push("O cabeçalho não contém todas as colunas obrigatórias: CNES, INE, A–K, pontos e denominador.");
-    return { competency: detectCompetency(matrix, filename), rows: [], errors, warnings, headerRow: headerIndex + 1 };
-  }
 
   let dataRowCount = 0;
   for (const source of matrix.slice(headerIndex + 1)) {
@@ -128,6 +116,7 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
         errors: [SIAPS_ROW_LIMIT_MESSAGE],
         warnings,
         headerRow: headerIndex + 1,
+        sheetName: candidate.sheetName,
       };
     }
   }
@@ -186,7 +175,12 @@ export function parseSiapsWorkbook(buffer: ArrayBuffer, filename = "arquivo.xlsx
   const competency = detectCompetency(matrix, filename);
   if (!competency) warnings.push("Competência não detectada automaticamente; informe-a antes de publicar.");
   if (!rows.length && !errors.length) errors.push("Nenhum registro C3 válido foi encontrado.");
-  return { competency, rows, errors, warnings, headerRow: headerIndex + 1 };
+  return { competency, rows, errors, warnings, headerRow: headerIndex + 1, sheetName: candidate.sheetName, schema: {
+    headerSignature: candidate.headerSignature,
+    unknownColumns: candidate.unknownColumns,
+    duplicateFields: candidate.duplicateFields,
+    missingFields: candidate.missingFields,
+  } };
 }
 
 export async function sha256Hex(buffer: ArrayBuffer) {
