@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(17);
 
 select has_function('public', 'preview_siaps_c3_v3',
   array['uuid','date','text','text','jsonb','text','boolean'],
