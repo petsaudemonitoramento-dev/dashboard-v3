@@ -27,6 +27,7 @@ create table if not exists siaps.c3_import_previews (
   file_sha256 text not null check (file_sha256 ~ '^[0-9a-f]{64}$'),
   rows_hash text not null,
   snapshot_hash text not null,
+  schema_signature text not null default '',
   created_at timestamptz not null default now(),
   expires_at timestamptz not null default now() + interval '20 minutes',
   consumed_at timestamptz,
@@ -45,7 +46,8 @@ grant all on siaps.c3_editor_scopes, siaps.c3_import_previews to service_role;
 -- NOVAMENTE pela RPC em cada prévia e em cada publicação.
 create or replace function public.preview_siaps_c3_v3(
   p_actor uuid, p_competency date, p_filename text,
-  p_file_sha256 text, p_rows jsonb, p_store boolean default true
+  p_file_sha256 text, p_rows jsonb,
+  p_schema_signature text default '', p_store boolean default true
 ) returns jsonb
 language plpgsql security definer
 set search_path = pg_catalog, public, app, core, siaps, analytics, audit
@@ -66,6 +68,7 @@ begin
   end if;
   if p_competency is null or p_competency <> date_trunc('month', p_competency)::date
      or p_file_sha256 !~ '^[a-f0-9]{64}$'
+     or length(p_schema_signature) > 4000
      or length(p_filename) not between 1 and 255
      or p_filename !~* '[.]xlsx$'
      or jsonb_typeof(p_rows) is distinct from 'array'
@@ -192,9 +195,9 @@ begin
 
   if p_store then
     insert into siaps.c3_import_previews(
-       actor, competency, filename, file_sha256, rows_hash, snapshot_hash
+       actor, competency, filename, file_sha256, rows_hash, snapshot_hash, schema_signature
     ) values (
-       p_actor, p_competency, p_filename, p_file_sha256, md5(p_rows::text), v_snapshot
+       p_actor, p_competency, p_filename, p_file_sha256, md5(p_rows::text), v_snapshot, p_schema_signature
     ) returning id into v_preview_id;
   end if;
   return v_info || jsonb_build_object('previewId', v_preview_id);
@@ -203,7 +206,7 @@ $$;
 
 create or replace function public.publish_siaps_c3_v3(
   p_actor uuid, p_preview_id uuid, p_competency date, p_filename text,
-  p_file_sha256 text, p_rows jsonb
+  p_file_sha256 text, p_rows jsonb, p_schema_signature text
 ) returns jsonb
 language plpgsql security definer
 set search_path = pg_catalog, public, app, core, siaps, analytics, audit
@@ -221,13 +224,14 @@ begin
   where id = p_preview_id for update;
   if not found or v_pre.actor <> p_actor or v_pre.competency <> p_competency
     or v_pre.filename <> p_filename or v_pre.file_sha256 <> p_file_sha256
-    or v_pre.rows_hash <> md5(p_rows::text) or v_pre.expires_at < now()
+    or v_pre.rows_hash <> md5(p_rows::text)
+    or v_pre.schema_signature <> p_schema_signature or v_pre.expires_at < now()
     or v_pre.consumed_at is not null then
     raise exception 'Prévia vencida, incompatível ou já utilizada; analise novamente'
       using errcode = '22023';
   end if;
   v_check := public.preview_siaps_c3_v3(
-    p_actor, p_competency, p_filename, p_file_sha256, p_rows, false);
+    p_actor, p_competency, p_filename, p_file_sha256, p_rows, p_schema_signature, false);
   if v_pre.snapshot_hash <> v_check->>'snapshot' then
     raise exception 'Os registros mudaram após a prévia. Analise novamente.'
       using errcode = '40001';
@@ -259,7 +263,8 @@ begin
       p_filename, p_file_sha256, p_competency, 'C3',
       'Cuidado na Gestação e Puerpério', '250400', 'CAMPINA GRANDE',
       'PB', 'preliminar',
-      jsonb_build_object('mode','conciliação por equipe','new',v_new,'identical',v_same),
+      jsonb_build_object('mode','conciliação por equipe','new',v_new,'identical',v_same,
+        'schema_signature',p_schema_signature),
       'mae-aps-c3/2.0.0', 'publicado', jsonb_array_length(p_rows), p_actor, now()
     ) returning id into v_import_id;
 
@@ -362,9 +367,9 @@ begin
 end;
 $$;
 
-revoke all on function public.preview_siaps_c3_v3(uuid,date,text,text,jsonb,boolean)
+revoke all on function public.preview_siaps_c3_v3(uuid,date,text,text,jsonb,text,boolean)
   from public, anon, authenticated;
-revoke all on function public.publish_siaps_c3_v3(uuid,uuid,date,text,text,jsonb)
+revoke all on function public.publish_siaps_c3_v3(uuid,uuid,date,text,text,jsonb,text)
   from public, anon, authenticated;
 grant execute on function public.preview_siaps_c3_v3(uuid,date,text,text,jsonb,boolean)
   to service_role;
