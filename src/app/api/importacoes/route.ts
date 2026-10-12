@@ -20,6 +20,7 @@ const payloadSchema = z.object({
   fileSha256: z.string().regex(/^[a-f0-9]{64}$/),
   competency: z.string().regex(/^20\d{2}-(0[1-9]|1[0-2])-01$/),
   rows: compactRowsSchema.min(1),
+  schemaSignature: z.string().max(4000).optional().default(""),
   previewId: z.string().uuid().optional(),
 }).strict();
 
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
       p_filename: payload.filename,
       p_file_sha256: payload.fileSha256,
       p_rows: payload.rows,
+      p_schema_signature: payload.schemaSignature,
     };
 
     if (payload.mode === "check") {
@@ -78,8 +80,27 @@ export async function POST(request: Request) {
         .select("id, filename, competency, status, rows_total, uploaded_at")
         .eq("file_sha256", payload.fileSha256).maybeSingle();
       if (previous.error) throw new Error("Falha na consulta do histórico de importações.");
+      const latest = await userClient.schema("siaps").from("imports")
+        .select("source_filters")
+        .eq("indicator_code", "C3")
+        .eq("municipality_ibge", "250400")
+        .eq("status", "publicado")
+        .order("uploaded_at", { ascending: false })
+        .limit(1).maybeSingle();
+      if (latest.error) throw new Error("Falha ao comparar versões do cabeçalho.");
+      const filters = latest.data?.source_filters as { schema_signature?: unknown } | null | undefined;
+      const prior = typeof filters?.schema_signature === "string" ? filters.schema_signature : null;
+      const headers = (s: string) => new Set(s.split("|").filter(Boolean));
+      const beforeHeaders = headers(prior ?? "");
+      const nowHeaders = headers(payload.schemaSignature);
+      const schemaChanges = prior && prior !== payload.schemaSignature
+        ? {
+          added: [...nowHeaders].filter(x => !beforeHeaders.has(x)).slice(0, 30),
+          removed: [...beforeHeaders].filter(x => !nowHeaders.has(x)).slice(0, 30),
+        } : null;
       return NextResponse.json({
         preview: preflight,
+        schemaChanges,
         duplicate: previous.data,
         // Informativo; a RPC não substitui uma competência integralmente.
         publicationRequiresReview: Boolean((preflight.conflicts ?? 0) || (preflight.unauthorized ?? 0)),
