@@ -18,6 +18,7 @@ type Preflight = {
 };
 type CheckResponse = {
   preview: Preflight;
+  schemaChanges?: { added: string[]; removed: string[] } | null;
   duplicate?: { filename: string; status: string; rows_total: number } | null;
 };
 type PublishResponse = { status: "publicado" | "sem_alteracoes"; added: number; unchanged: number };
@@ -43,6 +44,7 @@ export function ImportWizard() {
   const [competency, setCompetency] = useState("");
   const [preflight, setPreflight] = useState<Preflight | null>(null);
   const [duplicate, setDuplicate] = useState<CheckResponse["duplicate"]>(null);
+  const [schemaChanges, setSchemaChanges] = useState<CheckResponse["schemaChanges"]>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ message: string; ok: boolean } | null>(null);
 
@@ -51,13 +53,14 @@ export function ImportWizard() {
     return {
       mode, filename, fileSha256: hash, competency,
       rows: parsed.rows.map(compactSiapsRow),
+      schemaSignature: parsed.schema?.headerSignature ?? "",
       ...(previewId ? { previewId } : {}),
     };
   }
 
   async function selectFile(file?: File) {
     if (!file) return;
-    setBusy(true); setResult(null); setPreflight(null); setDuplicate(null); setParsed(null);
+    setBusy(true); setResult(null); setPreflight(null); setDuplicate(null); setSchemaChanges(null); setParsed(null);
     setFilename(file.name); setHash(""); setCompetency("");
     try {
       if (!/\.xlsx$/i.test(file.name)) throw new Error("Selecione um arquivo com extensão .xlsx.");
@@ -83,10 +86,11 @@ export function ImportWizard() {
   }
 
   async function analyze() {
-    setBusy(true); setResult(null); setPreflight(null); setDuplicate(null);
+    setBusy(true); setResult(null); setPreflight(null); setDuplicate(null); setSchemaChanges(null);
     try {
       const response = await post<CheckResponse>(payload("check"));
       setPreflight(response.preview); setDuplicate(response.duplicate ?? null);
+      setSchemaChanges(response.schemaChanges ?? null);
     } catch (error) {
       setResult({ message: error instanceof Error ? error.message : "Falha na análise.", ok: false });
     } finally { setBusy(false); }
@@ -143,7 +147,7 @@ export function ImportWizard() {
           <input id="siaps-competency" className="field mt-2 w-full" type="date" value={competency}
             onChange={event => {
               setCompetency(event.target.value ? `${event.target.value.slice(0,7)}-01` : "");
-              setPreflight(null); setDuplicate(null); setResult(null);
+              setPreflight(null); setDuplicate(null); setSchemaChanges(null); setResult(null);
             }} />
           <small>Mês e ano do relatório.</small>
         </div>
@@ -179,6 +183,12 @@ export function ImportWizard() {
         </button>
       </div>
 
+      {schemaChanges && (schemaChanges.added.length > 0 || schemaChanges.removed.length > 0) && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900" role="status">
+        <strong>O cabeçalho mudou em relação à última versão publicada.</strong>
+        {!!schemaChanges.added.length && <p className="mt-2 text-sm">Colunas novas: {schemaChanges.added.join(", ")}.</p>}
+        {!!schemaChanges.removed.length && <p className="mt-1 text-sm">Colunas ausentes nesta versão: {schemaChanges.removed.join(", ")}.</p>}
+        <p className="mt-1 text-xs">Campos novos não são interpretados automaticamente. Confirme sua origem antes de homologar um novo mapeamento.</p>
+      </div>}
       {preflight && <section aria-label="Resultado da conciliação" className="space-y-3 rounded-xl border p-4">
         <h3>Prévia antes da publicação</h3>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
