@@ -6,7 +6,9 @@ create table if not exists siaps.c3_editor_scopes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references app.profiles(user_id) on delete cascade,
   scope_kind text not null check (scope_kind in ('municipio', 'equipe')),
-  municipality_ibge text not null default '250400' check (municipality_ibge ~ '^[0-9]{7}$'),
+  -- Os dados legados de MAE APS usam o código '250400' (6 dígitos).
+  -- Não alterá-lo silenciosamente para um código de 7 dígitos durante o rollout.
+  municipality_ibge text not null default '250400' check (municipality_ibge ~ '^[0-9]{6,7}$'),
   ine text,
   granted_by uuid references app.profiles(user_id),
   granted_at timestamptz not null default now(),
