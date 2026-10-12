@@ -218,6 +218,9 @@ declare
   v_new int;
   v_same int;
 begin
+  -- Permissões são serializadas por editor e publicação por competência.
+  -- Primeiro trava o editor; a administração usa a mesma chave para escopos.
+  perform pg_advisory_xact_lock(hashtext('mae-aps-siaps-c3-editor:' || p_actor::text));
   -- Inclui competências sem nenhum dado corrente: não há row lock possível.
   perform pg_advisory_xact_lock(hashtext('mae-aps-siaps-c3:' || p_competency::text));
   select * into v_pre from siaps.c3_import_previews
@@ -407,6 +410,8 @@ begin
     raise exception 'Escopo inválido' using errcode = '22023';
   end if;
 
+  -- Revogação e publicação do mesmo editor jamais passam em paralelo.
+  perform pg_advisory_xact_lock(hashtext('mae-aps-siaps-c3-editor:' || p_target::text));
   if p_action = 'grant' then
     insert into siaps.c3_editor_scopes(user_id, scope_kind, municipality_ibge, ine, granted_by)
     values(p_target, p_scope_kind, '250400', p_ine, p_actor)
