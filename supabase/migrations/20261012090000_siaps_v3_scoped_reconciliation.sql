@@ -376,6 +376,64 @@ grant execute on function public.preview_siaps_c3_v3(uuid,date,text,text,jsonb,t
 grant execute on function public.publish_siaps_c3_v3(uuid,uuid,date,text,text,jsonb,text)
   to service_role;
 
+
+-- Administração dos escopos: escrita e auditoria ocorrem na MESMA transação.
+-- Um gestor não pode elevar seu próprio escopo por chamadas diretas.
+create or replace function public.manage_siaps_c3_scope_v3(
+  p_actor uuid, p_target uuid, p_action text, p_scope_kind text, p_ine text default null
+) returns jsonb
+language plpgsql security definer
+set search_path = pg_catalog, public, app, siaps, audit
+as $$
+declare
+  v_changed int;
+begin
+  if not exists (
+    select 1 from app.profiles p
+    where p.user_id = p_actor and p.role = 'admin' and p.active
+  ) then
+    raise exception 'Administrador ativo obrigatório' using errcode = '42501';
+  end if;
+  if not exists (
+    select 1 from app.profiles p
+    where p.user_id = p_target and p.role = 'gestao' and p.active
+  ) then
+    raise exception 'Editor de gestão deve estar ativo' using errcode = '22023';
+  end if;
+  if p_action not in ('grant', 'revoke')
+     or p_scope_kind not in ('municipio', 'equipe')
+     or (p_scope_kind = 'equipe' and (p_ine is null or p_ine !~ '^[0-9]{10}$'))
+     or (p_scope_kind = 'municipio' and p_ine is not null) then
+    raise exception 'Escopo inválido' using errcode = '22023';
+  end if;
+
+  if p_action = 'grant' then
+    insert into siaps.c3_editor_scopes(user_id, scope_kind, municipality_ibge, ine, granted_by)
+    values(p_target, p_scope_kind, '250400', p_ine, p_actor)
+    on conflict do nothing;
+    get diagnostics v_changed = row_count;
+  else
+    delete from siaps.c3_editor_scopes sc
+    where sc.user_id = p_target and sc.scope_kind = p_scope_kind
+      and sc.municipality_ibge = '250400'
+      and sc.ine is not distinct from p_ine;
+    get diagnostics v_changed = row_count;
+  end if;
+  insert into audit.events(actor_user_id, event_type, entity_type, entity_id, metadata)
+  values (
+    p_actor, 'siaps_c3_scope_' || p_action,
+    'siaps.c3_editor_scopes', p_target::text,
+    jsonb_build_object('actor',p_actor,'target',p_target,'scope',p_scope_kind,
+      'ine',p_ine,'changed',v_changed)
+  );
+  return jsonb_build_object('status','ok','affected',v_changed);
+end;
+$$;
+revoke all on function public.manage_siaps_c3_scope_v3(uuid,uuid,text,text,text)
+  from public, anon, authenticated;
+grant execute on function public.manage_siaps_c3_scope_v3(uuid,uuid,text,text,text)
+  to service_role;
+
 -- ATENÇÃO: retirar execução de RPCs antigas somente na janela de ativação
 -- coordenada com o deploy do novo endpoint, senão a versão atual perde importação.
 -- Na ativação final, executar sob transação:
