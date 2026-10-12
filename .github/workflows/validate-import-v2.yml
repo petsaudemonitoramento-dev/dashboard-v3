@@ -46,3 +46,35 @@ jobs:
         run: npm run lint
       - name: Build Next.js de desenvolvimento
         run: npm run build
+
+  db-integration:
+    name: Supabase local e pgTAP V2 (sem banco de produção)
+    needs: importer-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SUPABASE_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Preparar imagens de Postgres e pgTAP
+        shell: bash
+        run: |
+          docker pull ghcr.io/supabase/postgres:17.6.1.167
+          docker tag ghcr.io/supabase/postgres:17.6.1.167 public.ecr.aws/supabase/postgres:17.6.1.167
+          docker pull ghcr.io/supabase/pg_prove:3.36
+          docker tag ghcr.io/supabase/pg_prove:3.36 public.ecr.aws/supabase/pg_prove:3.36
+      - name: Inicializar Supabase local
+        run: npx supabase start -x logflare,vector,realtime,storage-api,imgproxy,edge-runtime,postgres-meta,studio,supavisor
+      - name: Construir esquema e executar migrações em banco descartável
+        run: npx supabase db reset
+      - name: Executar testes SQL pgTAP
+        run: npx supabase test db
+      - name: Encerrar Supabase local
+        if: always()
+        run: npx supabase stop
