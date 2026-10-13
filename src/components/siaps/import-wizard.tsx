@@ -130,7 +130,7 @@ export function ImportWizard() {
     <label className="upload-dropzone flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center">
       {busy ? <LoaderCircle aria-hidden="true" className="mb-3 size-9 animate-spin" /> : <UploadCloud aria-hidden="true" className="mb-3 size-9" />}
       <strong>Selecione a planilha XLSX do SIAPS</strong>
-      <span className="mt-1 text-sm text-slate-500">Nenhum dado é gravado durante a leitura local ou a análise.</span>
+      <span className="mt-1 text-sm text-slate-700">Nenhum dado é gravado durante a leitura local ou a análise.</span>
       <input className="sr-only" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         onChange={e => void selectFile(e.target.files?.[0])}/>
     </label>
@@ -167,9 +167,9 @@ export function ImportWizard() {
       </div>}
       {!!count && <div role="region" tabIndex={0} className="table-scroll" aria-label="Amostra de equipes da planilha">
         <table className="data-table"><caption className="sr-only">Primeiras oito equipes</caption>
-          <thead><tr><th scope="col">INE</th><th scope="col">CNES</th><th scope="col">Equipe</th><th scope="col">Denominador</th><th scope="col">Pontos</th></tr></thead>
+          <thead><tr><th scope="col">INE</th><th scope="col">CNES</th><th scope="col">Equipe / UBS</th><th scope="col">Denominador</th><th scope="col">Pontos</th></tr></thead>
           <tbody>{parsed.rows.slice(0,8).map(row=><tr key={row.fileRow}>
-            <td>{row.ine}</td><td>{row.cnes}</td><td>{row.teamName || "—"}</td>
+            <td>{row.ine}</td><td>{row.cnes}</td><td><strong>{row.teamName || "—"}</strong><small className="block text-slate-700">{row.establishmentName}</small></td>
             <td>{row.denominator}</td><td>{row.pointsTotal}</td>
           </tr>)}</tbody>
         </table>
