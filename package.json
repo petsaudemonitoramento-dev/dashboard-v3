@@ -25,7 +25,8 @@
     "typecheck": "tsc --noEmit",
     "registro:codigo": "node scripts/generate-registration-code.mjs",
     "registro:hash": "node scripts/hash-release.mjs",
-    "test:load:cloud": "k6 run tests/load/supabase-cloud.js"
+    "test:load:cloud": "k6 run tests/load/supabase-cloud.js",
+    "audit:security": "node scripts/audit-release-security.mjs"
   },
   "dependencies": {
     "@fontsource/clear-sans": "5.2.5",
