@@ -75,6 +75,10 @@ jobs:
         run: npx supabase db reset
       - name: Executar testes SQL pgTAP
         run: npx supabase test db
+      - name: Instalar Chromium para testes responsivos
+        run: npx playwright install --with-deps chromium
+      - name: Testes E2E de login mobile e importação no Supabase local
+        run: npm run test:e2e
       - name: Encerrar Supabase local
         if: always()
         run: npx supabase stop
