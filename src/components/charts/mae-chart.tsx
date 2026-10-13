@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { EChartsOption } from "echarts";
+import { MAE_CHART_COLORS } from "@/lib/design/mae-brand";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), {
   ssr: false,
@@ -51,6 +52,8 @@ export function MaeChart({ option, ariaLabel, accessibleData, drilldown, compone
       <div aria-label={ariaLabel} role="img">
         <ReactECharts
           option={{
+            color: [...MAE_CHART_COLORS],
+            textStyle: { fontFamily: "Clear Sans, Segoe UI, Arial, sans-serif" },
             animationDuration: 750,
             animationDurationUpdate: 500,
             animationEasing: "cubicOut",

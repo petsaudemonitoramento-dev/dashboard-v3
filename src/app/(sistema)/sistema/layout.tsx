@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { LandPlot, ShieldCheck } from "lucide-react";
 
@@ -29,7 +30,7 @@ export default async function SystemLayout({ children }: { children: React.React
     <a className="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
     <header className="app-header">
       <Link className="brand" href={homeForRole(profile.role)}>
-        <span className="brand-mark">MAE</span>
+        <Image className="mae-admin-brand-symbol" src="/brands/mae-aps-simbolo-cabecalho.svg" alt="" width={560} height={740} priority />
         <span><strong>MAE APS</strong><small>Monitoramento, Atenção e Estratégia na APS</small></span>
       </Link>
       <nav className="main-nav" aria-label="Navegação principal">

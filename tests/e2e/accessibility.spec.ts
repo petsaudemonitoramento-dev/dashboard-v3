@@ -109,7 +109,7 @@ test.describe("auditoria automática WCAG", () => {
     });
     await expect(page.getByText("E2E UBS Importada", { exact: true }).first()).toBeVisible({ timeout: 10_000 });
     await expect(
-      page.getByRole("button", { name: "Confirmar e publicar" }),
+      page.getByRole("button", { name: "Analisar duplicidades e permissões" }),
     ).toBeEnabled();
     await expectNoWcagViolations(
       page,
