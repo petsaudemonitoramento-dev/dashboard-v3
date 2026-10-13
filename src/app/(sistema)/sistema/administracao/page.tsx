@@ -115,6 +115,17 @@ export default async function AdministrationPage({
 
       <section className="panel">
         <div className="panel-heading">
+          <span className="eyebrow">Importador Inteligente V2</span>
+          <h2>Permissões territoriais de editores</h2>
+          <p>Autorize equipes específicas por INE ou, excepcionalmente, o município inteiro. Todas as alterações são auditadas.</p>
+        </div>
+        <Link className="primary-button mt-4 inline-flex" href="/sistema/administracao/escopos-importacao">
+          Administrar escopos de importação
+        </Link>
+      </section>
+
+      <section className="panel">
+        <div className="panel-heading">
           <span className="eyebrow">Rastreabilidade SIAPS</span>
           <h2>Auditoria de importações</h2>
           <p>Últimas publicações registradas, com responsável, competência e integridade do arquivo.</p>

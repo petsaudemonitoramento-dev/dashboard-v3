@@ -2,49 +2,39 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, FileSpreadsheet, LoaderCircle, UploadCloud } from "lucide-react";
+import { AlertCircle, CheckCircle2, FileSpreadsheet, LoaderCircle, ShieldCheck, UploadCloud } from "lucide-react";
 
 import { compactSiapsRow, parseSiapsWorkbook, sha256Hex, type SiapsParseResult } from "@/lib/siaps/parser";
 import { readImportApiResponse, SIAPS_REQUEST_TOO_LARGE_MESSAGE, SIAPS_XLSX_TOO_LARGE_MESSAGE } from "@/lib/siaps/errors";
 import { MAX_SIAPS_REQUEST_BYTES, MAX_SIAPS_XLSX_BYTES, utf8ByteLength } from "@/lib/siaps/limits";
 
-type ImportReference = {
-  id: string;
-  filename: string;
-  competency: string;
-  status: string;
-  rows_total: number;
-  uploaded_at?: string;
-  published_at?: string | null;
-} | null;
-
+type Preflight = {
+  previewId: string | null;
+  new: number;
+  identical: number;
+  conflicts: number;
+  unauthorized: number;
+  details: { fileRow: number; ine: string; cnes: string; status: string }[];
+};
 type CheckResponse = {
-  duplicate?: ImportReference;
-  existingCompetency?: ImportReference;
+  preview: Preflight;
+  schemaChanges?: { added: string[]; removed: string[] } | null;
+  duplicate?: { filename: string; status: string; rows_total: number } | null;
 };
+type PublishResponse = { status: "publicado" | "sem_alteracoes"; added: number; unchanged: number };
 
-type PublishResponse = {
-  rows?: number;
-  replaced?: boolean;
-};
-
-function serializedImportPayload(payload: unknown) {
-  const body = JSON.stringify(payload);
-  if (utf8ByteLength(body) > MAX_SIAPS_REQUEST_BYTES) {
-    throw new Error(SIAPS_REQUEST_TOO_LARGE_MESSAGE);
-  }
-  return body;
+function serialize(payload: unknown) {
+  const json = JSON.stringify(payload);
+  if (utf8ByteLength(json) > MAX_SIAPS_REQUEST_BYTES) throw new Error(SIAPS_REQUEST_TOO_LARGE_MESSAGE);
+  return json;
 }
-
-async function postImport<T>(payload: unknown, fallbackMessage: string) {
-  const body = serializedImportPayload(payload);
+async function post<T>(payload: unknown): Promise<T> {
   const response = await fetch("/api/importacoes", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body,
+    method: "POST", headers: { "content-type": "application/json" }, body: serialize(payload),
   });
-  return readImportApiResponse<T>(response, fallbackMessage);
+  return readImportApiResponse<T>(response, "Não foi possível conciliar a importação.");
 }
+const MONTH = /^20\d{2}-(0[1-9]|1[0-2])-01$/;
 
 export function ImportWizard() {
   const router = useRouter();
@@ -52,154 +42,181 @@ export function ImportWizard() {
   const [hash, setHash] = useState("");
   const [parsed, setParsed] = useState<SiapsParseResult | null>(null);
   const [competency, setCompetency] = useState("");
-  const [duplicate, setDuplicate] = useState<ImportReference>(null);
-  const [existingCompetency, setExistingCompetency] = useState<ImportReference>(null);
-  const [replacementConfirmed, setReplacementConfirmed] = useState(false);
+  const [preflight, setPreflight] = useState<Preflight | null>(null);
+  const [duplicate, setDuplicate] = useState<CheckResponse["duplicate"]>(null);
+  const [schemaChanges, setSchemaChanges] = useState<CheckResponse["schemaChanges"]>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ message: string; ok: boolean } | null>(null);
 
-  async function checkPublication(fileName: string, fileHash: string, nextCompetency: string) {
-    if (!fileHash || !/^20\d{2}-(0[1-9]|1[0-2])-01$/.test(nextCompetency)) {
-      setExistingCompetency(null);
-      setReplacementConfirmed(false);
-      return;
-    }
-
-    const check = await postImport<CheckResponse>(
-      {
-        mode: "check",
-        filename: fileName,
-        fileSha256: fileHash,
-        competency: nextCompetency,
-        rows: [],
-      },
-      "Não foi possível verificar se o arquivo ou a competência já foram importados.",
-    );
-    setDuplicate(check.duplicate ?? null);
-    setExistingCompetency(check.existingCompetency ?? null);
-    setReplacementConfirmed(false);
+  function payload(mode: "check" | "publish", previewId?: string) {
+    if (!parsed?.rows.length || !MONTH.test(competency)) throw new Error("Selecione um arquivo válido e informe a competência.");
+    return {
+      mode, filename, fileSha256: hash, competency,
+      rows: parsed.rows.map(compactSiapsRow),
+      schemaSignature: parsed.schema?.headerSignature ?? "",
+      ...(previewId ? { previewId } : {}),
+    };
   }
 
-  async function selectFile(file: File | undefined) {
+  async function selectFile(file?: File) {
     if (!file) return;
-    setFilename(file.name); setHash(""); setParsed(null); setCompetency("");
-    setDuplicate(null); setExistingCompetency(null); setReplacementConfirmed(false);
-    setResult(null); setBusy(true);
+    setBusy(true); setResult(null); setPreflight(null); setDuplicate(null); setSchemaChanges(null); setParsed(null);
+    setFilename(file.name); setHash(""); setCompetency("");
     try {
       if (!/\.xlsx$/i.test(file.name)) throw new Error("Selecione um arquivo com extensão .xlsx.");
-      if (file.type && file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") throw new Error("O tipo do arquivo não corresponde a XLSX.");
-      if (file.size === 0) throw new Error("O arquivo está vazio.");
+      if (file.type && file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") throw new Error("Tipo incompatível com XLSX.");
+      if (!file.size) throw new Error("O arquivo está vazio.");
       if (file.size > MAX_SIAPS_XLSX_BYTES) throw new Error(SIAPS_XLSX_TOO_LARGE_MESSAGE);
       const buffer = await file.arrayBuffer();
-      const [nextParsed, nextHash] = await Promise.all([Promise.resolve(parseSiapsWorkbook(buffer, file.name)), sha256Hex(buffer)]);
-      let validatedParse = nextParsed;
-      if (!nextParsed.errors.length) {
-        try {
-          serializedImportPayload({
-            mode: "publish",
-            filename: file.name,
-            fileSha256: nextHash,
-            competency: nextParsed.competency ?? "2000-01-01",
-            rows: nextParsed.rows.map(compactSiapsRow),
-          });
-        } catch (error) {
-          validatedParse = {
-            ...nextParsed,
-            errors: [...nextParsed.errors, error instanceof Error ? error.message : SIAPS_REQUEST_TOO_LARGE_MESSAGE],
-          };
-        }
+      const [data, sha] = await Promise.all([
+        Promise.resolve(parseSiapsWorkbook(buffer, file.name)), sha256Hex(buffer),
+      ]);
+      if (!data.errors.length) {
+        const chosen = data.competency ?? "2000-01-01";
+        serialize({ mode: "check", filename: file.name, fileSha256: sha,
+          competency: chosen, rows: data.rows.map(compactSiapsRow) });
       }
-      setFilename(file.name); setHash(nextHash); setParsed(validatedParse); setCompetency(validatedParse.competency ?? "");
-      if (validatedParse.errors.length) return;
-      await checkPublication(
-        file.name,
-        nextHash,
-        nextParsed.competency ?? "2000-01-01",
-      );
+      setParsed(data); setHash(sha); setCompetency(data.competency ?? "");
     } catch (error) {
-      setParsed({ competency: null, rows: [], errors: [error instanceof Error ? error.message : "Falha ao ler o arquivo."], warnings: [], headerRow: null });
+      setParsed({
+        competency: null, rows: [], errors: [error instanceof Error ? error.message : "Falha ao ler o arquivo."],
+        warnings: [], headerRow: null,
+      });
+    } finally { setBusy(false); }
+  }
+
+  async function analyze() {
+    setBusy(true); setResult(null); setPreflight(null); setDuplicate(null); setSchemaChanges(null);
+    try {
+      const response = await post<CheckResponse>(payload("check"));
+      setPreflight(response.preview); setDuplicate(response.duplicate ?? null);
+      setSchemaChanges(response.schemaChanges ?? null);
+    } catch (error) {
+      setResult({ message: error instanceof Error ? error.message : "Falha na análise.", ok: false });
     } finally { setBusy(false); }
   }
 
   async function publish() {
-    if (!parsed || parsed.errors.length || !/^20\d{2}-(0[1-9]|1[0-2])-01$/.test(competency)) return;
+    if (!preflight?.previewId || preflight.conflicts || preflight.unauthorized || busy) return;
     setBusy(true); setResult(null);
     try {
-      const body = await postImport<PublishResponse>(
-        {
-          mode: "publish",
-          filename,
-          fileSha256: hash,
-          competency,
-          rows: parsed.rows.map(compactSiapsRow),
-          replaceExisting: Boolean(existingCompetency && replacementConfirmed),
-        },
-        "Falha ao publicar.",
-      );
+      const response = await post<PublishResponse>(payload("publish", preflight.previewId));
       setResult({
-        message: body.replaced
-          ? `Competência substituída com segurança: ${body.rows ?? 0} registros válidos publicados.`
-          : `Importação publicada: ${body.rows ?? 0} registros válidos.`,
+        message: response.status === "sem_alteracoes"
+          ? `Verificação concluída: ${response.unchanged} registros já estavam corretos. Nenhum dado foi alterado.`
+          : `Conciliação publicada: ${response.added} novas equipes e ${response.unchanged} já existentes preservadas.`,
         ok: true,
       });
+      setPreflight(null); // tokens de publicação são de uso único
       router.refresh();
-    } catch (error) { setResult({ message: error instanceof Error ? error.message : "Falha ao publicar.", ok: false }); }
-    finally { setBusy(false); }
+    } catch (error) {
+      setPreflight(null); // obriga reanálise após erro ou concorrência
+      setResult({ message: error instanceof Error ? error.message : "Falha na publicação.", ok: false });
+    } finally { setBusy(false); }
   }
 
-  return <section aria-busy={busy} className="panel space-y-5">
-    <div className="panel-heading"><span className="eyebrow">Fluxo oficial</span><h2>Nova importação C3</h2><p>Leitura, validação e pré-visualização acontecem antes da confirmação.</p></div>
-    <span aria-live="polite" className="sr-only">{busy ? "Processando a importação." : "Importação pronta para interação."}</span>
-    <label className="upload-dropzone flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-300 bg-sky-50/60 p-8 text-center hover:border-sky-500">
-      {busy ? <LoaderCircle aria-hidden="true" className="mb-3 size-9 animate-spin text-sky-700" /> : <UploadCloud aria-hidden="true" className="mb-3 size-9 text-sky-700" />}
-      <strong>Selecione a planilha XLSX do SIAPS</strong><span className="mt-1 text-sm text-slate-500">O arquivo é validado antes de qualquer gravação.</span>
-      <input className="sr-only" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => void selectFile(event.target.files?.[0])} />
+  const canAnalyze = Boolean(parsed?.rows.length && !parsed?.errors.length && MONTH.test(competency) && !busy);
+  const canPublish = Boolean(preflight?.previewId && !preflight.conflicts && !preflight.unauthorized && !busy);
+  const count = parsed?.rows.length ?? 0;
+
+  return <section className="panel space-y-5" aria-busy={busy}>
+    <div className="panel-heading">
+      <span className="eyebrow">Importador Inteligente V2</span>
+      <h2>Conciliação segura de equipes C3</h2>
+      <p>Reconheça a estrutura e compare cada INE antes de publicar. Importações parciais não substituem a competência inteira.</p>
+    </div>
+    <span className="sr-only" aria-live="polite">{busy ? "Analisando arquivo." : "Pronto para interação."}</span>
+
+    <label className="upload-dropzone flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center">
+      {busy ? <LoaderCircle aria-hidden="true" className="mb-3 size-9 animate-spin" /> : <UploadCloud aria-hidden="true" className="mb-3 size-9" />}
+      <strong>Selecione a planilha XLSX do SIAPS</strong>
+      <span className="mt-1 text-sm text-slate-500">Nenhum dado é gravado durante a leitura local ou a análise.</span>
+      <input className="sr-only" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        onChange={e => void selectFile(e.target.files?.[0])}/>
     </label>
+
     {parsed && <>
       <div className="grid gap-3 md:grid-cols-4">
-        <div className="metric-card"><FileSpreadsheet aria-hidden="true" className="size-5 text-sky-700" /><span>Arquivo</span><strong className="text-base! break-all">{filename}</strong></div>
-        <div className="metric-card"><label className="block text-slate-500" htmlFor="siaps-competency">Competência</label><input id="siaps-competency" className="field mt-3 w-full" type="date" value={competency} onChange={(event) => {
-          const nextCompetency = event.target.value ? `${event.target.value.slice(0, 7)}-01` : "";
-          setCompetency(nextCompetency);
-          setExistingCompetency(null);
-          setReplacementConfirmed(false);
-          if (nextCompetency && hash) {
-            setBusy(true);
-            void checkPublication(filename, hash, nextCompetency).finally(() => setBusy(false));
-          }
-        }} /><small>Somente mês e ano são usados.</small></div>
-        <div className="metric-card accent-green"><span>Registros válidos</span><strong>{parsed.rows.length}</strong></div>
-        <div className="metric-card accent-orange"><span>Ocorrências</span><strong>{parsed.errors.length + parsed.warnings.length}</strong><small>{parsed.errors.length} erros · {parsed.warnings.length} advertências</small></div>
-      </div>
-      {duplicate && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900" role="alert"><AlertCircle aria-hidden="true" className="mr-2 inline size-5" /><strong>Arquivo duplicado:</strong> já consta como {duplicate.status} com {duplicate.rows_total} registros.</div>}
-      {existingCompetency && !duplicate && (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950" role="alert">
-          <div className="flex items-start gap-2">
-            <AlertCircle aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-            <div>
-              <strong>Esta competência já possui uma publicação.</strong>
-              <p className="mt-1 text-sm">
-                Arquivo atual: <b>{existingCompetency.filename}</b> · {existingCompetency.rows_total} registros.
-                A nova planilha substituirá integralmente essa versão nos dashboards, mas o histórico anterior será preservado para auditoria.
-              </p>
-              <label className="mt-3 flex items-start gap-2 text-sm font-bold">
-                <input
-                  checked={replacementConfirmed}
-                  className="mt-1"
-                  onChange={(event) => setReplacementConfirmed(event.target.checked)}
-                  type="checkbox"
-                />
-                Confirmo que revisei a planilha corrigida e quero substituir a competência publicada.
-              </label>
-            </div>
-          </div>
+        <div className="metric-card">
+          <FileSpreadsheet className="size-5" aria-hidden="true"/><span>Arquivo / aba</span>
+          <strong className="text-sm! break-all">{filename}</strong>
+          <small>{parsed.sheetName ?? "Aba não identificada"}</small>
         </div>
-      )}
-      {!!parsed.errors.length && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800" role="alert"><strong>Erros que impedem a importação</strong><ul className="mt-2 list-disc pl-5">{parsed.errors.slice(0, 20).map((item) => <li key={item}>{item}</li>)}</ul></div>}
-      {!!parsed.warnings.length && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900" role="status"><strong>Advertências</strong><ul className="mt-2 list-disc pl-5">{parsed.warnings.slice(0, 20).map((item) => <li key={item}>{item}</li>)}</ul></div>}
-      {!!parsed.rows.length && <div aria-label="Pré-visualização dos registros da importação" className="table-scroll" role="region" tabIndex={0}><table className="data-table"><caption className="sr-only">Primeiros oito registros válidos encontrados na planilha</caption><thead><tr><th scope="col">Linha</th><th scope="col">CNES / UBS</th><th scope="col">INE / Equipe</th><th scope="col">A–K</th><th scope="col">Pontos</th><th scope="col">Denominador</th><th scope="col">Razão oficial</th></tr></thead><tbody>{parsed.rows.slice(0, 8).map((row) => <tr key={row.fileRow}><td>{row.fileRow}</td><td>{row.cnes}<br/><small>{row.establishmentName}</small></td><td>{row.ine}<br/><small>{row.teamName}</small></td><td>{Object.values(row.components).join(" · ")}</td><td>{row.pointsTotal}</td><td>{row.denominator}</td><td>{row.officialRatio ?? "—"}</td></tr>)}</tbody></table></div>}
-      <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-slate-500">SHA-256: <code>{hash}</code></span><button className="primary-button" disabled={busy || !!duplicate || !!parsed.errors.length || !competency || (!!existingCompetency && !replacementConfirmed)} onClick={() => void publish()} type="button">{existingCompetency ? "Substituir e publicar" : "Confirmar e publicar"}</button></div>
-      {result && <div className={`rounded-xl border p-4 ${result.ok ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"}`} role={result.ok ? "status" : "alert"}>{result.ok ? <CheckCircle2 aria-hidden="true" className="mr-2 inline size-5" /> : <AlertCircle aria-hidden="true" className="mr-2 inline size-5" />}{result.message}</div>}
+        <div className="metric-card">
+          <label htmlFor="siaps-competency">Competência</label>
+          <input id="siaps-competency" className="field mt-2 w-full" type="date" value={competency}
+            onChange={event => {
+              setCompetency(event.target.value ? `${event.target.value.slice(0,7)}-01` : "");
+              setPreflight(null); setDuplicate(null); setSchemaChanges(null); setResult(null);
+            }} />
+          <small>Mês e ano do relatório.</small>
+        </div>
+        <div className="metric-card accent-green"><span>Registros lidos</span><strong>{count}</strong></div>
+        <div className="metric-card accent-orange"><span>Verificações</span>
+          <strong>{parsed.errors.length + parsed.warnings.length}</strong>
+          <small>{parsed.errors.length} erros · {parsed.warnings.length} avisos</small>
+        </div>
+      </div>
+      {!!parsed.errors.length && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
+        <strong>Erros que impedem a importação</strong>
+        <ul className="mt-2 list-disc pl-5">{parsed.errors.slice(0,20).map((item,i)=><li key={i}>{item}</li>)}</ul>
+      </div>}
+      {!!parsed.warnings.length && <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+        <strong>Alterações de estrutura e advertências</strong>
+        <ul className="mt-2 list-disc pl-5">{parsed.warnings.slice(0,20).map((item,i)=><li key={i}>{item}</li>)}</ul>
+      </div>}
+      {!!count && <div role="region" tabIndex={0} className="table-scroll" aria-label="Amostra de equipes da planilha">
+        <table className="data-table"><caption className="sr-only">Primeiras oito equipes</caption>
+          <thead><tr><th scope="col">INE</th><th scope="col">CNES</th><th scope="col">Equipe</th><th scope="col">Denominador</th><th scope="col">Pontos</th></tr></thead>
+          <tbody>{parsed.rows.slice(0,8).map(row=><tr key={row.fileRow}>
+            <td>{row.ine}</td><td>{row.cnes}</td><td>{row.teamName || "—"}</td>
+            <td>{row.denominator}</td><td>{row.pointsTotal}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <small className="break-all text-slate-500">SHA-256: {hash}</small>
+        <button type="button" className="primary-button" disabled={!canAnalyze}
+          onClick={() => void analyze()}>
+          <ShieldCheck aria-hidden="true" className="mr-2 inline size-4"/> Analisar duplicidades e permissões
+        </button>
+      </div>
+
+      {schemaChanges && (schemaChanges.added.length > 0 || schemaChanges.removed.length > 0) && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900" role="status">
+        <strong>O cabeçalho mudou em relação à última versão publicada.</strong>
+        {!!schemaChanges.added.length && <p className="mt-2 text-sm">Colunas novas: {schemaChanges.added.join(", ")}.</p>}
+        {!!schemaChanges.removed.length && <p className="mt-1 text-sm">Colunas ausentes nesta versão: {schemaChanges.removed.join(", ")}.</p>}
+        <p className="mt-1 text-xs">Campos novos não são interpretados automaticamente. Confirme sua origem antes de homologar um novo mapeamento.</p>
+      </div>}
+      {preflight && <section aria-label="Resultado da conciliação" className="space-y-3 rounded-xl border p-4">
+        <h3>Prévia antes da publicação</h3>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {([["Novos",preflight.new],["Idênticos",preflight.identical],["Conflitos",preflight.conflicts],["Fora do escopo",preflight.unauthorized]] as const)
+            .map(([label,value])=><div className="metric-card" key={label}><span>{label}</span><strong>{value}</strong></div>)}
+        </div>
+        {duplicate && <p className="text-sm">Este arquivo também consta no histórico como <strong>{duplicate.status}</strong> ({duplicate.rows_total} linhas).</p>}
+        {(preflight.conflicts > 0 || preflight.unauthorized > 0) && <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-950" role="alert">
+          <AlertCircle className="mr-2 inline size-5" aria-hidden="true"/>
+          <strong>Publicação bloqueada por segurança.</strong>
+          <p className="mt-1 text-sm">Há registros diferentes dos vigentes ou equipes fora da sua autorização. Nenhum dado será sobrescrito. Solicite conciliação ou uma exportação restrita ao seu escopo.</p>
+          <ul className="mt-2 list-disc pl-5 text-xs">
+            {(preflight.details ?? []).slice(0,12).map((x,i)=><li key={i}>Linha {x.fileRow} · INE {x.ine} · {x.status === "conflito" ? "divergência" : "sem permissão"}</li>)}
+          </ul>
+        </div>}
+        {!preflight.conflicts && !preflight.unauthorized && <p className="text-sm">
+          Serão incluídos <strong>{preflight.new}</strong> registros novos.
+          Outros <strong>{preflight.identical}</strong> permanecerão inalterados.
+          A ausência de equipes na planilha não remove dados existentes.
+        </p>}
+        <button type="button" className="primary-button" disabled={!canPublish}
+          onClick={() => void publish()}>{preflight.new ? "Confirmar inclusão segura" : "Registrar verificação sem alterações"}</button>
+      </section>}
     </>}
+    {result && <div role={result.ok ? "status" : "alert"}
+      className={`rounded-xl border p-4 ${result.ok ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-red-200 bg-red-50 text-red-800"}`}>
+      {result.ok ? <CheckCircle2 aria-hidden="true" className="mr-2 inline size-5"/> : <AlertCircle aria-hidden="true" className="mr-2 inline size-5"/>}
+      {result.message}
+    </div>}
   </section>;
 }
