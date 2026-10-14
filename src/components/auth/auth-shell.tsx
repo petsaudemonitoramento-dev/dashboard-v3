@@ -13,6 +13,7 @@ import {
 import { SystemStatus } from "@/components/auth/system-status";
 import { AuthIntroSession } from "@/components/auth/auth-intro-session";
 import { CinematicIntro } from "@/components/auth/cinematic-intro";
+import { MotionRibbons } from "@/components/auth/motion-ribbons";
 
 const assuranceItems = [
   { label: "Privacidade orientada à LGPD", icon: ShieldCheck },
@@ -42,7 +43,7 @@ export function AuthShell({
   // apenas o conteúdo central muda de acordo com a rota.
   if (cinematic) {
     return (
-      <div className="mae-cinema">
+      <div className="mae-cinema mae-motion-v3">
         <CinematicIntro initialPlayback={introOnLoad} />
         <div className="mae-cinema-program-signature" aria-label="PET Saúde Digital da UFCG">
           <span>PET Saúde Digital</span>
@@ -50,6 +51,7 @@ export function AuthShell({
           <span>UFCG</span>
         </div>
         <div className="mae-cinema-ambient" aria-hidden="true">
+          <MotionRibbons />
           <div className="mae-cinema-light-one" />
           <div className="mae-cinema-light-two" />
         </div>
