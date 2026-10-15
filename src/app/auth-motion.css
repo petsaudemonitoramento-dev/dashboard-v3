@@ -240,3 +240,125 @@
   }
   .mae-motion-v3 .mae-cinema-auth { animation: none !important; }
 }
+
+
+/* ===== Revisão V4: fidelidade à gravação de referência enviada =====
+ * A abertura tem apenas gradiente, logo que se desenha e wipe circular roxo.
+ * Os 4 ornamentos são os contornos reais da demonstração e aparecem
+ * SOMENTE quando o formulário é apresentado.
+ */
+.mae-gsap-stage-light {
+  background:
+    radial-gradient(ellipse 34% 63% at -3% 5%, rgba(92, 71, 152, .67), transparent 96%),
+    radial-gradient(ellipse 40% 56% at 91% 9%, rgba(171, 135, 243, .46), transparent 90%),
+    radial-gradient(ellipse 47% 55% at 88% 100%, rgba(92, 71, 152, .66), transparent 96%),
+    linear-gradient(118deg, #f4eaf5 7%, #faf5f1 50%, #e8d7f5 100%);
+}
+.mae-gsap-stage-light .mae-gsap-orb { opacity: .22; }
+.mae-gsap-reveal-wrap { overflow: visible; }
+.mae-gsap-stage-dark {
+  background:
+    radial-gradient(ellipse 60% 85% at 78% 13%, rgba(171,135,243,.31), transparent 91%),
+    linear-gradient(130deg, var(--mae-purple) 0%, #54229c 55%, var(--mae-purple) 100%);
+  will-change: clip-path;
+}
+.mae-gsap-white-logo {
+  filter: none;
+  will-change: opacity;
+}
+.mae-gsap-skip { z-index: 30; }
+
+/* Posições e silhuetas extraídas dos swirls do material de referência. */
+.mae-motion-v3 .mae-cinema-ambient {
+  overflow: hidden;
+  contain: layout paint;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-motion-ribbons {
+  inset: 0 0 3.9rem;
+}
+.mae-motion-v3 .mae-motion-ribbons .mae-ribbon {
+  opacity: 1;
+  max-width: none;
+  transform: translateZ(0);
+}
+.mae-motion-v3 .mae-ribbon-orange {
+  width: clamp(175px, 26.2vw, 396px);
+  left: 15.35%;
+  top: -1.2%;
+  color: var(--mae-orange);
+}
+.mae-motion-v3 .mae-ribbon-purple-top {
+  width: clamp(90px, 14vw, 203px);
+  right: -.1%;
+  left: auto;
+  top: -.5%;
+  color: var(--mae-purple);
+}
+.mae-motion-v3 .mae-ribbon-purple-bottom {
+  width: clamp(230px, 38.3vw, 560px);
+  left: 0;
+  bottom: 0;
+  top: auto;
+  color: var(--mae-purple-mid);
+}
+.mae-motion-v3 .mae-ribbon-cream {
+  width: clamp(190px, 39vw, 570px);
+  right: 2%;
+  bottom: .2%;
+  top: auto;
+  color: var(--mae-cream);
+  opacity: .72;
+}
+.mae-cinema.mae-motion-v3 {
+  background:
+    radial-gradient(ellipse 40% 60% at 2% 19%, rgba(92, 71, 152, .47), transparent 96%),
+    radial-gradient(ellipse 37% 52% at 96% 6%, rgba(171, 135, 243, .36), transparent 94%),
+    radial-gradient(ellipse 40% 60% at 95% 99%, rgba(92, 71, 152, .62), transparent 97%),
+    linear-gradient(115deg, #eee1f5 0%, #faf5f1 49%, #eadcf5 100%);
+}
+.mae-motion-v3 .mae-cinema-center {
+  width: min(100%, 1140px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 408px);
+  gap: clamp(2.4rem, 5vw, 5.6rem);
+}
+.mae-motion-v3 .mae-cinema-brand {
+  width: min(100%, 560px);
+  filter: none;
+}
+.mae-motion-v3 .mae-cinema-auth {
+  border-radius: 18px;
+  box-shadow: 0 18px 47px rgba(40,0,99,.10), 0 4px 15px rgba(40,0,99,.045);
+}
+@media (max-width: 850px) {
+  .mae-motion-v3 .mae-cinema-center {
+    width: min(100%, 450px);
+    grid-template-columns: minmax(0,1fr);
+    gap: clamp(.85rem, 2.2dvh, 1.6rem);
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+    left: 18%;
+    top: -2%;
+    width: 180px;
+    opacity: .7;
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-top {
+    right: -8%;
+    top: 4%;
+    width: 110px;
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-bottom {
+    left: -15%;
+    bottom: 19%;
+    width: 260px;
+    opacity: .40;
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-cream {
+    right: -26%;
+    bottom: 10%;
+    width: 240px;
+    opacity: .65;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-gsap-stage-dark, .mae-gsap-reveal { will-change: auto; }
+}
