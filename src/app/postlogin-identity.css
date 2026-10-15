@@ -729,3 +729,29 @@
     max-width: 100%;
   }
 }
+
+
+/* Legenda no centro matemático da rosca ECharts: center [50%,34%].
+   Usa o mesmo retângulo do canvas com translate(-50%,-50%).
+   Não depende de altura fixa em pixels ou da métrica da fonte. */
+.management-shell .mae-chart-plot-with-center {
+  position: relative;
+}
+.management-shell .mae-chart-center-label {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  display: block;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  white-space: pre-line;
+  color: #143154;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 23px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
