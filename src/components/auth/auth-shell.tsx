@@ -57,9 +57,12 @@ export function AuthShell({
               role="img"
               aria-label="MAE APS — Monitoramento, Atenção e Estratégia na Atenção Primária à Saúde"
             >
-              <Image className="mae-cinema-brand-drive" src="/brands/mae-aps-logo-preta-drive.svg"
-                alt="" aria-hidden="true" width={1810} height={680}
-                sizes="(max-width: 850px) 240px, 530px" priority />
+              <Image className="mae-cinema-brand-drive" src="/brands/mae-aps-horizontal-azul.svg"
+                alt="" aria-hidden="true" width={1610} height={635}
+                sizes="(max-width: 850px) 280px, 595px" priority unoptimized />
+              <span className="mae-cinema-brand-description" aria-hidden="true">
+                Monitoramento, atenção e estratégia<br />na Atenção Primária à Saúde
+              </span>
             </div>
             <div className="mae-cinema-auth">
               <div className="mae-cinema-status"><SystemStatus /></div>
