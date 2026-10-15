@@ -935,3 +935,154 @@
 @media (prefers-reduced-motion: reduce) {
   .management-shell .management-sidebar { transition: none; }
 }
+
+
+/*
+ * PR #21 — Reflow do shell por grade física, não sobreposição.
+ * Duas faixas reais: menu + conteúdo; o conteúdo é sempre minmax(0,1fr).
+ * Componentes analíticos usam container queries, baseadas na largura REAL
+ * disponível (e não apenas no viewport).
+ */
+@media (min-width: 851px) {
+  .management-shell {
+    --mae-side-track: 236px;
+    display: grid;
+    grid-template-columns: var(--mae-side-track) minmax(0,1fr);
+    grid-template-rows: auto minmax(0,1fr) auto;
+    transition: grid-template-columns .25s ease;
+    min-width: 0;
+  }
+  .management-shell.management-shell-nav-collapsed {
+    --mae-side-track: 0px;
+  }
+  .management-shell .management-topbar {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .management-shell .management-sidebar {
+    grid-column: 1;
+    grid-row: 2 / 4;
+    position: sticky;
+    z-index: 22;
+    top: 81px;
+    left: auto;
+    bottom: auto;
+    align-self: start;
+    height: calc(100dvh - 81px);
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: none;
+    transition: opacity .2s ease, visibility .2s ease;
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar {
+    width: 0;
+    min-width: 0;
+    padding-inline: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: none;
+  }
+  .management-shell .management-main {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    container: mae-dashboard / inline-size;
+  }
+  .management-shell.management-shell-nav-collapsed .management-main {
+    width: 100%;
+    margin: 0;
+  }
+  .management-shell .management-footer,
+  .management-shell.management-shell-nav-collapsed .management-footer {
+    grid-column: 2;
+    grid-row: 3;
+    width: 100%;
+    margin: 0;
+    min-width: 0;
+  }
+}
+/* O layout se adapta ao espaço efetivo, não ao tamanho do monitor.
+ * Nada some: filtros e cards só mudam a organização da grade. */
+@container mae-dashboard (max-width: 1399px) {
+  .management-dashboard .dashboard-filter-zone {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .management-dashboard .dashboard-filter-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .management-dashboard .dashboard-filter-secondary {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0,1fr) minmax(0,1.45fr) auto;
+  }
+  .management-dashboard .dashboard-kpi-grid {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+}
+@container mae-dashboard (max-width: 1120px) {
+  .management-dashboard .dashboard-secondary-charts,
+  .management-dashboard .dashboard-chart-row,
+  .management-module .module-two-column {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .management-dashboard .dashboard-secondary-charts .dashboard-chart-donut,
+  .management-dashboard .dashboard-secondary-charts .dashboard-components-card {
+    grid-column: auto;
+    min-width: 0;
+    width: 100%;
+  }
+  .management-dashboard .dashboard-filter-secondary {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .management-dashboard .dashboard-filter-actions { grid-column: 1 / -1; }
+}
+@container mae-dashboard (max-width: 750px) {
+  .management-dashboard .dashboard-kpi-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .management-dashboard .dashboard-filter-grid,
+  .management-dashboard .dashboard-filter-secondary {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .management-dashboard .dashboard-filter-secondary,
+  .management-dashboard .dashboard-filter-actions {
+    grid-column: auto;
+  }
+  .management-module .module-stat-grid,
+  .management-module .module-two-column {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
+@container mae-dashboard (max-width: 440px) {
+  .management-dashboard .dashboard-kpi-grid {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
+/* Protege títulos, dados e gráficos da largura automática mínima.
+   Tabelas rolam dentro de sua própria área, nunca expandem a página. */
+.management-shell .management-main :is(
+  .management-dashboard,.management-module,
+  .dashboard-filter-zone,.dashboard-filter-grid,.dashboard-filter-secondary,
+  .dashboard-kpi-grid,.dashboard-chart-row,.dashboard-secondary-charts,
+  .dashboard-bottom-grid,.dashboard-card,.dashboard-kpi,.module-two-column,
+  .module-stat-grid,.mae-chart,.mae-chart-plot,.table-scroll
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+.management-shell .management-main .table-scroll {
+  overflow-x: auto;
+}
+@media (max-width: 850px) {
+  .management-shell { display: block; }
+  .management-shell .management-main { container: mae-dashboard / inline-size; }
+}
+/* Evita animação de geometria para usuários com movimento reduzido. */
+@media (prefers-reduced-motion: reduce) {
+  .management-shell { transition: none; }
+}
