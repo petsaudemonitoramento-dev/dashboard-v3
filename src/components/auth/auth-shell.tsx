@@ -45,17 +45,6 @@ export function AuthShell({
     return (
       <div className="mae-cinema mae-motion-v3">
         <CinematicIntro initialPlayback={introOnLoad} />
-        <div className="mae-cinema-institutional-bar">
-          <span className="mae-cinema-institutional-ufcg">
-            <Image src="/brands/ufcg-oficial.png" alt="Universidade Federal de Campina Grande — UFCG"
-              width={1472} height={462} sizes="(max-width: 700px) 82px, 108px" />
-          </span>
-          <span className="mae-cinema-program-signature" aria-label="PET Saúde Digital da UFCG">
-            <span>PET Saúde Digital</span>
-            <span className="mae-cinema-program-separator" aria-hidden="true">·</span>
-            <span>UFCG</span>
-          </span>
-        </div>
         <div className="mae-cinema-ambient" aria-hidden="true">
           <MotionRibbons />
           <div className="mae-cinema-light-one" />
