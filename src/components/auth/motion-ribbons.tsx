@@ -23,11 +23,10 @@ export function MotionRibbons() {
           fill="currentColor"
         />
       </svg>
-      <svg className="mae-ribbon mae-ribbon-purple-top" viewBox="0 0 250 290"
-        preserveAspectRatio="xMaxYMin meet" focusable="false"
-        aria-hidden="true" data-reference-geometry="top-right-original-trace">
-        <path d="M 181.5 193 Q 162 181 162 212 Q 162 243 172 248.5 Q 182 254 191.5 257.5 Q 201 261 213 264 Q 225 267 237 268.5 Q 249 270 249 243.5 Q 249 217 240.5 216 Q 232 215 216.5 210 Q 201 205 181.5 193 Z M 86 0 Q 59 0 55.5 18 Q 52 36 51.5 52.5 Q 51 69 53.5 86.5 Q 56 104 63 123.5 Q 70 143 99 143 Q 128 143 119.5 125 Q 111 107 107.5 90.5 Q 104 74 104 57 Q 104 40 108.5 20 Q 113 0 86 0 Z" fill="currentColor" />
-      </svg>
+      <span
+        className="mae-ribbon mae-ribbon-purple-top"
+        data-reference-geometry="upper-right-continuous-ring"
+      />
       <svg className="mae-ribbon mae-ribbon-purple-bottom" viewBox="0 0 570 295"
        preserveAspectRatio="xMinYMax meet" focusable="false"
        aria-hidden="true" data-reference-geometry="bottom-left-original-trace">
