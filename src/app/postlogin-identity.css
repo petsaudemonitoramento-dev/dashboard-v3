@@ -678,3 +678,54 @@
     display: none;
   }
 }
+
+
+/* PR #20 · estabilização de alinhamento e contenção no celular.
+ * Retira a animação individual dos cards, que iniciava cada valor
+ * alguns pixels fora da linha dos outros durante a apresentação.
+ * A rolagem horizontal pertence somente ao nav, nunca à página. */
+.management-shell .dashboard-kpi {
+  animation: none;
+}
+@media (max-width: 850px) {
+  .management-shell {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .management-shell .management-topbar,
+  .management-shell .management-main,
+  .management-shell .management-footer {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin-left: 0;
+  }
+  .management-shell .management-topbar,
+  .management-shell .management-brand,
+  .management-shell .management-institutions {
+    min-width: 0;
+  }
+  .management-shell .management-sidebar {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .management-shell .management-sidebar nav {
+    flex: 0 0 auto;
+    min-width: 100%;
+    width: max-content;
+  }
+  .management-shell .management-dashboard,
+  .management-shell .dashboard-filter-zone,
+  .management-shell .dashboard-kpi-grid,
+  .management-shell .dashboard-chart-row,
+  .management-shell .dashboard-secondary-charts {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
