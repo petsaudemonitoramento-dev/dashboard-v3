@@ -12,7 +12,6 @@ test("Gestão navega pelos módulos existentes com a identidade unificada", asyn
     ["Indicadores", "/sistema/gestao/indicadores", "Indicadores"],
     ["UBS e equipes", "/sistema/gestao/ubs-equipes", "UBS e equipes"],
     ["Comparativos", "/sistema/gestao/comparativos", "Comparativos"],
-    ["Resumo", "/sistema/gestao/resumo", "Resumo"],
   ] as const;
 
   for (const [name, href] of expected) {
@@ -48,14 +47,18 @@ test("Administração utiliza o mesmo shell sem ganhar acesso de Gestão", async
   await expect(page).toHaveURL(/acesso-negado$/);
 });
 
-test("Navegação pós-login tem barra rolável no mobile, sem cortar o conteúdo", async ({ page }) => {
+test("Navegação mobile abre por botão e fecha sem cortar o conteúdo", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page, "gestao");
   const main = page.locator(".management-main");
-  const nav = page.locator(".management-sidebar");
+  const toggle = page.getByRole("button", { name: "Abrir menu lateral" });
   await expect(main).toBeVisible();
-  await expect(nav).toBeVisible();
-  await expect(nav).toHaveCSS("overflow-x", "auto");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await toggle.click();
+  await expect(page.locator(".management-sidebar")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Recolher menu lateral" })).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("button", { name: "Fechar menu" }).click();
+  await expect(page.getByRole("button", { name: "Abrir menu lateral" })).toHaveAttribute("aria-expanded", "false");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
@@ -148,4 +151,58 @@ test("total de equipes fica exatamente no centro da rosca C3", async ({ page }) 
   const targetY = plot!.y + plot!.height * .34;
   expect(Math.abs(label!.x + label!.width / 2 - targetX)).toBeLessThan(2);
   expect(Math.abs(label!.y + label!.height / 2 - targetY)).toBeLessThan(2);
+});
+
+
+test("Menu físico comprime e libera o dashboard sem perder valores ou filtros", async ({ page }) => {
+  for (const width of [1024, 1366, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, "gestao");
+    await page.locator(".dashboard-kpi-value").first().waitFor();
+    const values = await page.locator(".dashboard-kpi-value").allTextContents();
+    const labels = await page.locator(".dashboard-kpi-title span").allTextContents();
+    const periods = await page.locator('select[name="inicio"],select[name="fim"]').evaluateAll(
+      (elements) => elements.map((el) => (el as HTMLSelectElement).value),
+    );
+    const dims = async () => page.evaluate(() => {
+      const side = document.querySelector(".management-sidebar")!.getBoundingClientRect();
+      const main = document.querySelector(".management-main")!.getBoundingClientRect();
+      const cards = Array.from(document.querySelectorAll(".dashboard-kpi"));
+      return {
+        sideRight: side.right, mainLeft: main.left, mainWidth: main.width,
+        clip: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        cardsFit: cards.every((card) => {
+          const c = card.getBoundingClientRect();
+          const value = card.querySelector<HTMLElement>(".dashboard-kpi-value")!;
+          return c.right <= main.right + 1 && value.scrollWidth <= value.clientWidth + 1;
+        }),
+      };
+    });
+    const expanded = await dims();
+    expect(expanded.mainLeft).toBeGreaterThan(190);
+    expect(Math.abs(expanded.mainLeft - expanded.sideRight)).toBeLessThan(3);
+    expect(expanded.clip).toBeLessThanOrEqual(1);
+    expect(expanded.cardsFit).toBe(true);
+
+    await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+    await expect(page.locator(".management-shell")).toHaveClass(/management-shell-nav-collapsed/);
+    // Espera a transição física terminar, sem congelar elementos na posição antiga.
+    await expect.poll(async () => (await dims()).mainLeft).toBeLessThan(2);
+    const collapsed = await dims();
+    expect(collapsed.mainWidth).toBeGreaterThan(expanded.mainWidth + 180);
+    expect(collapsed.clip).toBeLessThanOrEqual(1);
+    expect(collapsed.cardsFit).toBe(true);
+    expect(await page.locator(".dashboard-kpi-value").allTextContents()).toEqual(values);
+    expect(await page.locator(".dashboard-kpi-title span").allTextContents()).toEqual(labels);
+    expect(await page.locator('select[name="inicio"],select[name="fim"]').evaluateAll(
+      (elements) => elements.map((el) => (el as HTMLSelectElement).value),
+    )).toEqual(periods);
+
+    await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+    await expect.poll(async () => (await dims()).mainLeft).toBeGreaterThan(190);
+    const again = await dims();
+    expect(again.clip).toBeLessThanOrEqual(1);
+    expect(again.cardsFit).toBe(true);
+    expect(await page.locator(".dashboard-kpi-value").allTextContents()).toEqual(values);
+  }
 });
