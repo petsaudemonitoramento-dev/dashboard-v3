@@ -21,12 +21,14 @@ export type AccessibleChartRow = {
   href?: string;
 };
 
-export function MaeChart({ option, ariaLabel, accessibleData, drilldown, componentDescriptions, height = 310 }: {
+export function MaeChart({ option, ariaLabel, accessibleData, drilldown, componentDescriptions, centerLabel, height = 310 }: {
   option: EChartsOption;
   ariaLabel: string;
   accessibleData: AccessibleChartRow[];
   drilldown?: Record<string, string>;
   componentDescriptions?: Record<string, string>;
+  /** Texto sobre a rosca: coordenado ao centro da série (50%, 34%). */
+  centerLabel?: string;
   height?: number;
 }) {
   const router = useRouter();
@@ -49,7 +51,7 @@ export function MaeChart({ option, ariaLabel, accessibleData, drilldown, compone
 
   return (
     <figure className="mae-chart">
-      <div aria-label={ariaLabel} role="img">
+      <div aria-label={ariaLabel} role="img" className={centerLabel ? "mae-chart-plot mae-chart-plot-with-center" : undefined}>
         <ReactECharts
           option={{
             color: [...MAE_CHART_COLORS],
@@ -67,6 +69,9 @@ export function MaeChart({ option, ariaLabel, accessibleData, drilldown, compone
             if (href) router.push(href);
           } } : undefined}
         />
+        {centerLabel ? (
+          <span className="mae-chart-center-label" aria-hidden="true">{centerLabel}</span>
+        ) : null}
       </div>
       <details className="mt-3 rounded-xl border border-slate-300 bg-slate-50 p-3">
         <summary className="cursor-pointer font-bold text-sky-800">Ver dados do gráfico</summary>
