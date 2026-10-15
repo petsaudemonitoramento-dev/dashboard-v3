@@ -1521,3 +1521,113 @@
 @media (prefers-reduced-motion: reduce) {
   .mae-gsap-intro-v6, .mae-gsap-intro-v6 * { animation: none !important; }
 }
+
+
+/* PR #19 · Correção da revisão visual em 15/10:
+   duas camadas isoladas: quando o círculo cobre a tela, só a marca
+   BRANCA fica na frente (não a versão roxa da cena clara). */
+.mae-gsap-intro-v6 .mae-gsap-stage-light {
+  z-index: 0;
+  isolation: isolate;
+}
+.mae-gsap-intro-v6 .mae-gsap-stage-dark {
+  z-index: 2;
+  isolation: isolate;
+}
+.mae-gsap-intro-v6 .mae-gsap-skip { z-index: 10; }
+.mae-gsap-intro-v6 .mae-gsap-reveal-wrap,
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  width: min(88vw, 930px, 148dvh);
+  max-height: 62dvh;
+  aspect-ratio: 1610 / 635;
+  overflow: visible;
+}
+.mae-gsap-intro-v6 .mae-gsap-flash,
+.mae-gsap-intro-v6 .mae-gsap-reveal,
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  -webkit-mask: none;
+  mask: none;
+  background: none;
+}
+.mae-gsap-intro-v6 .mae-gsap-official-logo {
+  /* Arte oficial: só símbolo + "MAE APS".
+     A assinatura completa fica em texto HTML, evitando os caracteres
+     ausentes da outra variante vetorial fornecida pelo Drive. */
+  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  background: currentColor;
+}
+.mae-gsap-intro-v6 .mae-gsap-logo-description {
+  position: absolute;
+  display: block;
+  top: 72%;
+  left: 30.5%;
+  right: 0;
+  max-width: none;
+  width: 69.5%;
+  color: inherit;
+  font-family: var(--mae-font-body);
+  font-size: clamp(.65rem, 1.72vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -.026em;
+  white-space: nowrap;
+  text-align: left;
+}
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  color: #fff !important;
+}
+.mae-gsap-intro-v6 .mae-gsap-white-logo .mae-gsap-official-logo {
+  color: #fff;
+  background: #fff;
+}
+.mae-gsap-intro-v6 .mae-gsap-white-logo .mae-gsap-logo-description {
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(16,0,45,.12);
+}
+
+/* Tela posterior: mesma geometria da marca oficial que abre a vinheta,
+   com as duas linhas COMPLETAS de assinatura, sem máscara de texto. */
+.mae-motion-v3 .mae-cinema-brand {
+  position: relative;
+  aspect-ratio: 1610 / 635;
+  overflow: visible;
+}
+.mae-motion-v3 .mae-cinema-brand-drive {
+  position: relative;
+  z-index: 0;
+  aspect-ratio: 1610 / 635;
+  object-fit: contain;
+}
+.mae-motion-v3 .mae-cinema-brand-description {
+  z-index: 1;
+  top: 72%;
+  left: 30.5%;
+  right: 0;
+  width: 69.5%;
+  max-width: none;
+  color: #280063;
+  font-family: var(--mae-font-body);
+  font-size: clamp(.73rem,1.43vw,1.2rem);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -.027em;
+  white-space: nowrap;
+}
+@media (max-width: 850px) {
+  .mae-gsap-intro-v6 .mae-gsap-reveal-wrap,
+  .mae-gsap-intro-v6 .mae-gsap-white-logo {
+    width: min(93vw, 630px);
+    max-height: 44dvh;
+  }
+  .mae-gsap-intro-v6 .mae-gsap-logo-description {
+    font-size: clamp(.49rem,2.08vw,.91rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand-description {
+    font-size: clamp(.45rem,2.04vw,.8rem);
+  }
+}
+@media (max-width: 390px) {
+  .mae-gsap-intro-v6 .mae-gsap-logo-description { font-size: clamp(.45rem,1.94vw,.7rem); }
+  .mae-motion-v3 .mae-cinema-brand-description { font-size: clamp(.43rem,1.91vw,.7rem); }
+}
