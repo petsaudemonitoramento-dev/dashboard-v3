@@ -8,13 +8,13 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
   await expect(page.locator(".mae-gsap-flash .mae-gsap-official-logo")).toHaveCount(1);
   await expect(page.locator(".mae-gsap-reveal .mae-gsap-official-logo")).toHaveCount(1);
   await expect(page.locator(".mae-gsap-white-logo .mae-gsap-official-logo")).toHaveCount(1);
-  await expect(page.locator(".mae-gsap-intro")).toHaveAttribute("data-intro-duration-ms", "5000");
-  await expect(page.locator(".mae-gsap-logo-description")).toHaveCount(3);
-  await expect(page.locator(".mae-gsap-reveal .mae-gsap-logo-description")).toHaveCount(0);
-  await expect(page.locator(".mae-gsap-tagline-light")).toHaveCount(1);
+  await expect(page.locator(".mae-gsap-intro")).toHaveAttribute("data-intro-duration-ms", "6000");
+  await expect(page.locator(".mae-gsap-logo-description")).toHaveCount(0);
+  await expect(page.locator(".mae-gsap-tagline-light")).toHaveCount(0);
   await expect(page.locator(".mae-gsap-stage-dark")).toHaveCSS("z-index", "2");
   await expect(page.locator(".mae-gsap-white-logo")).toHaveCSS("color", "rgb(255, 255, 255)");
-  await expect(page.locator(".mae-gsap-white-logo .mae-gsap-logo-description")).toContainText("na Atenção Primária à Saúde");
+  const mask = await page.locator(".mae-gsap-white-logo .mae-gsap-official-logo").evaluate(e => getComputedStyle(e).maskImage);
+  expect(mask).toContain("mae-aps-assinatura-unificada.svg");
   await expect(page.locator(".mae-cinema-ambient .mae-ribbon")).toHaveCount(4);
   await page.getByRole("button", { name: /pular/i }).click();
   await expect(page.locator(".mae-gsap-intro")).toHaveCount(0);
@@ -24,14 +24,19 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
 
 test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v7-5s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
   await page.goto("/entrar");
   const scene = page.locator(".mae-motion-v3");
   await expect(scene).toBeVisible();
   await expect(scene.locator(".mae-cinema-brand")).toBeVisible();
   await expect(scene.locator(".mae-cinema-institutional-bar")).toHaveCount(0);
   await expect(scene.locator(".mae-cinema-brand-drive")).toHaveAttribute("src", /mae-aps-horizontal-azul/);
-  await expect(scene.locator(".mae-cinema-brand-description")).toContainText("na Atenção Primária à Saúde");
+  await expect(scene.locator(".mae-cinema-brand-description")).toHaveCount(0);
+  const svg = await page.request.get("/brands/mae-aps-assinatura-unificada.svg");
+  expect(svg.ok()).toBeTruthy();
+  const svgXml = await svg.text();
+  expect(svgXml).toContain("Monitoramento, atenção e estratégia");
+  expect(svgXml).toContain("na Atenção Primária à Saúde");
   await expect(scene.locator(".mae-cinema-footer-identification img")).toBeVisible();
   await expect(scene.locator(".mae-ribbon-orange")).toHaveAttribute("data-reference-geometry", "1440x1024");
   await expect(scene.locator(".mae-ribbon-orange")).toHaveCSS("animation-name", "none");
@@ -58,7 +63,7 @@ test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async 
 for (const width of [320, 390, 768]) {
   test(`layout responsivo em ${width}px sem transbordamento horizontal`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
-    await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v7-5s", "played"));
+    await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
     await page.goto("/entrar");
     await expect(page.locator(".mae-cinema-brand")).toBeVisible();
     await expect(page.locator(".mae-cinema-auth")).toBeVisible();
@@ -92,30 +97,31 @@ test("logo mobile centralizada, ornamentos oficiais e brilho desativado com movi
 });
 
 
-test("vinheta de cinco segundos termina sem intervenção e preserva o SVG oficial", async ({ page }) => {
+test("vinheta de seis segundos termina sem intervenção e preserva o SVG oficial", async ({ page }) => {
   await page.goto("/entrar");
-  const intro = page.locator(".mae-gsap-intro-v6");
-  await expect(intro).toHaveAttribute("data-intro-duration-ms", "5000");
+  const intro = page.locator(".mae-gsap-intro-v8");
+  await expect(intro).toHaveAttribute("data-intro-duration-ms", "6000");
   const image = intro.locator(".mae-gsap-reveal .mae-gsap-official-logo");
   await expect(image).toHaveCount(1);
-  expect(await image.evaluate(el => getComputedStyle(el).maskImage)).toContain("mae-aps-horizontal-azul.svg");
+  expect(await image.evaluate(el => getComputedStyle(el).maskImage)).toContain("mae-aps-assinatura-unificada.svg");
   await expect(page.locator(".mae-gsap-stage-dark")).toHaveCSS("z-index", "2");
-  await expect(page.locator(".mae-gsap-intro-v6")).toHaveCount(0, { timeout: 6500 });
+  await expect(page.locator(".mae-gsap-intro-v8")).toHaveCount(0, { timeout: 7600 });
   await expect(page.getByRole("heading", { name: "Acesso ao MAE APS" })).toBeVisible();
 });
 
 
 test("ornamentos da prancheta: círculo superior direito e símbolo M inferior esquerdo", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1024 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v7-5s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
   await page.goto("/entrar");
   const circle = page.locator(".mae-motion-ribbons .mae-ribbon-purple-top");
   const mSymbol = page.locator(".mae-motion-ribbons .mae-ribbon-purple-bottom");
-  await expect(circle).toHaveCSS("border-top-style", "solid");
-  await expect(circle).toHaveCSS("border-radius", "50%");
+  await expect(circle).toHaveAttribute("data-reference-geometry", "top-right-original-trace");
+  await expect(circle.locator("path")).toHaveCount(1);
+  await expect(circle).toHaveCSS("border-top-style", "none");
   await expect(circle).toHaveCSS("mask-image", "none");
   await expect(circle).toHaveCSS("transform", "none");
-  await expect(mSymbol).toHaveAttribute("data-reference-geometry", "bottom-left-1440x1024");
+  await expect(mSymbol).toHaveAttribute("data-reference-geometry", "bottom-left-original-trace");
   await expect(mSymbol.locator("path")).toHaveCount(1);
   await expect(mSymbol).toHaveCSS("mask-image", "none");
   await expect(mSymbol).toHaveCSS("transform", "none");
@@ -123,25 +129,22 @@ test("ornamentos da prancheta: círculo superior direito e símbolo M inferior e
 
 test("tela notebook sem corte de Monitoramento e sem rodapé abaixo do viewport", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 635 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v7-5s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
   await page.goto("/entrar");
   const brand = page.locator(".mae-cinema-brand");
-  const description = brand.locator(".mae-cinema-brand-description");
+  const brandImage = brand.locator(".mae-cinema-brand-drive");
   const card = page.locator(".mae-cinema-auth");
   const footer = page.locator(".mae-cinema-footer");
-  await expect(description).toContainText("Monitoramento, atenção e estratégia");
-  await expect(description).toContainText("na Atenção Primária à Saúde");
-  const [brandRect, descRect, cardRect, footerRect] = await Promise.all([
-    brand.boundingBox(), description.boundingBox(), card.boundingBox(), footer.boundingBox(),
+  await expect(brandImage).toHaveAttribute("src", /mae-aps-assinatura-unificada.svg/);
+  const [brandRect, brandImgRect, cardRect, footerRect] = await Promise.all([
+    brand.boundingBox(), brandImage.boundingBox(), card.boundingBox(), footer.boundingBox(),
   ]);
   expect(brandRect).not.toBeNull();
-  expect(descRect).not.toBeNull();
+  expect(brandImgRect).not.toBeNull();
   expect(cardRect).not.toBeNull();
   expect(footerRect).not.toBeNull();
-  // A haste do M fica na primeira terça parte do SVG; o texto deve
-  // começar à direita dela, sem alcançar o cartão do formulário.
-  expect(descRect!.x).toBeGreaterThan(brandRect!.x + brandRect!.width * .34);
-  expect(descRect!.x + descRect!.width).toBeLessThan(cardRect!.x);
+  // O título e a assinatura estão em um único SVG que não cruza o card.
+  expect(brandImgRect!.x + brandImgRect!.width).toBeLessThan(cardRect!.x + 1);
   expect(cardRect!.width).toBeLessThanOrEqual(520);
   expect(footerRect!.y + footerRect!.height).toBeLessThanOrEqual(637);
   const overflow = await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight);
