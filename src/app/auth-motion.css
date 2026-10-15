@@ -1265,7 +1265,7 @@
   }
   .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-top { display:none; }
   .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-bottom {
-    left:-38%; bottom:-16%; width:115vw; height:110vw; max-height:520px;
+    left:-38%; bottom:-46%; width:115vw; height:110vw; max-height:520px;
     transform:rotate(48deg); opacity:.96; background:#5c4798;
   }
   .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-cream {
