@@ -59,3 +59,75 @@ test("Navegação pós-login tem barra rolável no mobile, sem cortar o conteúd
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+
+test("filtros selecionados têm espaço de leitura e os KPIs respeitam o card no notebook", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await signIn(page, "gestao");
+
+  const zone = page.locator(".dashboard-filter-zone");
+  const dateStart = page.locator('select[name="inicio"]');
+  const dateEnd = page.locator('select[name="fim"]');
+  const district = page.locator('select[name="distrito"]');
+  await expect(zone).toBeVisible();
+  for (const select of [dateStart, dateEnd, district]) {
+    const width = await select.evaluate(el => el.getBoundingClientRect().width);
+    expect(width).toBeGreaterThan(150);
+    await expect(select).toHaveCSS("text-overflow", "clip");
+  }
+  const filterColumns = await page.locator(".dashboard-filter-grid").evaluate(el => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+  expect(filterColumns).toBe(2);
+
+  const cards = page.locator(".dashboard-kpi");
+  await expect(cards).toHaveCount(6);
+  const metrics = await cards.evaluateAll(elements => elements.map(card => {
+    const value = card.querySelector<HTMLElement>(".dashboard-kpi-value");
+    const header = card.querySelector<HTMLElement>(".dashboard-kpi-header");
+    const description = card.querySelector<HTMLElement>(".dashboard-kpi-description");
+    if (!value || !header || !description) return null;
+    const cardRect = card.getBoundingClientRect();
+    const valueRect = value.getBoundingClientRect();
+    const descRect = description.getBoundingClientRect();
+    return {
+      cardLeft: cardRect.left, cardRight: cardRect.right, cardTop: cardRect.top,
+      valueLeft: valueRect.left, valueRight: valueRect.right,
+      valueTop: valueRect.top, descTop: descRect.top,
+      numberFits: value.scrollWidth <= value.clientWidth + 1,
+      headerBeforeValue: header.getBoundingClientRect().bottom <= valueRect.top,
+    };
+  })));
+  expect(metrics.every(Boolean)).toBe(true);
+  const m = metrics.filter((v): v is NonNullable<typeof v> => v !== null);
+  expect(m.length).toBe(6);
+  for (const card of m) {
+    expect(card.valueLeft).toBeGreaterThanOrEqual(card.cardLeft + 12);
+    expect(card.valueRight).toBeLessThanOrEqual(card.cardRight - 12);
+    expect(card.numberFits).toBe(true);
+    expect(card.headerBeforeValue).toBe(true);
+    expect(card.descTop).toBeGreaterThan(card.valueTop);
+  }
+  for (const row of [m.slice(0, 3), m.slice(3, 6)]) {
+    expect(Math.max(...row.map(x => x.valueTop)) - Math.min(...row.map(x => x.valueTop))).toBeLessThanOrEqual(2);
+    expect(Math.max(...row.map(x => x.cardTop)) - Math.min(...row.map(x => x.cardTop))).toBeLessThanOrEqual(2);
+  }
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
+});
+
+test("KPIs e filtros permanecem legíveis na largura de celular", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, "gestao");
+  const cards = page.locator(".dashboard-kpi");
+  await expect(cards).toHaveCount(6);
+  for (const card of await cards.all()) {
+    const value = card.locator(".dashboard-kpi-value");
+    await expect(value).toBeVisible();
+    const numberFits = await value.evaluate(el => el.scrollWidth <= el.clientWidth + 1);
+    expect(numberFits).toBe(true);
+  }
+  const start = page.locator('select[name="inicio"]');
+  await expect(start).toBeVisible();
+  const selectWidth = await start.evaluate(el => el.getBoundingClientRect().width);
+  expect(selectWidth).toBeGreaterThan(180);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+});
