@@ -290,3 +290,141 @@
 @media (prefers-reduced-motion: reduce) {
   .mae-motion-v3 .mae-ribbon-orange { animation: none !important; }
 }
+
+
+/* PR #19 · Ajustes finais dos ornamentos e da assinatura institucional.
+   O elemento superior é um anel geométrico CONTÍNUO que fica atrás do
+   cartão: sem SVG fragmentado, sem cortes nas junções. O inferior mantém
+   o vetor do M mas diminui proporcionalmente ao viewport. */
+.mae-motion-v3 .mae-cinema-ambient {
+  z-index: 0;
+  pointer-events: none;
+}
+.mae-motion-v3 .mae-cinema-main {
+  position: relative;
+  z-index: 1;
+}
+.mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-top {
+  --mae-ring-size: clamp(340px, 28.5vw, 415px);
+  position: absolute;
+  display: block;
+  left: auto;
+  bottom: auto;
+  right: clamp(-205px, -14vw, -150px);
+  top: clamp(-170px, -11.5vw, -125px);
+  width: var(--mae-ring-size);
+  height: var(--mae-ring-size);
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+  border: clamp(44px, 3.65vw, 54px) solid #280063;
+  border-radius: 50%;
+  color: #280063;
+  background: transparent;
+  overflow: visible;
+  -webkit-mask: none;
+  mask: none;
+  opacity: 1;
+  transform: none;
+  animation: none !important;
+  pointer-events: none;
+}
+.mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-bottom {
+  left: 0;
+  right: auto;
+  bottom: 0;
+  top: auto;
+  width: min(490px, 49dvh);
+  height: auto;
+  aspect-ratio: 570 / 295;
+  opacity: .96;
+  transform: none;
+  animation: none !important;
+  -webkit-mask: none;
+  mask: none;
+  pointer-events: none;
+}
+
+/* A imagem da UFCG enviada pelo usuário é byte-a-byte idêntica ao PNG
+   public/brands/ufcg-oficial.png. O problema era a largura renderizada
+   de 125px; aumentamos o tamanho efetivo mantendo resolução nativa. */
+.mae-motion-v3 .mae-cinema-footer {
+  min-height: 62px;
+}
+.mae-motion-v3 .mae-cinema-ufcg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 184px;
+  height: auto;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 0 auto;
+  padding: 3px 5px;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: none;
+}
+.mae-motion-v3 .mae-cinema-ufcg img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  image-rendering: auto;
+}
+@media (min-width: 851px) {
+  .mae-motion-v3 .mae-cinema-footer {
+    display: grid;
+    min-height: 62px;
+    grid-template-columns: minmax(184px, 1fr) minmax(0, 3.3fr) minmax(182px, 1fr);
+    align-items: center;
+    gap: .55rem;
+    padding: .25rem clamp(.8rem,1.6vw,1.5rem);
+  }
+  .mae-motion-v3 .mae-cinema-footer-identification {
+    max-width: none;
+    justify-self: start;
+  }
+  .mae-motion-v3 .mae-cinema-footer-details {
+    min-width: 0;
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .mae-motion-v3 .mae-cinema-footer-credits {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+@media (min-width: 851px) and (max-width: 1100px) {
+  .mae-motion-v3 .mae-cinema-ufcg { width: 164px; }
+  .mae-motion-v3 .mae-cinema-footer {
+    grid-template-columns: minmax(165px, .9fr) minmax(0, 2.8fr) minmax(156px, 1fr);
+    column-gap: .45rem;
+  }
+}
+@media (max-width: 850px) {
+  .mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-top {
+    --mae-ring-size: 280px;
+    top: -122px;
+    right: -147px;
+    border-width: 38px;
+  }
+  .mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-bottom {
+    width: min(74vw, 310px);
+    bottom: 0;
+    left: 0;
+    opacity: .47;
+  }
+  .mae-motion-v3 .mae-cinema-footer {
+    min-height: 55px;
+  }
+  .mae-motion-v3 .mae-cinema-ufcg {
+    width: clamp(117px, 26vw, 148px);
+    height: auto;
+  }
+}
+@media (max-width: 380px) {
+  .mae-motion-v3 .mae-cinema-ufcg { width: 119px; }
+}
