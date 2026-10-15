@@ -1289,3 +1289,235 @@
   .mae-motion-v3 .auth-primary-button::before { animation:none !important; }
   .mae-motion-v3 .auth-primary-button { transition:none; }
 }
+
+
+/* ============================================================
+ * PR #19 · V6 revisada com referência: abertura 5s + login
+ * Fonte única da marca: SVG vetorial OFICIAL (inclui subtítulo).
+ * Este bloco consolida as decisões finais, sem tocar no pós-login.
+ * ============================================================ */
+.mae-gsap-intro-v6 .mae-gsap-stage-light {
+  background:
+    radial-gradient(ellipse 41% 70% at 0% 11%, rgba(92,71,152,.30), transparent 97%),
+    radial-gradient(ellipse 45% 65% at 100% 100%, rgba(171,135,243,.22), transparent 94%),
+    linear-gradient(120deg,#f3ecf7 0%,#fffaf7 50%,#eee2f7 100%);
+}
+.mae-gsap-intro-v6 .mae-gsap-orb { opacity: .12; filter: blur(100px); }
+.mae-gsap-intro-v6 .mae-gsap-orb-a { background: #ab87f3; }
+.mae-gsap-intro-v6 .mae-gsap-orb-b { background: #5c4798; }
+.mae-gsap-intro-v6 .mae-gsap-orb-c { background: #f9f3ef; }
+.mae-gsap-intro-v6 .mae-gsap-reveal-wrap,
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(85vw, 900px, 156dvh);
+  max-height: 61dvh;
+  aspect-ratio: 1810 / 680;
+  height: auto;
+  min-width: 0;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+.mae-gsap-intro-v6 .mae-gsap-flash,
+.mae-gsap-intro-v6 .mae-gsap-reveal {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: #280063;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+.mae-gsap-intro-v6 .mae-gsap-official-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  /* Texto "Monitoramento" faz parte do vetor, não é composto via CSS. */
+  -webkit-mask: url("/brands/mae-aps-logo-preta-drive.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-logo-preta-drive.svg") center / contain no-repeat;
+}
+.mae-gsap-intro-v6 .mae-gsap-stage-dark {
+  background:
+    radial-gradient(ellipse 72% 80% at 50% 45%, #52279a 0%, #38117f 48%, #280063 100%);
+  opacity: 1;
+  visibility: visible;
+  will-change: clip-path;
+}
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  color: #fff;
+  filter: none;
+  opacity: 1;
+  visibility: visible;
+}
+/* O fundo roxo nunca encobre a marca: o SVG branco está na mesma posição
+   e tem o mesmo tamanho do vetor roxo da primeira cena. */
+.mae-gsap-intro-v6 .mae-gsap-white-logo .mae-gsap-official-logo {
+  filter: drop-shadow(0 0 1px rgba(255,255,255,.15));
+}
+.mae-gsap-intro-v6 .mae-gsap-skip { z-index: 30; }
+
+/* Desktop: sem cabeçalho redundante, marca à esquerda, card à direita,
+   identificação institucional SOMENTE na faixa inferior. */
+.mae-cinema.mae-motion-v3 {
+  background:
+    radial-gradient(ellipse 34% 59% at -2% 10%, rgba(130,89,185,.22), transparent 97%),
+    radial-gradient(ellipse 36% 47% at 100% 96%, rgba(106,64,168,.25), transparent 97%),
+    linear-gradient(118deg,#f4edf8 0%,#fffdfa 50%,#f4edf9 100%);
+}
+.mae-motion-v3 .mae-cinema-institutional-bar { display: none !important; }
+.mae-motion-v3 .mae-cinema-ambient { z-index: 0; }
+.mae-motion-v3 .mae-cinema-main {
+  padding: clamp(1rem,2.7dvh,2rem) clamp(1.2rem,4vw,4.2rem);
+  align-items: center;
+  justify-content: center;
+}
+.mae-motion-v3 .mae-cinema-center {
+  width: min(100%, 1260px);
+  grid-template-columns: minmax(0,1fr) minmax(0,570px);
+  gap: clamp(2rem,5vw,5.5rem);
+  align-items: center;
+}
+.mae-motion-v3 .mae-cinema-brand {
+  justify-self: start;
+  width: min(100%,595px);
+  max-width: 100%;
+  aspect-ratio: 1810 / 680;
+  height: auto;
+}
+.mae-motion-v3 .mae-cinema-brand-drive {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(12%) sepia(76%) saturate(4135%) hue-rotate(258deg) brightness(66%) contrast(120%);
+}
+.mae-motion-v3 .mae-cinema-auth {
+  justify-self: end;
+  width: 100%;
+  max-width: 570px;
+  min-height: min(683px, calc(100dvh - 105px));
+  padding: clamp(1.45rem,2.7vw,2.25rem);
+  background: #fff;
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 24px;
+  box-shadow: 0 12px 34px rgba(40,0,99,.055);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.mae-motion-v3 .mae-cinema-status { margin: 0 0 clamp(1rem,2.1dvh,1.45rem); }
+.mae-motion-v3 .mae-cinema-auth h1 {
+  font-size: clamp(1.45rem,2.35vw,2rem);
+  font-weight: 800;
+  color: #280063;
+}
+.mae-motion-v3 .mae-cinema-description {
+  margin: .55rem 0 clamp(1.2rem,3.1dvh,2.1rem);
+  color: #302144;
+  font-size: clamp(.82rem,1.1vw,.98rem);
+  line-height: 1.42;
+}
+.mae-motion-v3 .auth-signin-stack { gap: clamp(.65rem,1.65dvh,1rem); }
+.mae-motion-v3 .auth-form { gap: clamp(.65rem,1.65dvh,1rem); }
+.mae-motion-v3 .auth-field { color:#24143b; font-weight:700; font-size:.9rem; }
+.mae-motion-v3 .auth-input {
+  min-height: clamp(50px,5.9dvh,61px);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #e2d8ed;
+  color: #280063;
+}
+.mae-motion-v3 .auth-input::placeholder { color: #766b86; }
+.mae-motion-v3 .auth-primary-button {
+  min-height: clamp(50px,5.9dvh,61px);
+  color: #fff;
+  border-radius: 12px;
+}
+.mae-motion-v3 .auth-google-button {
+  min-height: clamp(50px,5.9dvh,61px);
+  border-radius: 12px;
+}
+.mae-motion-v3 .auth-secondary-links { margin-top: .38rem; }
+
+/* Marca de canto sem ocupar o conteúdo ou criar uma barra no topo. */
+.mae-motion-v3 .mae-cinema-ambient .mae-motion-ribbons { inset: 0 0 53px; }
+.mae-motion-v3 .mae-ribbon-orange { opacity: .88; }
+.mae-motion-v3 .mae-ribbon-purple-top { opacity: .94; }
+.mae-motion-v3 .mae-ribbon-purple-bottom { opacity: .91; }
+.mae-motion-v3 .mae-ribbon-cream { opacity: .80; }
+.mae-motion-v3 .mae-gsap-replay {
+  top: .65rem;
+  right: .9rem;
+  bottom: auto;
+  font-size: .68rem;
+  z-index: 6;
+  opacity: .82;
+}
+.mae-motion-v3 .mae-cinema-footer {
+  background: #211247;
+  color: #fff;
+}
+/* A faixa institucional não depende de largura fixa e não deve cobrir
+   links ou campos quando houver zoom, teclado virtual ou tela curta. */
+@media (min-width: 851px) and (max-width: 1100px) {
+  .mae-motion-v3 .mae-cinema-center {
+    grid-template-columns: minmax(0,1fr) minmax(0,51%);
+    gap: 1.5rem;
+  }
+}
+@media (max-width: 850px) {
+  .mae-gsap-intro-v6 .mae-gsap-reveal-wrap,
+  .mae-gsap-intro-v6 .mae-gsap-white-logo {
+    width: min(94vw, 640px);
+    max-height: 45dvh;
+  }
+  .mae-motion-v3 .mae-cinema-main {
+    padding: max(2.65rem,calc(env(safe-area-inset-top) + 2rem))
+      clamp(.85rem,4.5vw,1.45rem) 1.4rem;
+    align-items: flex-start;
+  }
+  .mae-motion-v3 .mae-cinema-center {
+    width: min(100%, 470px);
+    grid-template-columns: minmax(0,1fr);
+    justify-items: center;
+    gap: clamp(1rem,2.6dvh,1.6rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand {
+    justify-self: center;
+    width: min(80vw,325px);
+    height: auto;
+  }
+  .mae-motion-v3 .mae-cinema-auth {
+    width: 100%;
+    min-height: 0;
+    max-width: 470px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    display: block;
+  }
+  .mae-motion-v3 .mae-cinema-description { margin-bottom: 1rem; }
+  .mae-motion-v3 .mae-gsap-replay { top: .45rem; right: .45rem; }
+  .mae-motion-v3 .mae-ribbon-purple-bottom { opacity: .55; }
+}
+@media (max-width: 390px) {
+  .mae-motion-v3 .mae-cinema-main { padding-top: max(2.7rem,calc(env(safe-area-inset-top) + 2.2rem)); }
+  .mae-motion-v3 .mae-cinema-center { gap: .9rem; }
+  .mae-motion-v3 .mae-cinema-brand { width: min(78vw,285px); }
+  .mae-motion-v3 .mae-cinema-description { margin-bottom: .65rem; }
+  .mae-motion-v3 .auth-input,
+  .mae-motion-v3 .auth-primary-button,
+  .mae-motion-v3 .auth-google-button { min-height: 46px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-gsap-intro-v6, .mae-gsap-intro-v6 * { animation: none !important; }
+}
