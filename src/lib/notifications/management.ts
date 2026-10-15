@@ -75,9 +75,13 @@ export async function loadManagementNotices(
   // Lembrete mensal dentro do sistema. Só Gestão pode consultar imports e realizar publicação.
   // Uma publicação registrada no próprio mês atende a periodicidade do lembrete.
   if (role === "gestao") {
-    const yearMonth = new Intl.DateTimeFormat("en-CA", {
+    const localDateParts = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Fortaleza", year: "numeric", month: "2-digit",
-    }).format(now).slice(0, 7);
+    }).formatToParts(now);
+    const year = localDateParts.find((part) => part.type === "year")?.value;
+    const month = localDateParts.find((part) => part.type === "month")?.value;
+    if (!year || !month) return { notices, error: true };
+    const yearMonth = `${year}-${month}`;
     const monthStart = `${yearMonth}-01T00:00:00-03:00`;
     const imported = await supabase.schema("siaps").from("imports")
       .select("status,uploaded_at").gte("uploaded_at", monthStart)
