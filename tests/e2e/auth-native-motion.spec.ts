@@ -14,22 +14,26 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Acesso ao MAE APS" })).toBeVisible();
 });
 
-test("layout desktop preserva logo oficial e login autenticável no cartão claro", async ({ page }) => {
+test("layout Figma desktop: logo preta oficial, formulário sem cartão e cristal roxo", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v5", "played"));
   await page.goto("/entrar");
   const scene = page.locator(".mae-motion-v3");
   await expect(scene).toBeVisible();
   await expect(scene.locator(".mae-cinema-brand")).toBeVisible();
-  await expect(scene.locator(".mae-cinema-brand-description")).toContainText("Atenção Primária à Saúde");
+  await expect(scene.locator(".mae-cinema-brand-drive")).toHaveAttribute("src", /mae-aps-logo-preta-drive/);
+  await expect(scene.locator(".mae-cinema-institutional-ufcg img")).toBeVisible();
   const card = scene.locator(".mae-cinema-auth");
   await expect(card).toBeVisible();
-  expect(await card.evaluate(e => getComputedStyle(e).backgroundColor)).toBe("rgb(255, 255, 255)");
+  expect(await card.evaluate(e => getComputedStyle(e).backgroundColor)).not.toBe("rgb(255, 255, 255)");
   const columns = await scene.locator(".mae-cinema-center").evaluate(e => getComputedStyle(e).gridTemplateColumns);
   expect(columns.split(" ").length).toBe(2);
   await expect(card.locator('input[name="email"]')).toBeVisible();
   await expect(card.locator('input[name="password"]')).toBeVisible();
-  await expect(card.getByRole("button", { name: "Entrar" })).toBeVisible();
+  const loginButton = card.getByRole("button", { name: "Entrar" });
+  await expect(loginButton).toBeVisible();
+  expect(await loginButton.evaluate(e => getComputedStyle(e, "::before").animationName)).toBe("mae-purple-crystal-sheen");
+  expect(await loginButton.evaluate(e => getComputedStyle(e).borderRadius)).toBe("11px");
 });
 
 for (const width of [320, 390, 768]) {
@@ -51,4 +55,18 @@ test("movimento reduzido exibe o login sem exigir assistir à abertura", async (
   await page.goto("/entrar");
   await expect(page.locator(".mae-cinema-auth")).toBeVisible();
   await expect(page.locator(".mae-gsap-intro")).toHaveCount(0);
+});
+
+test("logo mobile centralizada, ornamentos oficiais e brilho desativado com movimento reduzido", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/entrar");
+  await expect(page.locator(".mae-cinema-brand-drive")).toBeVisible();
+  await expect(page.locator(".mae-ribbon-purple-bottom")).toBeVisible();
+  const card = page.locator(".mae-cinema-auth");
+  const button = card.getByRole("button", { name: "Entrar" });
+  await expect(button).toBeVisible();
+  expect(await button.evaluate(e => getComputedStyle(e, "::before").animationName)).toBe("none");
+  await expect(card.locator('input[name="email"]')).toBeVisible();
+  await expect(card.locator('input[name="password"]')).toBeVisible();
 });
