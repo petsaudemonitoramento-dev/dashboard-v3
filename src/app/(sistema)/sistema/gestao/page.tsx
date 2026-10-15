@@ -434,15 +434,15 @@ export default async function ManagementDashboard({
   const visibleTeams = teams.filter((item) => filters.availableTeamIds.has(item.id));
 
   const baseAxis = {
-    axisLine: { lineStyle: { color: "#d8e2ef" } },
-    axisLabel: { color: "#667892", fontSize: 11 },
-    splitLine: { lineStyle: { color: "#eef3f8" } },
+    axisLine: { lineStyle: { color: "#e5daef" } },
+    axisLabel: { color: "#695e7b", fontSize: 11 },
+    splitLine: { lineStyle: { color: "#f2edf7" } },
   };
 
   const evolutionOption: EChartsOption = {
-    color: ["#1479e8", "#ff6d1f", "#7357e8"],
+    color: ["#5C4798", "#F44E04", "#AB87F3"],
     tooltip: { trigger: "axis", confine: false, appendTo: "body", extraCssText: "z-index:9999;max-width:340px;white-space:normal;" },
-    legend: { top: 0, textStyle: { color: "#53657c", fontSize: 11 } },
+    legend: { top: 0, textStyle: { color: "#695e7b", fontSize: 11 } },
     grid: { left: 42, right: 18, top: 42, bottom: 34 },
     xAxis: { type: "category", data: evolution.map((item) => monthLabel(item.month)), ...baseAxis },
     yAxis: { type: "value", min: 0, max: 100, ...baseAxis },
@@ -454,14 +454,14 @@ export default async function ManagementDashboard({
   };
 
   const comparisonOption: EChartsOption = {
-    color: ["#1682ed"],
+    color: ["#5C4798"],
     tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, confine: false, appendTo: "body", extraCssText: "z-index:9999;max-width:360px;white-space:normal;" },
     grid: { left: 46, right: 14, top: 20, bottom: 72 },
     xAxis: {
       type: "category",
       data: comparison.map((item) => item.name),
       axisLabel: { color: "#667892", interval: 0, rotate: comparison.length > 6 ? 28 : 0, width: 90, overflow: "truncate" },
-      axisLine: { lineStyle: { color: "#d8e2ef" } },
+      axisLine: { lineStyle: { color: "#e5daef" } },
     },
     yAxis: { type: "value", min: 0, max: 100, ...baseAxis },
     series: [{
