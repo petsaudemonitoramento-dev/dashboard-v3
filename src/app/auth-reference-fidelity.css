@@ -1,127 +1,145 @@
 /*
- * PR #19 · composição responsiva calibrada pela prancheta 1440 × 1024.
+ * MAE APS · PR #19 · fidelidade à referência visual (revisão 15/10).
+ * Geometria dos ornamentos: contorno das cores do arquivo original
+ * de 1440x1024. Em telas menores, escala uniforme pela ALTURA útil,
+ * sem transformar um traço contínuo em um desenho genérico.
  *
- * Escopo limitado à página de login cinematográfica.
- * Posições dos ornamentos são normalizadas ao viewport e não
- * deformam o desenho; os formulários, auth e páginas pós-login
- * não têm dependência destas regras.
+ * Não afeta o sistema após o login.
  */
 
-/* Recria o círculo superior direito, preservando a parte atrás do card. */
-.mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-top {
-  display: block;
+/* Fundo com os ornamentos atrás de marca e formulário. */
+.mae-motion-v3 .mae-cinema-ambient .mae-motion-ribbons {
   position: absolute;
-  left: auto;
-  right: -15.6vw;
-  top: -11.1vw;
-  bottom: auto;
-  width: min(29.2vw, 420px);
-  height: min(29.2vw, 420px);
-  max-width: none;
-  max-height: none;
-  box-sizing: border-box;
-  aspect-ratio: 1;
-  border: clamp(34px, 3.8vw, 55px) solid #280063;
-  border-radius: 50%;
-  background: transparent;
-  -webkit-mask: none;
-  mask: none;
-  transform: none;
-  animation: none;
-  opacity: 1;
-  filter: none;
-}
-
-/* Contorno fiel ao símbolo M da referência inferior esquerda.
- * O SVG contém a silhueta exata vetorizada e não uma máscara
- * do logo inteiro que mostrava somente um fragmento do traço. */
-.mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-bottom {
-  display: block;
-  position: absolute;
-  left: 0;
-  right: auto;
-  bottom: 0;
-  top: auto;
-  width: min(38.33vw, 55.8dvh, 552px);
+  inset: 0 0 50px;
+  width: 100%;
   height: auto;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Laranja mantido conforme aprovado; é a silhueta já extraída. */
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 100%;
   max-width: none;
   max-height: none;
-  aspect-ratio: 552 / 285;
-  box-sizing: border-box;
-  color: #5c4798;
+  color: #f44e04;
+  opacity: 1;
+  transform: none;
+  animation: none !important;
+  filter: none;
+}
+.mae-motion-v3 .mae-ribbon-orange path {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Arco superior direito: cópia vetorial do ORIGINAL, com a faixa
+   que aparece novamente à direita do card. Não é um círculo genérico. */
+.mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-top {
+  position: absolute;
+  display: block;
+  inset: 0 0 auto auto;
+  width: min(250px, 25.8dvh);
+  height: auto;
+  aspect-ratio: 250 / 290;
+  max-width: none;
+  max-height: none;
+  color: #280063;
+  opacity: 1;
+  overflow: visible;
+  border: none;
+  border-radius: 0;
   background: transparent;
   -webkit-mask: none;
   mask: none;
-  opacity: 1;
   transform: none;
   animation: none;
   filter: none;
 }
-.mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-bottom path {
-  fill: currentColor;
+
+/* M inferior esquerdo: duas ondas e laço central vazado.
+   O hole é preservado com fill-rule=evenodd no SVG. */
+.mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-bottom {
+  position: absolute;
+  display: block;
+  inset: auto auto 0 0;
+  width: min(570px, 58.8dvh);
+  height: auto;
+  aspect-ratio: 570 / 295;
+  max-width: none;
+  max-height: none;
+  color: #5c4798;
+  opacity: 1;
+  overflow: visible;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  -webkit-mask: none;
+  mask: none;
+  transform: none;
+  animation: none;
+  filter: none;
 }
 
-/* Geometria do layout na proporção original: marca à esquerda,
- * card à direita. O conteúdo fica dimensionado pela altura útil. */
+/* Fundo creme e massa roxa no canto mantidos da referência. */
+.mae-cinema.mae-motion-v3 {
+  background:
+    radial-gradient(ellipse 34% 59% at -2% 10%, rgba(130,89,185,.22), transparent 97%),
+    radial-gradient(ellipse 36% 47% at 100% 96%, rgba(106,64,168,.25), transparent 97%),
+    linear-gradient(118deg,#f4edf8 0%,#fffdfa 50%,#f4edf9 100%);
+}
 .mae-motion-v3 .mae-cinema-main {
   min-width: 0;
   min-height: 0;
-  padding: clamp(16px, 3dvh, 34px) clamp(18px, 4vw, 64px);
+  align-items: center;
+  padding: clamp(12px, 2.7dvh, 32px) clamp(18px, 4vw, 64px);
 }
 .mae-motion-v3 .mae-cinema-center {
   width: min(100%, 1240px);
   grid-template-columns: minmax(0, 1fr) minmax(0, .95fr);
-  align-items: center;
   gap: clamp(28px, 5vw, 78px);
+  align-items: center;
 }
+
+/* Marca completamente vetorial, sem pseudotexto acima da haste M.
+   O subtitle faz parte do próprio SVG e sua caixa pertence ao viewBox. */
 .mae-motion-v3 .mae-cinema-brand {
   display: block;
   position: relative;
-  width: min(100%, 535px);
-  height: auto;
-  min-height: 0;
-  aspect-ratio: 1610 / 635;
   justify-self: start;
+  width: min(100%, 570px);
+  min-height: 0;
+  height: auto;
+  aspect-ratio: 1990 / 665;
   overflow: visible;
-  flex: none;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+  filter: none;
 }
 .mae-motion-v3 .mae-cinema-brand-drive {
-  position: relative;
+  display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1610 / 635;
-  display: block;
+  max-height: none;
+  aspect-ratio: 1990 / 665;
   object-fit: contain;
+  filter: none !important;
 }
-/* O desenho do M ultrapassa a antiga coordenada de 30.5%,
- * onde "Monitoramento" ficava atrás da haste do símbolo. */
+/* O span legado é proibido: este título não pode ser duplicado. */
 .mae-motion-v3 .mae-cinema-brand-description {
-  display: block;
-  position: absolute;
-  left: 35.4%;
-  top: 68.7%;
-  right: auto;
-  bottom: auto;
-  width: max-content;
-  max-width: none;
-  padding: 0;
-  margin: 0;
-  font-family: var(--mae-font-body);
-  font-size: clamp(.72rem, 2.02dvh, 1.36rem);
-  line-height: 1.15;
-  letter-spacing: -.022em;
-  white-space: nowrap;
-  font-weight: 700;
-  color: #280063;
-  text-align: left;
-  z-index: 2;
+  display: none !important;
 }
+
 .mae-motion-v3 .mae-cinema-auth {
+  justify-self: end;
   width: 100%;
   max-width: 570px;
   min-height: 0;
   height: auto;
-  justify-self: end;
 }
 .mae-motion-v3 .mae-cinema-footer {
   position: relative;
@@ -129,9 +147,59 @@
   min-height: 49px;
 }
 
-/* Notebook com viewport baixa (por exemplo 1366 × 635):
- * não aumentar card/elementos ao ponto de criar scroll vertical
- * ou esconder a faixa institucional atrás da barra do Windows. */
+/* Abertura: SVG único, incluindo símbolo e as duas linhas.
+   Uma única máscara para fases roxa e branca: não há transição
+   independente que oculte parte de "Monitoramento". */
+.mae-gsap-intro-v8 .mae-gsap-reveal-wrap,
+.mae-gsap-intro-v8 .mae-gsap-white-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(88vw, 1000px, 176dvh);
+  max-height: 60dvh;
+  height: auto;
+  aspect-ratio: 1990 / 665;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+.mae-gsap-intro-v8 .mae-gsap-reveal,
+.mae-gsap-intro-v8 .mae-gsap-flash,
+.mae-gsap-intro-v8 .mae-gsap-white-logo {
+  -webkit-mask: none;
+  mask: none;
+  background: none;
+}
+.mae-gsap-intro-v8 .mae-gsap-official-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  -webkit-mask: url("/brands/mae-aps-assinatura-unificada.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-assinatura-unificada.svg") center / contain no-repeat;
+}
+.mae-gsap-intro-v8 .mae-gsap-logo-description { display: none !important; }
+.mae-gsap-intro-v8 .mae-gsap-stage-dark {
+  z-index: 2;
+  opacity: 1;
+  visibility: visible;
+}
+.mae-gsap-intro-v8 .mae-gsap-stage-light { z-index: 0; }
+.mae-gsap-intro-v8 .mae-gsap-white-logo,
+.mae-gsap-intro-v8 .mae-gsap-white-logo .mae-gsap-official-logo {
+  color: #fff !important;
+  background-color: transparent;
+}
+.mae-gsap-intro-v8 .mae-gsap-white-logo .mae-gsap-official-logo {
+  background-color: #fff;
+}
+.mae-gsap-intro-v8 .mae-gsap-flash,
+.mae-gsap-intro-v8 .mae-gsap-reveal { color: #280063; }
+.mae-gsap-intro-v8 .mae-gsap-skip { z-index: 10; }
+
+/* Escala de notebook: card e assinatura equilibrados em 1366x635. */
 @media (min-width: 851px) and (max-height: 800px) {
   .mae-motion-v3 .mae-cinema-main {
     padding: clamp(8px, 1.7dvh, 16px) clamp(20px, 4vw, 58px);
@@ -141,10 +209,7 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, .96fr);
     gap: clamp(25px, 4.1vw, 65px);
   }
-  .mae-motion-v3 .mae-cinema-brand { width: min(100%, 500px); }
-  .mae-motion-v3 .mae-cinema-brand-description {
-    font-size: clamp(.7rem, 2.08dvh, 1rem);
-  }
+  .mae-motion-v3 .mae-cinema-brand { width: min(100%, 530px); }
   .mae-motion-v3 .mae-cinema-auth {
     max-width: 505px;
     padding: clamp(14px, 2.1dvh, 21px) clamp(18px, 2.35vw, 30px);
@@ -157,26 +222,18 @@
     line-height: 1.35;
     margin: .42rem 0 .82rem;
   }
-  .mae-motion-v3 .auth-form { gap: .5rem; }
+  .mae-motion-v3 .auth-form,
   .mae-motion-v3 .auth-signin-stack { gap: .5rem; }
   .mae-motion-v3 .auth-field { gap: .18rem; font-size: .81rem; }
-  .mae-motion-v3 .auth-input {
-    min-height: 43px;
-    border-radius: 11px;
-  }
+  .mae-motion-v3 .auth-input { min-height: 43px; border-radius: 11px; }
   .mae-motion-v3 .auth-primary-button,
-  .mae-motion-v3 .auth-google-button {
-    min-height: 44px;
-  }
+  .mae-motion-v3 .auth-google-button { min-height: 44px; }
   .mae-motion-v3 .auth-secondary-links { margin-top: .1rem; }
   .mae-motion-v3 .mae-cinema-footer {
     min-height: 47px;
     padding-block: .32rem;
   }
 }
-
-/* Tablets e mobile preservam o empilhamento real do formulário,
- * mesmo quando a tela é estreita ou a altura varia. */
 @media (max-width: 850px) {
   .mae-motion-v3 .mae-cinema-main {
     padding: max(3.25rem, calc(env(safe-area-inset-top) + 2.7rem))
@@ -185,24 +242,20 @@
   }
   .mae-motion-v3 .mae-cinema-center {
     width: min(100%, 470px);
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0,1fr);
     justify-items: center;
-    gap: clamp(1rem, 2.7dvh, 1.5rem);
+    gap: clamp(1rem,2.7dvh,1.5rem);
   }
   .mae-motion-v3 .mae-cinema-brand {
-    width: min(78vw, 310px);
+    width: min(85vw, 350px);
     justify-self: center;
-  }
-  .mae-motion-v3 .mae-cinema-brand-description {
-    left: 35.4%;
-    top: 68.7%;
-    font-size: clamp(.45rem, 2.02vw, .78rem);
+    aspect-ratio: 1990/665;
   }
   .mae-motion-v3 .mae-cinema-auth {
     max-width: 470px;
     min-height: 0;
-    display: block;
     justify-self: stretch;
+    display: block;
     background: transparent;
     border: 0;
     border-radius: 0;
@@ -210,16 +263,30 @@
     box-shadow: none;
   }
   .mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-top {
-    width: 230px;
-    height: 230px;
-    right: -115px;
-    top: -105px;
-    border-width: 33px;
+    width: min(250px, 25.8dvh);
   }
   .mae-motion-v3 .mae-motion-ribbons .mae-ribbon-purple-bottom {
-    width: min(77vw, 360px);
-    bottom: -4px;
-    left: 0;
-    opacity: .42;
+    width: min(570px, 58.8dvh);
+    opacity: .48;
   }
+  .mae-gsap-intro-v8 .mae-gsap-reveal-wrap,
+  .mae-gsap-intro-v8 .mae-gsap-white-logo {
+    width: min(94vw, 660px);
+    max-height: 46dvh;
+    aspect-ratio: 1990/665;
+  }
+}
+@media (max-width: 390px) {
+  .mae-motion-v3 .mae-cinema-main {
+    padding-top: max(3.0rem, calc(env(safe-area-inset-top) + 2.6rem));
+  }
+  .mae-motion-v3 .mae-cinema-center { gap: .9rem; }
+  .mae-motion-v3 .mae-cinema-brand { width: min(84vw, 330px); }
+  .mae-motion-v3 .mae-cinema-description { margin-bottom: .65rem; }
+  .mae-motion-v3 .auth-input,
+  .mae-motion-v3 .auth-primary-button,
+  .mae-motion-v3 .auth-google-button { min-height: 46px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-motion-v3 .mae-ribbon-orange { animation: none !important; }
 }
