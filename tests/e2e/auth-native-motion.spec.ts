@@ -192,7 +192,7 @@ test("fundo de login usa degradê CSS mais presente, sem imagem e sem afetar a a
     color: getComputedStyle(element).backgroundColor,
   }));
   expect(computed.image).not.toContain("url(");
-  expect((computed.image.match(/radial-gradient\\(/g) ?? []).length).toBe(4);
+  expect(computed.image.split("radial-gradient(").length - 1).toBe(4);
   expect(computed.image).toContain("linear-gradient(");
   expect(computed.color).toBe("rgb(241, 231, 250)");
   await expect(page.locator(".mae-cinema-auth")).toHaveCSS("background-color", "rgb(255, 255, 255)");
