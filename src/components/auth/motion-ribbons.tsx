@@ -1,24 +1,23 @@
 /**
- * Curvas decorativas originais para a cena de acesso MAE APS.
- * SVG vetorial inline: nenhum vídeo, GIF, imagem rasterizada ou canvas.
- * A marca em si continua sendo carregada dos SVGs oficiais do projeto.
+ * Quatro ornamentos vetoriais extraídos da geometria da demonstração
+ * fornecida (swirl-*.png), mantendo suas proporções e cores oficiais.
+ * CSS anima apenas transform/opacity; nenhum GIF, vídeo ou network request.
+ * Ornamentos aparecem SOMENTE na tela de acesso, não na vinheta.
  */
-export function MotionRibbons({ intro = false }: { intro?: boolean }) {
+export function MotionRibbons() {
   return (
-    <div className={`mae-motion-ribbons${intro ? " mae-motion-ribbons-intro" : ""}`} aria-hidden="true">
-      <svg className="mae-ribbon mae-ribbon-orange" viewBox="0 0 320 205" fill="none" focusable="false">
-        <path d="M-27 78C45-4 119-5 184 52c52 46 102 49 166-24" stroke="currentColor" strokeWidth="30" strokeLinecap="round"/>
-        <path d="M19 140c63-36 103-31 151-1" stroke="currentColor" strokeWidth="10" strokeLinecap="round" opacity=".43"/>
+    <div className="mae-motion-ribbons" aria-hidden="true">
+      <svg className="mae-ribbon mae-ribbon-orange" viewBox="0 0 567 345" fill="currentColor" focusable="false">
+        <path d="M8 0L24 52L48 109L75 158L117 218L159 263L190 288L232 314L265 328L299 338L339 344L360 344L399 338L439 325L483 300L527 260L545 236L566 197L566 13L560 0L493 0L510 33L520 70L509 74L475 69L452 54L438 37L431 19L431 0L372 0L372 25L378 49L392 75L415 101L436 116L455 125L493 133L520 132L521 138L515 163L504 189L486 216L463 240L445 254L409 273L381 281L356 284L322 282L284 272L248 255L208 227L170 189L123 123L96 72L71 1Z"/>
       </svg>
-      <svg className="mae-ribbon mae-ribbon-purple-top" viewBox="0 0 200 320" fill="none" focusable="false">
-        <path d="M107-37C220 47 177 136 73 178-18 215 12 296 154 350" stroke="currentColor" strokeWidth="34" strokeLinecap="round"/>
+      <svg className="mae-ribbon mae-ribbon-purple-top" viewBox="0 0 303 408" fill="currentColor" focusable="false">
+        <path d="M169 267L168 366L187 377L224 392L257 401L300 407L302 404L302 326L259 317L229 306L196 288Z M13 0L3 55L3 120L12 168L27 208L118 209L95 159L84 106L86 49L98 0Z"/>
       </svg>
-      <svg className="mae-ribbon mae-ribbon-purple-bottom" viewBox="0 0 380 250" fill="none" focusable="false">
-        <path d="M-63 185C3 108 91 108 151 161c52 46 118 47 186-6 51-41 67-90 20-154" stroke="currentColor" strokeWidth="38" strokeLinecap="round"/>
-        <path d="M-40 238c65-47 143-40 194 4" stroke="currentColor" strokeWidth="11" strokeLinecap="round" opacity=".38"/>
+      <svg className="mae-ribbon mae-ribbon-purple-bottom" viewBox="0 0 831 429" fill="currentColor" fillRule="evenodd" focusable="false">
+        <path d="M0 60L0 163L2 164L37 133L72 111L113 95L145 87L174 83L229 84L273 93L300 105L252 149L223 186L204 220L192 257L190 289L198 325L216 353L230 367L250 380L293 393L336 392L367 383L408 357L432 331L446 309L457 285L467 246L467 194L455 151L443 127L450 123L470 119L526 118L566 125L607 140L649 165L684 196L716 239L731 271L740 300L747 345L747 391L741 428L824 428L830 382L824 302L812 255L788 200L764 163L726 122L676 84L636 63L573 42L511 35L453 39L424 45L383 58L350 36L316 21L261 6L217 0L175 0L150 3L94 15L39 36Z M366 160L380 185L386 209L386 234L375 268L355 294L334 308L306 312L286 306L276 297L272 288L273 270L285 241L311 206L339 179Z"/>
       </svg>
-      <svg className="mae-ribbon mae-ribbon-cream" viewBox="0 0 380 155" fill="none" focusable="false">
-        <path d="M-45 151C70 4 127 5 198 67c52 48 122 44 216-48" stroke="currentColor" strokeWidth="24" strokeLinecap="round"/>
+      <svg className="mae-ribbon mae-ribbon-cream" viewBox="0 0 843 204" fill="currentColor" focusable="false">
+        <path d="M836 42L774 51L777 104L780 107L780 180L777 183L777 203L839 203L839 188L842 185L842 96L839 93Z M182 0L93 0L90 3L89 8L75 21L74 26L66 33L65 38L48 60L41 77L36 81L35 89L27 99L27 108L12 138L12 147L9 150L9 159L3 174L0 203L65 203L74 158L89 128L89 122L98 110L105 93L110 89L117 75L125 68L132 54L152 35L155 29L158 29L159 24Z"/>
       </svg>
     </div>
   );
