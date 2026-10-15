@@ -1,19 +1,25 @@
 import { ManagementShell } from "@/components/layout/management-shell";
 import { getActiveProfileContext } from "@/lib/auth/guards";
 import { enforceRouteGuard } from "@/lib/auth/route-guard";
+import { loadManagementNotices } from "@/lib/notifications/management";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-/**
- * O mesmo design system MAE APS acompanha todos os perfis.
- * Nenhuma regra de autorização é alterada: o guard permanece ativo,
- * e os links são exibidos conforme o perfil liberado pelo servidor.
- */
+/** Apenas dados oficiais expostos ao perfil autenticado.
+ * Falhas nas notificações não bloqueiam telas nem simulam avisos. */
 export default async function SystemLayout({ children }: { children: React.ReactNode }) {
-  const { profile } = await enforceRouteGuard(() => getActiveProfileContext());
-
+  const { profile, user } = await enforceRouteGuard(() => getActiveProfileContext());
+  const supabase = await createClient();
+  const [notices, auth] = await Promise.all([
+    loadManagementNotices(supabase, profile.role).catch(() => ({ notices: [], error: true })),
+    supabase.auth.getUser(),
+  ]);
+  const candidate = auth.data.user?.user_metadata?.display_name;
+  const displayName = typeof candidate === "string" && candidate.length <= 80 ? candidate.trim() : "";
   return (
-    <ManagementShell email={profile.email} role={profile.role}>
+    <ManagementShell email={profile.email} role={profile.role} userId={user.id}
+      displayName={displayName} notices={notices.notices} noticesUnavailable={notices.error}>
       {children}
     </ManagementShell>
   );
