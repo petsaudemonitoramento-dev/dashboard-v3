@@ -641,3 +641,381 @@
 @media (prefers-reduced-motion: reduce) {
   .mae-gsap-reveal, .mae-gsap-logo-horizontal, .mae-gsap-flash { will-change: auto; }
 }
+
+
+/* ===== PR #19 · Composição fiel ao Figma, usando SVGs oficiais do Drive =====
+ * Desktop: marca preta à esquerda e formulário livre à direita.
+ * Mobile: marca centrada em cima, formulário embaixo e símbolo na base.
+ * A vinheta GSAP existente permanece independente do layout final.
+ */
+.mae-cinema.mae-motion-v3 {
+  color: #201731;
+  background:
+    radial-gradient(ellipse 38% 48% at -5% 6%, rgba(92,71,152,.18), transparent 100%),
+    radial-gradient(ellipse 43% 52% at 108% 96%, rgba(171,135,243,.14), transparent 95%),
+    linear-gradient(118deg, #f8f3f2 0%, #fbf8f5 48%, #f4edf6 100%);
+}
+.mae-motion-v3 .mae-cinema-ambient {
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  contain: paint;
+}
+.mae-motion-v3 .mae-cinema-light-one,
+.mae-motion-v3 .mae-cinema-light-two { display: none; }
+
+/* A assinatura institucional acompanha os dois tamanhos do protótipo. */
+.mae-motion-v3 .mae-cinema-institutional-bar {
+  position: absolute;
+  top: max(.85rem, env(safe-area-inset-top));
+  left: clamp(1rem, 2.3vw, 2.4rem);
+  right: clamp(1rem, 2.3vw, 2.4rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: .9rem;
+  z-index: 8;
+  pointer-events: none;
+}
+.mae-motion-v3 .mae-cinema-institutional-ufcg {
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(86px, 8.5vw, 118px);
+  padding: .2rem .35rem;
+  border-radius: 6px;
+  background: rgba(255,255,255,.89);
+}
+.mae-motion-v3 .mae-cinema-institutional-ufcg img {
+  display: block; width: 100%; height: auto; object-fit: contain;
+}
+.mae-motion-v3 .mae-cinema-program-signature {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  padding: .37rem .6rem;
+  border: 1px solid rgba(92,71,152,.13);
+  border-radius: 7px;
+  background: rgba(255,255,255,.82);
+  color: #280063;
+  font-size: clamp(.61rem, .8vw, .74rem);
+  font-weight: 700;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.mae-motion-v3 .mae-cinema-program-separator { color: #7f5db8; }
+.mae-motion-v3 .mae-gsap-replay {
+  top: clamp(3.35rem, 7vh, 4.1rem);
+  right: clamp(1rem, 2.3vw, 2.4rem);
+  bottom: auto;
+  padding: .3rem .65rem;
+  color: #3d246e;
+  background: rgba(255,255,255,.77);
+  border-color: rgba(92,71,152,.17);
+}
+.mae-motion-v3 .mae-gsap-replay:hover { color: #280063; background: #fff; }
+
+/* Ornamentos: o desenho navy é o símbolo autêntico Prancheta 30_3.svg. */
+.mae-motion-v3 .mae-motion-ribbons {
+  inset: 0 0 3.15rem;
+  position: absolute;
+  overflow: hidden;
+}
+.mae-motion-v3 .mae-motion-ribbons .mae-ribbon {
+  position: absolute; display: block;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+}
+.mae-motion-v3 .mae-ribbon-orange {
+  left: -2%; top: -5%;
+  width: clamp(260px, 27vw, 410px);
+  color: #F44E04;
+  opacity: .85;
+  animation: mae-figma-coral 15s ease-in-out infinite alternate;
+}
+.mae-motion-v3 .mae-ribbon-purple-top,
+.mae-motion-v3 .mae-ribbon-purple-bottom {
+  -webkit-mask: url("/brands/mae-aps-simbolo-drive.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-simbolo-drive.svg") center / contain no-repeat;
+  background: #252555;
+  opacity: .97;
+}
+.mae-motion-v3 .mae-ribbon-purple-top {
+  right: -10.5%;
+  top: -19%;
+  width: clamp(330px, 41vw, 590px);
+  height: clamp(380px, 49vw, 700px);
+  transform: rotate(-31deg);
+}
+.mae-motion-v3 .mae-ribbon-purple-bottom {
+  left: -12.5%; bottom: -42%;
+  width: clamp(320px, 39vw, 585px);
+  height: clamp(350px, 44vw, 640px);
+  transform: rotate(52deg);
+}
+.mae-motion-v3 .mae-ribbon-cream { display: none; }
+@keyframes mae-figma-coral {
+  from { transform: translate3d(-4px, 0, 0) rotate(-1deg); }
+  to { transform: translate3d(8px, 8px, 0) rotate(2deg); }
+}
+
+/* Desktop 1440: espaço em branco e campos grandes sem caixa em volta. */
+.mae-motion-v3 .mae-cinema-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(5rem, 10vh, 7rem) clamp(1.25rem, 6vw, 6rem) clamp(1.3rem, 3vh, 2.5rem);
+}
+.mae-motion-v3 .mae-cinema-center {
+  width: min(100%, 1220px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: clamp(2.25rem, 6vw, 7rem);
+  align-items: center;
+}
+.mae-motion-v3 .mae-cinema-brand {
+  display: grid;
+  place-items: center;
+  justify-self: start;
+  width: min(100%, 570px);
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1810 / 680;
+  padding: 0;
+  background: transparent;
+  -webkit-mask: none;
+  mask: none;
+  filter: none;
+  color: #15121c;
+}
+.mae-motion-v3 .mae-cinema-brand-drive {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+.mae-motion-v3 .mae-cinema-auth {
+  display: block;
+  width: min(100%, 520px);
+  min-height: 0;
+  max-width: 520px;
+  justify-self: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0 clamp(.15rem, 2.4vw, 1.25rem);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #201731;
+}
+.mae-motion-v3 .mae-cinema-status { margin: 0 0 clamp(.8rem, 2.4vh, 1.5rem); }
+.mae-motion-v3 .mae-cinema-auth h1 {
+  margin: 0;
+  color: #191526;
+  text-align: center;
+  font-size: clamp(1.43rem, 2vw, 1.95rem);
+  font-weight: 800;
+  line-height: 1.17;
+}
+.mae-motion-v3 .mae-cinema-description {
+  margin: .5rem 0 clamp(1rem, 3.1vh, 1.75rem);
+  color: #4b415b;
+  text-align: center;
+  font-size: clamp(.78rem, 1vw, .94rem);
+  line-height: 1.47;
+}
+.mae-motion-v3 .mae-cinema .auth-signin-stack,
+.mae-motion-v3 .auth-signin-stack { gap: clamp(.55rem, 1.4vh, .85rem); }
+.mae-motion-v3 .auth-form { gap: clamp(.52rem, 1.4vh, .9rem); }
+.mae-motion-v3 .auth-field {
+  gap: .36rem;
+  color: #241b32;
+  font-size: .85rem;
+  font-weight: 750;
+}
+.mae-motion-v3 .auth-input {
+  min-height: clamp(47px, 5.6vh, 58px);
+  background: #e7dff0;
+  border: 1px solid #d6cae2;
+  border-radius: 9px;
+  font-size: .91rem;
+  color: #280063;
+}
+.mae-motion-v3 .auth-input::placeholder { color: #665679; opacity: 1; }
+.mae-motion-v3 .auth-input:hover { background: #ebe4f3; border-color: #b3a1d0; }
+.mae-motion-v3 .auth-input:focus-visible {
+  background: #fff;
+  border-color: #6944a5;
+  outline: 3px solid rgba(171,135,243,.42);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+
+/* Cristal roxo: superfície polida, reflexo diagonal e brilho controlado. */
+.mae-motion-v3 .auth-primary-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: clamp(48px, 5.5vh, 58px);
+  border: 1px solid #9672d4;
+  border-radius: 11px;
+  margin-top: .2rem;
+  color: white;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: .015em;
+  background:
+    radial-gradient(ellipse 68% 130% at 45% -45%, rgba(244,233,255,.47), transparent 70%),
+    linear-gradient(110deg,#3c167b 2%,#8057ce 47%,#53219f 96%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.64),
+    inset 0 -3px 9px rgba(31,0,74,.29),
+    0 7px 17px rgba(59,22,120,.19);
+  text-shadow: 0 1px 2px rgba(26,3,55,.26);
+  transition: box-shadow .22s ease, transform .22s ease, filter .22s ease;
+}
+.mae-motion-v3 .auth-primary-button::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -80% auto -80% -62%;
+  width: 32%;
+  transform: skewX(-23deg) translateX(-125%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.04), rgba(255,255,255,.56), rgba(255,255,255,.04), transparent);
+  pointer-events: none;
+  animation: mae-purple-crystal-sheen 5.8s cubic-bezier(.4,0,.25,1) infinite;
+}
+.mae-motion-v3 .auth-primary-button::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1px 3px auto;
+  height: 43%;
+  border-radius: 10px 10px 46% 46%;
+  background: linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,0));
+  pointer-events: none;
+}
+@keyframes mae-purple-crystal-sheen {
+  0%,18% { transform: skewX(-23deg) translateX(-130%); }
+  38%,100% { transform: skewX(-23deg) translateX(650%); }
+}
+.mae-motion-v3 .auth-primary-button:hover:not(:disabled) {
+  filter: brightness(1.075);
+  background:
+    radial-gradient(ellipse 68% 130% at 45% -45%, rgba(244,233,255,.55), transparent 70%),
+    linear-gradient(110deg,#4c1f92 2%,#9568e2 47%,#5d29ad 96%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.76), inset 0 -3px 9px rgba(31,0,74,.26), 0 10px 23px rgba(59,22,120,.28);
+  transform: translateY(-1px);
+}
+.mae-motion-v3 .auth-primary-button:active:not(:disabled) { transform: translateY(1px) scale(.992); }
+.mae-motion-v3 .auth-primary-button:focus-visible {
+  outline: 3px solid #ab87f3;
+  outline-offset: 3px;
+}
+.mae-motion-v3 .auth-primary-button:disabled {
+  opacity: .62;
+  cursor: wait;
+  filter: none;
+}
+.mae-motion-v3 .auth-primary-button:disabled::before { animation: none; opacity: 0; }
+.mae-motion-v3 .auth-google-button {
+  min-height: clamp(47px, 5.5vh, 58px);
+  border: 1px solid #b5a8ca;
+  border-radius: 10px;
+  color: #2b1845;
+  background: #fff;
+  font-size: .89rem;
+  font-weight: 700;
+}
+.mae-motion-v3 .auth-google-button:hover { border-color: #7653ac; background: #fbf9ff; }
+.mae-motion-v3 .auth-divider { color: #554666; }
+.mae-motion-v3 .auth-divider::before,.mae-motion-v3 .auth-divider::after { background: #b8a8ce; }
+.mae-motion-v3 .auth-secondary-links { margin-top: .18rem; }
+.mae-motion-v3 .auth-secondary-links a,.mae-motion-v3 .auth-back-link { color: #38215b; font-weight: 700; }
+.mae-motion-v3 .auth-secondary-links a:hover,.mae-motion-v3 .auth-back-link:hover { color: #7345ad; }
+.mae-motion-v3 .auth-system-status { color:#166437; background:#edf8f0; border-color:#c2dfcc; }
+.mae-motion-v3 .auth-back-link:focus-visible { outline: 3px solid #ab87f3; }
+
+/* Rodapé institucional único, mantendo créditos, SIAPS e LGPD. */
+.mae-motion-v3 .mae-cinema-footer { z-index: 3; background: #23214f; border-top-color: #414174; color:#f5f1ff; }
+@media (min-width: 851px) {
+  .mae-motion-v3 .mae-cinema-footer {
+    grid-template-columns: minmax(95px,1fr) minmax(0,2.6fr) minmax(170px,1fr);
+    min-height: 48px;
+  }
+}
+
+/* Mobile conforme a arte pequena do Figma, SEM encolher o formulário. */
+@media (max-width: 850px) {
+  .mae-motion-v3 .mae-cinema-institutional-bar { left: .75rem; right: .75rem; top: max(.52rem,env(safe-area-inset-top)); }
+  .mae-motion-v3 .mae-cinema-institutional-ufcg { width: 87px; }
+  .mae-motion-v3 .mae-cinema-program-signature { font-size: .57rem; gap: .17rem; padding: .24rem .36rem; }
+  .mae-motion-v3 .mae-gsap-replay { top: 3.6rem; right: .65rem; font-size: .62rem; }
+  .mae-motion-v3 .mae-cinema-main {
+    padding: clamp(7.1rem, 15vh, 10.5rem) clamp(.85rem, 5vw, 1.5rem) 1.35rem;
+    align-items: flex-start;
+  }
+  .mae-motion-v3 .mae-cinema-center {
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+    width: min(100%, 430px);
+    gap: clamp(2rem, 4vh, 3.1rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand {
+    justify-self: center;
+    width: min(75vw, 280px);
+    min-height: 0;
+    height: auto;
+  }
+  .mae-motion-v3 .mae-cinema-auth {
+    width: 100%;
+    max-width: 430px;
+    padding: 0 .2rem;
+    min-height: 0;
+    justify-self: stretch;
+  }
+  .mae-motion-v3 .mae-cinema-auth h1 { font-size: clamp(1.4rem, 4.9vw, 1.85rem); }
+  .mae-motion-v3 .mae-cinema-description { margin-bottom: 1.05rem; }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+    top: -3%; left: 16%; width: 260px; opacity: .74;
+  }
+  .mae-motion-v3 .mae-ribbon-purple-top { display: none; }
+  .mae-motion-v3 .mae-ribbon-cream {
+    display: block;
+    color: #f44e04;
+    width: 275px;
+    right: -25%;
+    top: -6%;
+    opacity: .70;
+    transform: rotate(-15deg);
+  }
+  .mae-motion-v3 .mae-ribbon-purple-bottom {
+    display: block;
+    left: -45%;
+    bottom: -29%;
+    width: 580px;
+    height: 560px;
+    background: #5c4798;
+    transform: rotate(45deg);
+    opacity: .75;
+  }
+  .mae-motion-v3 .mae-cinema-footer { position: relative; }
+}
+@media (max-width: 390px) {
+  .mae-motion-v3 .mae-cinema-main { padding-top: 6.5rem; padding-inline: .78rem; padding-bottom: 1rem; }
+  .mae-motion-v3 .mae-cinema-center { gap: 1.65rem; }
+  .mae-motion-v3 .mae-cinema-brand { width: min(74vw, 240px); }
+  .mae-motion-v3 .auth-input,.mae-motion-v3 .auth-primary-button,.mae-motion-v3 .auth-google-button { min-height: 46px; }
+  .mae-motion-v3 .mae-cinema-description { font-size: .77rem; }
+  .mae-motion-v3 .mae-ribbon-purple-bottom { left: -55%; bottom: -30%; width: 500px; height: 510px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-motion-v3 .mae-ribbon-orange,
+  .mae-motion-v3 .auth-primary-button::before { animation: none !important; }
+  .mae-motion-v3 .auth-primary-button { transition: none; }
+}
