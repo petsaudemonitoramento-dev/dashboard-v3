@@ -462,3 +462,219 @@
     transition-duration: .01ms !important;
   }
 }
+
+
+/* PR #20 — ajuste de filtros e cartões (15/10)
+ * Em notebooks, a coluna de importação retirava espaço da seleção:
+ * "janeiro de 2026" era visualmente cortado. Layout responsivo por área útil.
+ * KPIs possuem faixas uniformes: ícone/título, número, explicação.
+ */
+.management-shell .dashboard-filter-grid,
+.management-shell .dashboard-filter-secondary,
+.management-shell .dashboard-period-selects {
+  min-width: 0;
+}
+.management-shell .dashboard-filter-grid > label,
+.management-shell .dashboard-filter-secondary > label,
+.management-shell .dashboard-period-group {
+  min-width: 0;
+}
+.management-shell .dashboard-period-selects {
+  grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr);
+  gap: .45rem;
+}
+.management-shell .dashboard-filter-grid select,
+.management-shell .dashboard-filter-grid input {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  padding-inline: .75rem 1.65rem;
+  border-radius: 10px;
+  font-size: .79rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-overflow: clip;
+}
+.management-shell .dashboard-filter-grid input {
+  padding-right: .75rem;
+}
+.management-shell .dashboard-filter-grid select:disabled {
+  color: #625879;
+  opacity: .75;
+}
+.management-shell .dashboard-filter-secondary {
+  min-width: 0;
+}
+.management-shell .dashboard-filter-actions {
+  min-width: 0;
+}
+
+/* Cada valor começa exatamente na mesma faixa em todos os seis cards,
+ * independentemente do comprimento do título ou da largura do ícone. */
+.management-shell .dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: .8rem;
+  align-items: stretch;
+}
+.management-shell .dashboard-kpi {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 66px 42px minmax(38px, 1fr);
+  align-items: start;
+  min-width: 0;
+  min-height: 177px;
+  width: 100%;
+  padding: 1rem 1rem .85rem;
+  gap: .15rem;
+  overflow: visible; /* tooltips permanecem acessíveis */
+  border-radius: 16px;
+}
+.management-shell .dashboard-kpi-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: start;
+  gap: .6rem;
+  width: 100%;
+  min-width: 0;
+}
+.management-shell .dashboard-kpi-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 0;
+  flex: none;
+}
+.management-shell .dashboard-kpi-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.management-shell .dashboard-kpi-title {
+  display: flex;
+  gap: .35rem;
+  min-width: 0;
+  min-height: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 0;
+  font-size: .75rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.management-shell .dashboard-kpi-title > span {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow-wrap: normal;
+  hyphens: auto;
+  font-size: inherit;
+  line-height: inherit;
+}
+.management-shell .dashboard-kpi-title .dashboard-help {
+  flex: 0 0 auto;
+  margin-top: .05rem;
+}
+.management-shell .dashboard-kpi > .dashboard-kpi-value {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  font-size: clamp(1.55rem, 1.88vw, 1.95rem);
+  line-height: 1.22;
+  font-weight: 800;
+  color: var(--kpi);
+  letter-spacing: -.045em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+.management-shell .dashboard-kpi > .dashboard-kpi-description {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: .12rem 0 0;
+  color: var(--post-muted);
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.32;
+  overflow-wrap: break-word;
+}
+
+/* Num notebook o filtro e o botão de importação não disputam largura. */
+@media (max-width: 1750px) {
+  .management-shell .dashboard-filter-zone {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .7rem;
+  }
+  .management-shell .dashboard-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    column-gap: 1rem;
+    row-gap: .8rem;
+  }
+  .management-shell .dashboard-period-group {
+    grid-column: auto;
+  }
+  .management-shell .dashboard-filter-secondary {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(185px, .9fr) minmax(230px, 1.4fr) auto;
+    align-items: end;
+  }
+  .management-shell .dashboard-import-cta {
+    min-height: 82px;
+    padding: .8rem 1rem;
+    border-radius: 15px;
+  }
+  .management-shell .dashboard-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1080px) {
+  .management-shell .dashboard-filter-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .management-shell .dashboard-filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .management-shell .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .management-shell .dashboard-filter-grid,
+  .management-shell .dashboard-filter-secondary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .management-shell .dashboard-filter-secondary {
+    grid-column: auto;
+  }
+  .management-shell .dashboard-filter-actions {
+    grid-column: auto;
+  }
+  .management-shell .dashboard-period-group {
+    grid-column: auto;
+  }
+  .management-shell .dashboard-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .management-shell .dashboard-kpi {
+    grid-template-rows: 60px 42px minmax(34px, 1fr);
+    min-height: 165px;
+  }
+  .management-shell .dashboard-kpi > .dashboard-kpi-value {
+    font-size: clamp(1.7rem, 7vw, 1.95rem);
+  }
+}
+@media (max-width: 390px) {
+  .management-shell .dashboard-period-selects {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .management-shell .dashboard-period-selects > span {
+    display: none;
+  }
+}
