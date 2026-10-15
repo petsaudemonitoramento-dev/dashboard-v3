@@ -131,3 +131,21 @@ test("KPIs e filtros permanecem legíveis na largura de celular", async ({ page 
   expect(selectWidth).toBeGreaterThan(180);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 });
+
+
+test("total de equipes fica exatamente no centro da rosca C3", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await signIn(page, "gestao");
+  const chart = page.locator(".dashboard-chart-donut .mae-chart-plot");
+  const center = chart.locator(".mae-chart-center-label");
+  await expect(center).toBeVisible();
+  await expect(center).toContainText("equipes");
+  const plot = await chart.boundingBox();
+  const label = await center.boundingBox();
+  expect(plot).not.toBeNull();
+  expect(label).not.toBeNull();
+  const targetX = plot!.x + plot!.width * .5;
+  const targetY = plot!.y + plot!.height * .34;
+  expect(Math.abs(label!.x + label!.width / 2 - targetX)).toBeLessThan(2);
+  expect(Math.abs(label!.y + label!.height / 2 - targetY)).toBeLessThan(2);
+});
