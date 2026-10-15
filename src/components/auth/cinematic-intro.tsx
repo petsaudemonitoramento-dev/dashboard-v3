@@ -5,8 +5,8 @@ import gsap from "gsap";
 
 // Vinheta fiel à demonstração: marca progressiva, círculo roxo, logo branco,
 // entrada no login. Vetorial, sem vídeo/GIF; opção Pular e reduced-motion.
-const INTRO_KEY = "mae-aps-animacao-referencia-oficial-v4";
-const MAX_INTRO_MS = 11000;
+const INTRO_KEY = "mae-aps-animacao-referencia-oficial-v5";
+const MAX_INTRO_MS = 12400;
 
 export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -62,26 +62,27 @@ export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: b
       gsap.set(".mae-gsap-orb-b", { x: 28, y: 13, scale: 0.96 });
       gsap.set(".mae-gsap-orb-c", { x: 11, y: -11, scale: 0.98 });
 
+      gsap.set(".mae-gsap-flash", { autoAlpha: 0 });
       const intro = gsap.timeline({ defaults: { ease: "power2.inOut" } });
       intro
-        // M inicial: revelação pausada, como a escrita da marca no vídeo.
-        .to(".mae-gsap-reveal", { clipPath: "inset(0 67% 0 0)", duration: 1.75 }, 0.55)
-        // AE APS e linhas do nome oficial são descobertos em sequência.
-        .to(".mae-gsap-reveal", { clipPath: "inset(0 0% 0 0)", duration: 1.82 }, 2.25)
-        .to(".mae-gsap-orb-a", { x: 11, y: 9, duration: 4.0 }, 0)
-        .to(".mae-gsap-orb-b", { x: -9, y: -10, duration: 4.0 }, 0)
-        .to(".mae-gsap-orb-c", { x: -13, y: 6, duration: 4.0 }, 0)
-        // Wipe circular roxo, preservando a marca branca em destaque.
+        // Nos frames iniciais do vídeo original a marca completa surge e desaparece.
+        .to(".mae-gsap-flash", { autoAlpha: 1, duration: .34 }, .67)
+        .to(".mae-gsap-flash", { autoAlpha: 0, duration: .38 }, 1.26)
+        // A assinatura M/AE APS é desenhada antes do nome completo.
+        .to(".mae-gsap-reveal", { clipPath: "inset(0 68% 0 0)", duration: 1.36 }, 2.30)
+        .to(".mae-gsap-reveal", { clipPath: "inset(0 0% 0 0)", duration: 1.88 }, 3.62)
+        .to(".mae-gsap-orb-a", { x: 11, y: 9, duration: 4.9 }, 0)
+        .to(".mae-gsap-orb-b", { x: -9, y: -10, duration: 4.9 }, 0)
+        .to(".mae-gsap-orb-c", { x: -13, y: 6, duration: 4.9 }, 0)
+        // Círculo roxo ocupa o palco, mantendo o logotipo oficial em branco.
         .to(".mae-gsap-stage-dark", {
           clipPath: "circle(155% at 84% 48%)",
-          duration: 1.08,
+          duration: 1.10,
           ease: "power2.inOut",
-        }, 4.65)
-        // Hold do símbolo branco (sem câmera girando ou zoom artificial).
-        .to({}, { duration: 3.3 }, 5.73)
-        // A vinheta desaparece e revela o login fiel à composição.
-        .to(root, { autoAlpha: 0, duration: 0.68, ease: "power2.inOut" }, 9.15)
-        .call(complete, [], 9.86);
+        }, 6.58)
+        .to({}, { duration: 2.65 }, 7.68)
+        .to(root, { autoAlpha: 0, duration: .65, ease: "power2.inOut" }, 10.35)
+        .call(complete, [], 11.05);
     }, root);
 
     const fallback = window.setTimeout(complete, MAX_INTRO_MS);
@@ -106,12 +107,18 @@ export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: b
         <span className="mae-gsap-orb mae-gsap-orb-b" />
         <span className="mae-gsap-orb mae-gsap-orb-c" />
         <div className="mae-gsap-reveal-wrap">
-          <span className="mae-gsap-reveal" />
-          <span className="mae-gsap-sweep" />
+          <span className="mae-gsap-flash mae-gsap-logo-horizontal" />
+          <div className="mae-gsap-reveal">
+            <span className="mae-gsap-logo-horizontal" />
+            <span className="mae-gsap-logo-description">Monitoramento, atenção e estratégia<br/>na Atenção Primária à Saúde</span>
+          </div>
         </div>
       </div>
       <div className="mae-gsap-stage-dark" aria-hidden="true">
-        <span className="mae-gsap-white-logo" />
+        <div className="mae-gsap-white-logo">
+          <span className="mae-gsap-logo-horizontal" />
+          <span className="mae-gsap-logo-description">Monitoramento, atenção e estratégia<br/>na Atenção Primária à Saúde</span>
+        </div>
       </div>
       <button className="mae-gsap-skip" type="button" onClick={complete}>
         Pular <span aria-hidden="true">→</span>
