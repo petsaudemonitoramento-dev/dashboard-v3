@@ -6,7 +6,7 @@ import gsap from "gsap";
 // Vinheta fiel à demonstração: marca progressiva, círculo roxo, logo branco,
 // entrada no login. Vetorial, sem vídeo/GIF; opção Pular e reduced-motion.
 const INTRO_KEY = "mae-aps-animacao-referencia-oficial-v4";
-const MAX_INTRO_MS = 9300;
+const MAX_INTRO_MS = 11000;
 
 export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -78,10 +78,10 @@ export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: b
           ease: "power2.inOut",
         }, 4.65)
         // Hold do símbolo branco (sem câmera girando ou zoom artificial).
-        .to({}, { duration: 1.35 }, 5.73)
+        .to({}, { duration: 3.3 }, 5.73)
         // A vinheta desaparece e revela o login fiel à composição.
-        .to(root, { autoAlpha: 0, duration: 0.68, ease: "power2.inOut" }, 7.08)
-        .call(complete, [], 7.79);
+        .to(root, { autoAlpha: 0, duration: 0.68, ease: "power2.inOut" }, 9.15)
+        .call(complete, [], 9.86);
     }, root);
 
     const fallback = window.setTimeout(complete, MAX_INTRO_MS);
