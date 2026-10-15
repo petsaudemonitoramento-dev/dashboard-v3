@@ -165,9 +165,6 @@ export function ManagementShell({ children, email, role, userId, displayName, no
         </div>
       </header>
 
-      {mobile && menuOpen ? (
-        <button className="management-side-backdrop" type="button" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} />
-      ) : null}
       <aside className="management-sidebar" id="management-side-navigation">
         <nav aria-label={isAdmin ? "Navegação da Administração" : "Navegação da Gestão"}>
           {isAdmin ? <>
