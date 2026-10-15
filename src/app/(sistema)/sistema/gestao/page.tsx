@@ -188,15 +188,15 @@ function MetricCard({
 }) {
   return (
     <article className={`dashboard-kpi ${tone}`}>
-      <div className="dashboard-kpi-icon"><Icon aria-hidden="true" className="size-6" /></div>
-      <div>
+      <div className="dashboard-kpi-header">
+        <div className="dashboard-kpi-icon"><Icon aria-hidden="true" className="size-6" /></div>
         <div className="dashboard-kpi-title">
           <span>{title}</span>
           <DashboardHelp text={help} />
         </div>
-        <strong>{value}</strong>
-        <small>{subtitle}</small>
       </div>
+      <strong className="dashboard-kpi-value">{value}</strong>
+      <small className="dashboard-kpi-description">{subtitle}</small>
     </article>
   );
 }
