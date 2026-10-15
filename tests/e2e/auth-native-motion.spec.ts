@@ -178,3 +178,23 @@ test("UFCG: PNG oficial em resolução integral, com tamanho legível no rodapé
   expect(logoBox!.y).toBeGreaterThanOrEqual(footerBox!.y - 1);
   expect(logoBox!.y + logoBox!.height).toBeLessThanOrEqual(footerBox!.y + footerBox!.height + 1);
 });
+
+
+test("fundo de login usa degradê CSS mais presente, sem imagem e sem afetar a abertura", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 635 });
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+  await page.goto("/entrar");
+
+  const scene = page.locator(".mae-cinema.mae-motion-v3");
+  await expect(scene).toBeVisible();
+  const computed = await scene.evaluate(element => ({
+    image: getComputedStyle(element).backgroundImage,
+    color: getComputedStyle(element).backgroundColor,
+  }));
+  expect(computed.image).not.toContain("url(");
+  expect((computed.image.match(/radial-gradient\\(/g) ?? []).length).toBe(4);
+  expect(computed.image).toContain("linear-gradient(");
+  expect(computed.color).toBe("rgb(241, 231, 250)");
+  await expect(page.locator(".mae-cinema-auth")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator(".mae-ribbon-purple-top")).toHaveCSS("border-top-style", "solid");
+});
