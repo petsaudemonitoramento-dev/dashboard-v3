@@ -5,6 +5,8 @@ import "@fontsource/clear-sans/500.css";
 import "@fontsource/clear-sans/700.css";
 import "./globals.css";
 import "./brand-system.css";
+import "./auth-motion.css";
+import "./auth-reference-fidelity.css";
 
 export const metadata: Metadata = {
   applicationName: "MAE APS",

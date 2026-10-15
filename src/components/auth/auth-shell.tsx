@@ -13,6 +13,7 @@ import {
 import { SystemStatus } from "@/components/auth/system-status";
 import { AuthIntroSession } from "@/components/auth/auth-intro-session";
 import { CinematicIntro } from "@/components/auth/cinematic-intro";
+import { MotionRibbons } from "@/components/auth/motion-ribbons";
 
 const assuranceItems = [
   { label: "Privacidade orientada à LGPD", icon: ShieldCheck },
@@ -42,14 +43,10 @@ export function AuthShell({
   // apenas o conteúdo central muda de acordo com a rota.
   if (cinematic) {
     return (
-      <div className="mae-cinema">
+      <div className="mae-cinema mae-motion-v3">
         <CinematicIntro initialPlayback={introOnLoad} />
-        <div className="mae-cinema-program-signature" aria-label="PET Saúde Digital da UFCG">
-          <span>PET Saúde Digital</span>
-          <span className="mae-cinema-program-separator" aria-hidden="true">·</span>
-          <span>UFCG</span>
-        </div>
         <div className="mae-cinema-ambient" aria-hidden="true">
+          <MotionRibbons />
           <div className="mae-cinema-light-one" />
           <div className="mae-cinema-light-two" />
         </div>
@@ -59,7 +56,14 @@ export function AuthShell({
               className="mae-cinema-brand"
               role="img"
               aria-label="MAE APS — Monitoramento, Atenção e Estratégia na Atenção Primária à Saúde"
-            />
+            >
+              <Image className="mae-cinema-brand-drive"
+                src="/brands/mae-aps-assinatura-unificada.svg"
+                alt="" aria-hidden="true"
+                width={1990} height={665}
+                sizes="(max-width: 850px) 310px, 550px"
+                priority unoptimized />
+            </div>
             <div className="mae-cinema-auth">
               <div className="mae-cinema-status"><SystemStatus /></div>
               <h1 id="auth-access-title">{title}</h1>
@@ -76,7 +80,8 @@ export function AuthShell({
                 alt="Universidade Federal de Campina Grande — UFCG"
                 width={1472}
                 height={462}
-                sizes="(max-width: 560px) 67px, 94px"
+                sizes="(max-width: 850px) 148px, 184px"
+                unoptimized
               />
             </span>
             <span className="mae-cinema-footer-product">

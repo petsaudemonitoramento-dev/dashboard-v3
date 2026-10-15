@@ -20,10 +20,11 @@ function SubmitButton({ label }: { label: string }) {
   return (
     <button
       className="auth-primary-button"
+      aria-busy={pending}
       disabled={pending}
       type="submit"
     >
-      {pending ? "Aguarde..." : label}
+      <span className="auth-primary-button-label">{pending ? "Aguarde..." : label}</span>
     </button>
   );
 }

@@ -6,6 +6,9 @@ on:
     paths:
       - "src/lib/siaps/**"
       - "src/components/siaps/**"
+      - "src/components/auth/**"
+      - "src/app/auth-motion.css"
+      - "tests/e2e/auth-native-motion.spec.ts"
       - "src/app/api/importacoes/**"
       - "src/app/(sistema)/sistema/administracao/**"
       - "supabase/migrations/**"

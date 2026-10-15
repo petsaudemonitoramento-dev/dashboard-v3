@@ -1,0 +1,1722 @@
+/*
+ * MAE APS · demonstração reinterpretada em animação nativa (sem mp4/GIF).
+ * CSS Grid real, elementos orgânicos SVG e movimento por transform.
+ * Importado depois de brand-system.css, sem afetar dashboards ou gráficos.
+ */
+
+/* A ilustração é decorativa, não altera ou redesenha o logotipo oficial. */
+.mae-motion-ribbons { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.mae-motion-ribbons .mae-ribbon {
+  position: absolute;
+  display: block;
+  max-width: none;
+  height: auto;
+  opacity: .72;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.mae-ribbon-orange {
+  left: -3%; top: -6%;
+  width: clamp(185px, 25vw, 370px);
+  color: var(--mae-orange);
+  animation: mae-ribbon-drift-one 13s ease-in-out infinite alternate;
+}
+.mae-ribbon-purple-top {
+  right: -1.4%; top: -4%;
+  width: clamp(100px, 14vw, 205px);
+  color: var(--mae-purple-mid);
+  animation: mae-ribbon-drift-two 17s ease-in-out infinite alternate;
+}
+.mae-ribbon-purple-bottom {
+  left: -5%; bottom: -6%;
+  width: clamp(220px, 32vw, 450px);
+  color: var(--mae-purple);
+  animation: mae-ribbon-drift-two 19s ease-in-out infinite alternate-reverse;
+}
+.mae-ribbon-cream {
+  right: -4%; bottom: -5%;
+  width: clamp(210px, 31vw, 440px);
+  color: #F9F3EF;
+  opacity: .8;
+  animation: mae-ribbon-drift-one 16s ease-in-out infinite alternate-reverse;
+}
+@keyframes mae-ribbon-drift-one {
+  from { transform: translate3d(-7px, 0, 0) rotate(-4deg); }
+  to { transform: translate3d(11px, 9px, 0) rotate(3deg); }
+}
+@keyframes mae-ribbon-drift-two {
+  from { transform: translate3d(6px, -7px, 0) rotate(3deg); }
+  to { transform: translate3d(-12px, 12px, 0) rotate(-4deg); }
+}
+
+/* Abertura de 2.9 s: mesmos vetores, identidade oficial e cores coerentes. */
+.mae-gsap-intro { background: var(--mae-cream); }
+.mae-gsap-stage-light {
+  background:
+    radial-gradient(ellipse 75% 65% at 49% 48%, #fffdfc 0%, #f6f0fa 58%, transparent 95%),
+    linear-gradient(125deg, #e9daf9 0%, var(--mae-cream) 50%, #dfcef5 100%);
+}
+.mae-gsap-stage-light .mae-motion-ribbons-intro { z-index: 0; }
+.mae-gsap-stage-light .mae-ribbon { animation: none; }
+.mae-gsap-stage-light .mae-ribbon-cream { color: #BCA3E8; opacity: .58; }
+.mae-gsap-stage-light .mae-ribbon-purple-bottom { opacity: .55; }
+.mae-gsap-stage-light .mae-gsap-reveal-wrap { z-index: 1; }
+.mae-gsap-stage-dark {
+  background:
+    radial-gradient(ellipse at 30% 39%, rgba(171,135,243,.35), transparent 54%),
+    linear-gradient(119deg, var(--mae-purple) 4%, var(--mae-purple-mid) 57%, var(--mae-purple) 100%);
+}
+.mae-gsap-skip {
+  color: var(--mae-purple);
+  background: rgba(249,243,239,.96);
+  border-color: rgba(92,71,152,.32);
+}
+
+/* Layout final inspirado na composição da demonstração: marca + cartão. */
+.mae-cinema.mae-motion-v3 {
+  color: var(--mae-purple);
+  background:
+    radial-gradient(ellipse 46% 55% at 35% 24%, rgba(171,135,243,.26) 0%, transparent 100%),
+    radial-gradient(ellipse 48% 50% at 94% 70%, rgba(92,71,152,.18) 0%, transparent 100%),
+    linear-gradient(120deg, #eee5f9 0%, #f8f4fd 42%, #ebe1f7 100%);
+}
+.mae-motion-v3 .mae-cinema-ambient { z-index: 0; }
+.mae-motion-v3 .mae-cinema-light-one,
+.mae-motion-v3 .mae-cinema-light-two { display: none; }
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-bottom { opacity: .32; }
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange { opacity: .8; }
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-cream { color: #fff; opacity: .82; }
+.mae-motion-v3 .mae-cinema-main {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: clamp(5.2rem, 9dvh, 7.4rem) clamp(1rem, 4vw, 3rem) clamp(1.3rem, 3dvh, 3rem);
+}
+.mae-motion-v3 .mae-cinema-center {
+  display: grid;
+  width: min(100%, 1080px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 408px);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 6rem);
+}
+.mae-motion-v3 .mae-cinema-brand {
+  width: min(100%, 515px);
+  aspect-ratio: 1610 / 635;
+  justify-self: center;
+  background: var(--mae-purple);
+  filter: drop-shadow(0 12px 24px rgba(40,0,99,.12));
+}
+.mae-motion-v3 .mae-cinema-auth {
+  width: 100%;
+  border: 1px solid rgba(92,71,152,.17);
+  border-radius: 22px;
+  padding: clamp(1.35rem, 2.5vw, 2rem);
+  color: var(--mae-purple);
+  background: #fff;
+  box-shadow: 0 24px 65px rgba(40,0,99,.13), 0 3px 18px rgba(40,0,99,.06);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.mae-motion-v3 .mae-cinema-auth h1 {
+  color: var(--mae-purple);
+  font-size: clamp(1.4rem, 2.3vw, 1.65rem);
+  line-height: 1.16;
+}
+.mae-motion-v3 .mae-cinema-description {
+  color: #55436f;
+  font-size: .84rem;
+  line-height: 1.48;
+  margin: .55rem 0 1.1rem;
+}
+.mae-motion-v3 .auth-system-status {
+  color: #17643a;
+  background: #eaf8ef;
+  border-color: #b7dbc4;
+}
+.mae-motion-v3 .auth-field {
+  color: var(--mae-purple);
+  font-size: .84rem;
+  font-weight: 700;
+}
+.mae-motion-v3 .auth-input {
+  border: 1px solid #cfc0e6;
+  background: #f3effa;
+  color: var(--mae-purple);
+  min-height: 45px;
+}
+.mae-motion-v3 .auth-input::placeholder { color: #716587; }
+.mae-motion-v3 .auth-input:focus-visible {
+  outline: 3px solid var(--mae-lilac);
+  border-color: var(--mae-purple-mid);
+}
+.mae-motion-v3 .auth-primary-button {
+  min-height: 46px;
+  color: #fff;
+  border: 1px solid var(--mae-purple-mid);
+  background: linear-gradient(105deg, var(--mae-purple-mid), var(--mae-purple));
+  box-shadow: 0 6px 20px rgba(40,0,99,.12);
+}
+.mae-motion-v3 .auth-primary-button:hover:not(:disabled) {
+  color: #fff;
+  background: var(--mae-purple);
+}
+.mae-motion-v3 .auth-google-button {
+  min-height: 45px;
+  color: var(--mae-purple);
+  border-color: #c4b5dc;
+  background: #fff;
+}
+.mae-motion-v3 .auth-google-button:hover { background: #f4effc; }
+.mae-motion-v3 .auth-divider { color: #55436f; }
+.mae-motion-v3 .auth-divider::before,
+.mae-motion-v3 .auth-divider::after { background: #c9b9e2; }
+.mae-motion-v3 .auth-secondary-links a,
+.mae-motion-v3 .auth-back-link {
+  color: var(--mae-purple);
+  text-decoration-color: #9079b8;
+  font-size: .78rem;
+}
+.mae-motion-v3 .auth-secondary-links a:hover,
+.mae-motion-v3 .auth-back-link:hover { color: var(--mae-purple-mid); }
+
+/* Assinatura institucional com boa leitura sobre o fundo claro. */
+.mae-motion-v3 .mae-cinema-program-signature {
+  color: var(--mae-purple);
+  background: rgba(249,243,239,.83);
+  border-color: rgba(92,71,152,.23);
+  box-shadow: 0 3px 18px rgba(40,0,99,.06);
+}
+.mae-motion-v3 .mae-cinema-program-separator { color: var(--mae-purple-mid); }
+.mae-motion-v3 .mae-gsap-replay {
+  color: var(--mae-purple);
+  border-color: rgba(92,71,152,.25);
+  background: rgba(249,243,239,.85);
+}
+.mae-motion-v3 .mae-gsap-replay:hover,
+.mae-motion-v3 .mae-gsap-replay:focus-visible {
+  color: var(--mae-purple);
+  background: #fff;
+}
+
+/* Mantém o rodapé institucional existente e evita interferência das curvas. */
+.mae-motion-v3 .mae-cinema-footer {
+  z-index: 2;
+  background: var(--mae-purple);
+  border-top: 1px solid rgba(249,243,239,.23);
+}
+
+/* Tablet e mobile: cartão deixa de ser miniatura da demonstração. */
+@media (max-width: 850px) {
+  .mae-motion-v3 .mae-cinema-main {
+    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1rem 1.2rem;
+  }
+  .mae-motion-v3 .mae-cinema-center {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    width: min(100%, 450px);
+    gap: clamp(.8rem, 2.4dvh, 1.6rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand { width: min(62vw, 285px); }
+  .mae-motion-v3 .mae-cinema-auth { padding: clamp(1.05rem, 4vw, 1.5rem); }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange { top: 2%; left: -18%; width: 220px; }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-bottom { bottom: 19%; width: 220px; }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-top { right: -8%; width: 130px; }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-cream { right: -20%; width: 230px; }
+}
+@media (max-width: 390px) {
+  .mae-motion-v3 .mae-cinema-main { padding-inline: .7rem; padding-bottom: .85rem; }
+  .mae-motion-v3 .mae-cinema-center { gap: .65rem; }
+  .mae-motion-v3 .mae-cinema-brand { width: min(60vw, 215px); }
+  .mae-motion-v3 .mae-cinema-auth { border-radius: 17px; padding: 1rem; }
+  .mae-motion-v3 .mae-cinema-description { font-size: .76rem; margin-bottom: .72rem; }
+}
+@media (max-width: 700px) and (max-height: 690px) {
+  .mae-motion-v3 .mae-cinema-main { padding-top: 4.75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-motion-ribbons .mae-ribbon {
+    animation: none !important;
+    will-change: auto;
+  }
+  .mae-motion-v3 .mae-cinema-auth { animation: none !important; }
+}
+
+
+/* ===== Revisão V4: fidelidade à gravação de referência enviada =====
+ * A abertura tem apenas gradiente, logo que se desenha e wipe circular roxo.
+ * Os 4 ornamentos são os contornos reais da demonstração e aparecem
+ * SOMENTE quando o formulário é apresentado.
+ */
+.mae-gsap-stage-light {
+  background:
+    radial-gradient(ellipse 34% 63% at -3% 5%, rgba(92, 71, 152, .67), transparent 96%),
+    radial-gradient(ellipse 40% 56% at 91% 9%, rgba(171, 135, 243, .46), transparent 90%),
+    radial-gradient(ellipse 47% 55% at 88% 100%, rgba(92, 71, 152, .66), transparent 96%),
+    linear-gradient(118deg, #f4eaf5 7%, #faf5f1 50%, #e8d7f5 100%);
+}
+.mae-gsap-stage-light .mae-gsap-orb { opacity: .22; }
+.mae-gsap-reveal-wrap { overflow: visible; }
+.mae-gsap-stage-dark {
+  background:
+    radial-gradient(ellipse 60% 85% at 78% 13%, rgba(171,135,243,.31), transparent 91%),
+    linear-gradient(130deg, var(--mae-purple) 0%, #54229c 55%, var(--mae-purple) 100%);
+  will-change: clip-path;
+}
+.mae-gsap-white-logo {
+  filter: none;
+  will-change: opacity;
+}
+.mae-gsap-skip { z-index: 30; }
+
+/* Posições e silhuetas extraídas dos swirls do material de referência. */
+.mae-motion-v3 .mae-cinema-ambient {
+  overflow: hidden;
+  contain: layout paint;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-motion-ribbons {
+  inset: 0 0 3.9rem;
+}
+.mae-motion-v3 .mae-motion-ribbons .mae-ribbon {
+  opacity: 1;
+  max-width: none;
+  transform: translateZ(0);
+}
+.mae-motion-v3 .mae-ribbon-orange {
+  width: clamp(175px, 26.2vw, 396px);
+  left: 15.35%;
+  top: -1.2%;
+  color: var(--mae-orange);
+}
+.mae-motion-v3 .mae-ribbon-purple-top {
+  width: clamp(90px, 14vw, 203px);
+  right: -.1%;
+  left: auto;
+  top: -.5%;
+  color: var(--mae-purple);
+}
+.mae-motion-v3 .mae-ribbon-purple-bottom {
+  width: clamp(230px, 38.3vw, 560px);
+  left: 0;
+  bottom: 0;
+  top: auto;
+  color: var(--mae-purple-mid);
+}
+.mae-motion-v3 .mae-ribbon-cream {
+  width: clamp(190px, 39vw, 570px);
+  right: 2%;
+  bottom: .2%;
+  top: auto;
+  color: var(--mae-cream);
+  opacity: .98;
+}
+.mae-cinema.mae-motion-v3 {
+  background:
+    radial-gradient(ellipse 40% 60% at 2% 19%, rgba(92, 71, 152, .47), transparent 96%),
+    radial-gradient(ellipse 37% 52% at 96% 6%, rgba(171, 135, 243, .36), transparent 94%),
+    radial-gradient(ellipse 40% 60% at 95% 99%, rgba(72, 20, 132, .83), transparent 97%),
+    linear-gradient(115deg, #eee1f5 0%, #faf5f1 49%, #eadcf5 100%);
+}
+.mae-motion-v3 .mae-cinema-center {
+  width: min(100%, 1140px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 408px);
+  gap: clamp(2.4rem, 5vw, 5.6rem);
+}
+.mae-motion-v3 .mae-cinema-brand {
+  width: min(100%, 560px);
+  filter: none;
+}
+.mae-motion-v3 .mae-cinema-auth {
+  border-radius: 18px;
+  box-shadow: 0 18px 47px rgba(40,0,99,.10), 0 4px 15px rgba(40,0,99,.045);
+}
+@media (max-width: 850px) {
+  .mae-motion-v3 .mae-cinema-center {
+    width: min(100%, 450px);
+    grid-template-columns: minmax(0,1fr);
+    gap: clamp(.85rem, 2.2dvh, 1.6rem);
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+    left: 18%;
+    top: -2%;
+    width: 180px;
+    opacity: .7;
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-top {
+    right: -8%;
+    top: 4%;
+    width: 110px;
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-bottom {
+    left: -15%;
+    bottom: 19%;
+    width: 260px;
+    opacity: .40;
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-cream {
+    right: -26%;
+    bottom: 10%;
+    width: 240px;
+    opacity: .65;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-gsap-stage-dark, .mae-gsap-reveal { will-change: auto; }
+}
+
+
+/* ===== Revisão V5 — sequência dos vídeos e composição 1440×1024 enviada =====
+   Desenho oficial é mascarado do SVG original; texto de apoio não substitui a marca.
+   Sem vídeo, GIF ou imagens externas. Grades fluem de verdade em telas pequenas. */
+
+/* VINHETA: logotipo horizontal com descriptor, revelado em 2 etapas. */
+.mae-gsap-reveal-wrap,
+.mae-gsap-white-logo {
+  width: min(74vw, 730px, calc(76dvh * 2.535));
+  aspect-ratio: 2.535;
+  height: auto;
+  overflow: visible;
+}
+.mae-gsap-reveal,
+.mae-gsap-flash {
+  position: absolute;
+  inset: 0;
+  display: block;
+  color: #280063;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+.mae-gsap-reveal { clip-path: inset(0 100% 0 0); will-change: clip-path; }
+.mae-gsap-flash { will-change: opacity; }
+.mae-gsap-logo-horizontal {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+}
+.mae-gsap-logo-description {
+  position: absolute;
+  display: block;
+  left: 30.5%;
+  right: 0;
+  top: 73%;
+  max-width: 69%;
+  color: currentColor;
+  text-align: left;
+  font-family: var(--mae-font-body);
+  font-weight: 700;
+  letter-spacing: -.033em;
+  font-size: clamp(.7rem, 1.7vw, 1.25rem);
+  line-height: 1.14;
+}
+.mae-gsap-white-logo {
+  color: #fff;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+  filter: none;
+  overflow: visible;
+}
+
+/* TELA FINAL: fundo suavemente difuso e ornamentos fiéis ao print. */
+.mae-cinema.mae-motion-v3 {
+  background:
+    radial-gradient(ellipse 36% 65% at 0% 15%, rgba(92,71,152,.47), transparent 96%),
+    radial-gradient(ellipse 40% 58% at 96% 3%, rgba(171,135,243,.36), transparent 94%),
+    radial-gradient(ellipse 36% 57% at 91% 99%, rgba(92,71,152,.52), transparent 97%),
+    linear-gradient(113deg, #eee1f5 0%, #faf8f5 51%, #efe5f5 100%);
+}
+.mae-motion-v3 .mae-cinema-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(3.2rem, 7dvh, 5.5rem) clamp(1.2rem, 4vw, 3.5rem) clamp(1.1rem, 3dvh, 2rem);
+}
+.mae-motion-v3 .mae-cinema-center {
+  display: grid;
+  width: min(100%, 1258px);
+  grid-template-columns: minmax(0, 600px) minmax(0, 570px);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 5.5rem);
+}
+.mae-motion-v3 .mae-cinema-brand {
+  position: relative;
+  display: block;
+  width: min(100%, 600px);
+  height: clamp(178px, 21vw, 253px);
+  min-width: 0;
+  aspect-ratio: auto;
+  justify-self: start;
+  background: transparent;
+  -webkit-mask: none;
+  mask: none;
+  filter: none;
+  color: var(--mae-purple);
+}
+.mae-motion-v3 .mae-cinema-brand-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--mae-purple);
+  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+}
+.mae-motion-v3 .mae-cinema-brand-description {
+  position: absolute;
+  display: block;
+  top: 73%;
+  left: 30.5%;
+  right: 0;
+  color: var(--mae-purple);
+  font-family: var(--mae-font-body);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  font-size: clamp(.85rem, 1.45vw, 1.35rem);
+  line-height: 1.12;
+}
+.mae-motion-v3 .mae-cinema-auth {
+  justify-self: end;
+  width: 100%;
+  max-width: 570px;
+  min-height: min(683px, calc(100dvh - 152px));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1.55rem, 2.6vw, 2.25rem);
+  background: #fff;
+  border: 1px solid rgba(249,243,239,.9);
+  border-radius: 20px;
+  box-shadow: 0 8px 35px rgba(40,0,99,.035);
+}
+.mae-motion-v3 .mae-cinema-auth h1 {
+  color: var(--mae-purple);
+  font-size: clamp(1.42rem, 2.45vw, 1.9rem);
+  line-height: 1.18;
+  font-weight: 750;
+  text-align: center;
+  margin: .35rem 0 0;
+}
+.mae-motion-v3 .mae-cinema-status { margin-bottom: 1.3rem; }
+.mae-motion-v3 .mae-cinema-description {
+  color: var(--mae-purple);
+  text-align: center;
+  font-size: clamp(.78rem, 1.16vw, .96rem);
+  margin: .65rem 0 clamp(1.1rem, 3.5dvh, 2rem);
+  line-height: 1.42;
+}
+.mae-motion-v3 .auth-form { gap: clamp(.65rem, 1.55dvh, 1rem); }
+.mae-motion-v3 .auth-field { gap: .28rem; font-size: .88rem; font-weight: 700; }
+.mae-motion-v3 .auth-input {
+  min-height: clamp(48px, 5.9dvh, 61px);
+  border-radius: 12px;
+  border-color: transparent;
+  background: #e1d7ee;
+  color: #280063;
+  font-size: 1rem;
+}
+.mae-motion-v3 .auth-primary-button {
+  min-height: clamp(49px, 5.9dvh, 61px);
+  margin-top: .2rem;
+  border-radius: 13px;
+  border: none;
+  color: white;
+  font-size: 1.14rem;
+  font-weight: 750;
+  background: linear-gradient(105deg, #78639d 0%, #a68bb5 45%, #571277 100%);
+  box-shadow: none;
+}
+.mae-motion-v3 .auth-google-button {
+  min-height: clamp(48px, 5.9dvh, 62px);
+  border: 1px solid #897c9a;
+  border-radius: 13px;
+  background: #fff;
+  color: var(--mae-purple);
+  font-size: clamp(.84rem, 1.22vw, 1.04rem);
+  font-weight: 650;
+}
+.mae-motion-v3 .auth-signin-stack { display: grid; gap: clamp(.6rem, 1.35dvh, 1rem); }
+.mae-motion-v3 .auth-secondary-links { margin-top: .35rem; }
+.mae-motion-v3 .auth-secondary-links a { font-size: clamp(.76rem, 1.06vw, .92rem); color: #251736; }
+
+/* Rodapé do print: UFCG à esquerda, versões centralizadas, créditos à direita. */
+@media (min-width: 851px) {
+  .mae-motion-v3 .mae-cinema-footer {
+    display: grid;
+    grid-template-columns: minmax(125px, 1fr) minmax(0, 800px) minmax(200px, 1fr);
+    align-items: center;
+    column-gap: .6rem;
+    padding: .55rem clamp(.8rem, 1.6vw, 1.55rem);
+    background: #1c0739;
+    color: #faf4ff;
+    font-size: clamp(.62rem, .78vw, .76rem);
+    min-height: 53px;
+  }
+  .mae-motion-v3 .mae-cinema-footer-product { display: none; }
+  .mae-motion-v3 .mae-cinema-footer-identification { justify-self: start; }
+  .mae-motion-v3 .mae-cinema-ufcg { width: 125px; height: auto; }
+  .mae-motion-v3 .mae-cinema-footer-details {
+    width: 100%;
+    max-width: none;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    justify-items: center;
+    text-align: center;
+  }
+  .mae-motion-v3 .mae-cinema-footer-technical {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: .28rem .68rem;
+    width: 100%;
+  }
+  .mae-motion-v3 .mae-cinema-footer-version,
+  .mae-motion-v3 .mae-cinema-footer-governance { width: auto; justify-content: center; }
+  .mae-motion-v3 .mae-cinema-footer-credits {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    text-align: right;
+  }
+}
+@media (max-width: 1100px) and (min-width: 851px) {
+  .mae-motion-v3 .mae-cinema-center {
+    grid-template-columns: minmax(0,1fr) minmax(0,48%);
+    gap: clamp(1.2rem, 3vw, 2.3rem);
+  }
+  .mae-motion-v3 .mae-cinema-footer {
+    grid-template-columns: minmax(110px, 1fr) minmax(0, 2.3fr) minmax(175px, 1fr);
+  }
+  .mae-motion-v3 .mae-cinema-footer-technical { font-size: .62rem; }
+}
+
+/* Mobile e tablet: mesmo visual, formulário em tamanho natural e sem scroll interno. */
+@media (max-width: 850px) {
+  .mae-motion-v3 .mae-cinema-main {
+    padding: max(4.25rem, calc(env(safe-area-inset-top) + 3.5rem)) clamp(.65rem, 4vw, 1.4rem) 1.2rem;
+  }
+  .mae-motion-v3 .mae-cinema-center {
+    width: min(100%, 470px);
+    grid-template-columns: minmax(0,1fr);
+    gap: clamp(.5rem, 2.2dvh, 1.25rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand {
+    width: min(74vw, 335px);
+    height: clamp(126px, 33vw, 160px);
+    justify-self: center;
+  }
+  .mae-motion-v3 .mae-cinema-brand-description { font-size: clamp(.55rem, 2.05vw, .77rem); }
+  .mae-motion-v3 .mae-cinema-auth {
+    max-width: 470px;
+    min-height: 0;
+    padding: clamp(1.1rem, 4vw, 1.65rem);
+    display: block;
+    justify-self: stretch;
+    border-radius: 17px;
+  }
+  .mae-motion-v3 .mae-cinema-status { margin-bottom: .5rem; }
+  .mae-motion-v3 .mae-cinema-description { margin: .45rem 0 1rem; }
+  .mae-motion-v3 .auth-field { font-size: .79rem; }
+  .mae-motion-v3 .auth-signin-stack { gap: .6rem; }
+  .mae-motion-v3 .auth-secondary-links a { font-size: .8rem; }
+  .mae-gsap-reveal-wrap, .mae-gsap-white-logo {
+    width: min(92vw, 560px);
+  }
+  .mae-gsap-logo-description { font-size: clamp(.58rem, 2.3vw, .9rem); }
+}
+@media (max-width: 390px) {
+  .mae-motion-v3 .mae-cinema-main { padding-inline: .65rem; }
+  .mae-motion-v3 .mae-cinema-brand { width: min(68vw, 270px); height: 122px; }
+  .mae-motion-v3 .mae-cinema-auth { padding: .95rem; }
+  .mae-motion-v3 .mae-cinema-auth h1 { font-size: 1.23rem; }
+  .mae-motion-v3 .auth-input { min-height: 45px; }
+  .mae-motion-v3 .auth-primary-button,
+  .mae-motion-v3 .auth-google-button { min-height: 46px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-gsap-reveal, .mae-gsap-logo-horizontal, .mae-gsap-flash { will-change: auto; }
+}
+
+
+/* ===== PR #19 · Composição fiel ao Figma, usando SVGs oficiais do Drive =====
+ * Desktop: marca preta à esquerda e formulário livre à direita.
+ * Mobile: marca centrada em cima, formulário embaixo e símbolo na base.
+ * A vinheta GSAP existente permanece independente do layout final.
+ */
+.mae-cinema.mae-motion-v3 {
+  color: #201731;
+  background:
+    radial-gradient(ellipse 38% 48% at -5% 6%, rgba(92,71,152,.18), transparent 100%),
+    radial-gradient(ellipse 43% 52% at 108% 96%, rgba(171,135,243,.14), transparent 95%),
+    linear-gradient(118deg, #f8f3f2 0%, #fbf8f5 48%, #f4edf6 100%);
+}
+.mae-motion-v3 .mae-cinema-ambient {
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  contain: paint;
+}
+.mae-motion-v3 .mae-cinema-light-one,
+.mae-motion-v3 .mae-cinema-light-two { display: none; }
+
+/* A assinatura institucional acompanha os dois tamanhos do protótipo. */
+.mae-motion-v3 .mae-cinema-institutional-bar {
+  position: absolute;
+  top: max(.85rem, env(safe-area-inset-top));
+  left: clamp(1rem, 2.3vw, 2.4rem);
+  right: clamp(1rem, 2.3vw, 2.4rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: .9rem;
+  z-index: 8;
+  pointer-events: none;
+}
+.mae-motion-v3 .mae-cinema-institutional-ufcg {
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(86px, 8.5vw, 118px);
+  padding: .2rem .35rem;
+  border-radius: 6px;
+  background: rgba(255,255,255,.89);
+}
+.mae-motion-v3 .mae-cinema-institutional-ufcg img {
+  display: block; width: 100%; height: auto; object-fit: contain;
+}
+.mae-motion-v3 .mae-cinema-program-signature {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  padding: .37rem .6rem;
+  border: 1px solid rgba(92,71,152,.13);
+  border-radius: 7px;
+  background: rgba(255,255,255,.82);
+  color: #280063;
+  font-size: clamp(.61rem, .8vw, .74rem);
+  font-weight: 700;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.mae-motion-v3 .mae-cinema-program-separator { color: #7f5db8; }
+.mae-motion-v3 .mae-gsap-replay {
+  top: clamp(3.35rem, 7vh, 4.1rem);
+  right: clamp(1rem, 2.3vw, 2.4rem);
+  bottom: auto;
+  padding: .3rem .65rem;
+  color: #3d246e;
+  background: rgba(255,255,255,.77);
+  border-color: rgba(92,71,152,.17);
+}
+.mae-motion-v3 .mae-gsap-replay:hover { color: #280063; background: #fff; }
+
+/* Ornamentos: o desenho navy é o símbolo autêntico Prancheta 30_3.svg. */
+.mae-motion-v3 .mae-motion-ribbons {
+  inset: 0 0 3.15rem;
+  position: absolute;
+  overflow: hidden;
+}
+.mae-motion-v3 .mae-motion-ribbons .mae-ribbon {
+  position: absolute; display: block;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+}
+.mae-motion-v3 .mae-ribbon-orange {
+  left: -2%; top: -5%;
+  width: clamp(260px, 27vw, 410px);
+  color: #F44E04;
+  opacity: .85;
+  animation: mae-figma-coral 15s ease-in-out infinite alternate;
+}
+.mae-motion-v3 .mae-ribbon-purple-top,
+.mae-motion-v3 .mae-ribbon-purple-bottom {
+  -webkit-mask: url("/brands/mae-aps-simbolo-drive.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-simbolo-drive.svg") center / contain no-repeat;
+  background: #252555;
+  opacity: .97;
+}
+.mae-motion-v3 .mae-ribbon-purple-top {
+  right: -10.5%;
+  top: -19%;
+  width: clamp(330px, 41vw, 590px);
+  height: clamp(380px, 49vw, 700px);
+  transform: rotate(-31deg);
+}
+.mae-motion-v3 .mae-ribbon-purple-bottom {
+  left: -12.5%; bottom: -42%;
+  width: clamp(320px, 39vw, 585px);
+  height: clamp(350px, 44vw, 640px);
+  transform: rotate(52deg);
+}
+.mae-motion-v3 .mae-ribbon-cream { display: none; }
+@keyframes mae-figma-coral {
+  from { transform: translate3d(-4px, 0, 0) rotate(-1deg); }
+  to { transform: translate3d(8px, 8px, 0) rotate(2deg); }
+}
+
+/* Desktop 1440: espaço em branco e campos grandes sem caixa em volta. */
+.mae-motion-v3 .mae-cinema-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(5rem, 10vh, 7rem) clamp(1.25rem, 6vw, 6rem) clamp(1.3rem, 3vh, 2.5rem);
+}
+.mae-motion-v3 .mae-cinema-center {
+  width: min(100%, 1220px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: clamp(2.25rem, 6vw, 7rem);
+  align-items: center;
+}
+.mae-motion-v3 .mae-cinema-brand {
+  display: grid;
+  place-items: center;
+  justify-self: start;
+  width: min(100%, 570px);
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1810 / 680;
+  padding: 0;
+  background: transparent;
+  -webkit-mask: none;
+  mask: none;
+  filter: none;
+  color: #15121c;
+}
+.mae-motion-v3 .mae-cinema-brand-drive {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+.mae-motion-v3 .mae-cinema-auth {
+  display: block;
+  width: min(100%, 520px);
+  min-height: 0;
+  max-width: 520px;
+  justify-self: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0 clamp(.15rem, 2.4vw, 1.25rem);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #201731;
+}
+.mae-motion-v3 .mae-cinema-status { margin: 0 0 clamp(.8rem, 2.4vh, 1.5rem); }
+.mae-motion-v3 .mae-cinema-auth h1 {
+  margin: 0;
+  color: #191526;
+  text-align: center;
+  font-size: clamp(1.43rem, 2vw, 1.95rem);
+  font-weight: 800;
+  line-height: 1.17;
+}
+.mae-motion-v3 .mae-cinema-description {
+  margin: .5rem 0 clamp(1rem, 3.1vh, 1.75rem);
+  color: #4b415b;
+  text-align: center;
+  font-size: clamp(.78rem, 1vw, .94rem);
+  line-height: 1.47;
+}
+.mae-motion-v3 .mae-cinema .auth-signin-stack,
+.mae-motion-v3 .auth-signin-stack { gap: clamp(.55rem, 1.4vh, .85rem); }
+.mae-motion-v3 .auth-form { gap: clamp(.52rem, 1.4vh, .9rem); }
+.mae-motion-v3 .auth-field {
+  gap: .36rem;
+  color: #241b32;
+  font-size: .85rem;
+  font-weight: 750;
+}
+.mae-motion-v3 .auth-input {
+  min-height: clamp(47px, 5.6vh, 58px);
+  background: #e7dff0;
+  border: 1px solid #d6cae2;
+  border-radius: 9px;
+  font-size: .91rem;
+  color: #280063;
+}
+.mae-motion-v3 .auth-input::placeholder { color: #665679; opacity: 1; }
+.mae-motion-v3 .auth-input:hover { background: #ebe4f3; border-color: #b3a1d0; }
+.mae-motion-v3 .auth-input:focus-visible {
+  background: #fff;
+  border-color: #6944a5;
+  outline: 3px solid rgba(171,135,243,.42);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+
+/* Cristal roxo: superfície polida, reflexo diagonal e brilho controlado. */
+.mae-motion-v3 .auth-primary-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: clamp(48px, 5.5vh, 58px);
+  border: 1px solid #9672d4;
+  border-radius: 11px;
+  margin-top: .2rem;
+  color: white;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: .015em;
+  background:
+    radial-gradient(ellipse 68% 130% at 45% -45%, rgba(244,233,255,.47), transparent 70%),
+    linear-gradient(110deg,#3c167b 2%,#8057ce 47%,#53219f 96%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.64),
+    inset 0 -3px 9px rgba(31,0,74,.29),
+    0 7px 17px rgba(59,22,120,.19);
+  text-shadow: 0 1px 2px rgba(26,3,55,.26);
+  transition: box-shadow .22s ease, transform .22s ease, filter .22s ease;
+}
+.mae-motion-v3 .auth-primary-button::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -80% auto -80% -62%;
+  width: 32%;
+  transform: skewX(-23deg) translateX(-125%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.04), rgba(255,255,255,.56), rgba(255,255,255,.04), transparent);
+  pointer-events: none;
+  animation: mae-purple-crystal-sheen 5.8s cubic-bezier(.4,0,.25,1) infinite;
+}
+.mae-motion-v3 .auth-primary-button::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1px 3px auto;
+  height: 43%;
+  border-radius: 10px 10px 46% 46%;
+  background: linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,0));
+  pointer-events: none;
+}
+@keyframes mae-purple-crystal-sheen {
+  0%,18% { transform: skewX(-23deg) translateX(-130%); }
+  38%,100% { transform: skewX(-23deg) translateX(650%); }
+}
+.mae-motion-v3 .auth-primary-button:hover:not(:disabled) {
+  filter: brightness(1.075);
+  background:
+    radial-gradient(ellipse 68% 130% at 45% -45%, rgba(244,233,255,.55), transparent 70%),
+    linear-gradient(110deg,#4c1f92 2%,#9568e2 47%,#5d29ad 96%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.76), inset 0 -3px 9px rgba(31,0,74,.26), 0 10px 23px rgba(59,22,120,.28);
+  transform: translateY(-1px);
+}
+.mae-motion-v3 .auth-primary-button:active:not(:disabled) { transform: translateY(1px) scale(.992); }
+.mae-motion-v3 .auth-primary-button:focus-visible {
+  outline: 3px solid #ab87f3;
+  outline-offset: 3px;
+}
+.mae-motion-v3 .auth-primary-button:disabled {
+  opacity: .62;
+  cursor: wait;
+  filter: none;
+}
+.mae-motion-v3 .auth-primary-button:disabled::before { animation: none; opacity: 0; }
+.mae-motion-v3 .auth-google-button {
+  min-height: clamp(47px, 5.5vh, 58px);
+  border: 1px solid #b5a8ca;
+  border-radius: 10px;
+  color: #2b1845;
+  background: #fff;
+  font-size: .89rem;
+  font-weight: 700;
+}
+.mae-motion-v3 .auth-google-button:hover { border-color: #7653ac; background: #fbf9ff; }
+.mae-motion-v3 .auth-divider { color: #554666; }
+.mae-motion-v3 .auth-divider::before,.mae-motion-v3 .auth-divider::after { background: #b8a8ce; }
+.mae-motion-v3 .auth-secondary-links { margin-top: .18rem; }
+.mae-motion-v3 .auth-secondary-links a,.mae-motion-v3 .auth-back-link { color: #38215b; font-weight: 700; }
+.mae-motion-v3 .auth-secondary-links a:hover,.mae-motion-v3 .auth-back-link:hover { color: #7345ad; }
+.mae-motion-v3 .auth-system-status { color:#166437; background:#edf8f0; border-color:#c2dfcc; }
+.mae-motion-v3 .auth-back-link:focus-visible { outline: 3px solid #ab87f3; }
+
+/* Rodapé institucional único, mantendo créditos, SIAPS e LGPD. */
+.mae-motion-v3 .mae-cinema-footer { z-index: 3; background: #23214f; border-top-color: #414174; color:#f5f1ff; }
+@media (min-width: 851px) {
+  .mae-motion-v3 .mae-cinema-footer {
+    grid-template-columns: minmax(95px,1fr) minmax(0,2.6fr) minmax(170px,1fr);
+    min-height: 48px;
+  }
+}
+
+/* Mobile conforme a arte pequena do Figma, SEM encolher o formulário. */
+@media (max-width: 850px) {
+  .mae-motion-v3 .mae-cinema-institutional-bar { left: .75rem; right: .75rem; top: max(.52rem,env(safe-area-inset-top)); }
+  .mae-motion-v3 .mae-cinema-institutional-ufcg { width: 87px; }
+  .mae-motion-v3 .mae-cinema-program-signature { font-size: .57rem; gap: .17rem; padding: .24rem .36rem; }
+  .mae-motion-v3 .mae-gsap-replay { top: 3.6rem; right: .65rem; font-size: .62rem; }
+  .mae-motion-v3 .mae-cinema-main {
+    padding: clamp(7.1rem, 15vh, 10.5rem) clamp(.85rem, 5vw, 1.5rem) 1.35rem;
+    align-items: flex-start;
+  }
+  .mae-motion-v3 .mae-cinema-center {
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+    width: min(100%, 430px);
+    gap: clamp(2rem, 4vh, 3.1rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand {
+    justify-self: center;
+    width: min(75vw, 280px);
+    min-height: 0;
+    height: auto;
+  }
+  .mae-motion-v3 .mae-cinema-auth {
+    width: 100%;
+    max-width: 430px;
+    padding: 0 .2rem;
+    min-height: 0;
+    justify-self: stretch;
+  }
+  .mae-motion-v3 .mae-cinema-auth h1 { font-size: clamp(1.4rem, 4.9vw, 1.85rem); }
+  .mae-motion-v3 .mae-cinema-description { margin-bottom: 1.05rem; }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+    top: -3%; left: 16%; width: 260px; opacity: .74;
+  }
+  .mae-motion-v3 .mae-ribbon-purple-top { display: none; }
+  .mae-motion-v3 .mae-ribbon-cream {
+    display: block;
+    color: #f44e04;
+    width: 275px;
+    right: -25%;
+    top: -6%;
+    opacity: .70;
+    transform: rotate(-15deg);
+  }
+  .mae-motion-v3 .mae-ribbon-purple-bottom {
+    display: block;
+    left: -45%;
+    bottom: -29%;
+    width: 580px;
+    height: 560px;
+    background: #5c4798;
+    transform: rotate(45deg);
+    opacity: .75;
+  }
+  .mae-motion-v3 .mae-cinema-footer { position: relative; }
+}
+@media (max-width: 390px) {
+  .mae-motion-v3 .mae-cinema-main { padding-top: 6.5rem; padding-inline: .78rem; padding-bottom: 1rem; }
+  .mae-motion-v3 .mae-cinema-center { gap: 1.65rem; }
+  .mae-motion-v3 .mae-cinema-brand { width: min(74vw, 240px); }
+  .mae-motion-v3 .auth-input,.mae-motion-v3 .auth-primary-button,.mae-motion-v3 .auth-google-button { min-height: 46px; }
+  .mae-motion-v3 .mae-cinema-description { font-size: .77rem; }
+  .mae-motion-v3 .mae-ribbon-purple-bottom { left: -55%; bottom: -30%; width: 500px; height: 510px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-motion-v3 .mae-ribbon-orange,
+  .mae-motion-v3 .auth-primary-button::before { animation: none !important; }
+  .mae-motion-v3 .auth-primary-button { transition: none; }
+}
+
+
+/* ===================================================================
+ * Figma 1440 / Mobile 390 — implementação fiel às telas de referência
+ * 14/10/2026. Mantém os SVGs oficiais do Google Drive (sem vídeo).
+ * =================================================================== */
+.mae-cinema.mae-motion-v3 {
+  background:
+    radial-gradient(ellipse 29% 48% at -2% 8%, rgba(128,91,196,.35) 0%, transparent 95%),
+    radial-gradient(ellipse 29% 38% at 101% 94%, rgba(121,82,179,.46) 0%, transparent 97%),
+    linear-gradient(114deg,#f3ecf9 0%,#fffaf8 50%,#f1e7f8 100%);
+  color:#280063;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-motion-ribbons { inset: 0 0 47px; }
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+  left: 14.5%; top: -16%;
+  width: clamp(310px,31vw,465px);
+  opacity: 1;
+  animation: mae-figma-coral 17s ease-in-out infinite alternate;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-top {
+  display:block;
+  right:-25.5%; top:-58%;
+  width:clamp(530px,57vw,840px);
+  height:clamp(570px,60vw,885px);
+  transform:rotate(-31deg);
+  opacity:1;
+  background:#280063;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-bottom {
+  display:block;
+  left:-32%; bottom:-82%;
+  width:clamp(460px,52vw,760px);
+  height:clamp(500px,56vw,830px);
+  transform:rotate(44deg);
+  opacity:1;
+  background:#5c4798;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-cream {
+  display:block;
+  right:-18%; bottom:-28%;
+  width:clamp(330px,38vw,555px);
+  opacity:.86;
+  color:#f9f3ef;
+}
+.mae-motion-v3 .mae-cinema-main {
+  position:relative;
+  z-index:2;
+  width:100%;
+  padding:clamp(5.5rem,10vh,7.6rem) clamp(1.25rem,5vw,5.5rem) clamp(1.25rem,3vh,2.5rem);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.mae-motion-v3 .mae-cinema-center {
+  width:min(100%,1240px);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,540px);
+  gap:clamp(2rem,6.5vw,6.5rem);
+  align-items:center;
+}
+.mae-motion-v3 .mae-cinema-brand {
+  display:grid;
+  place-items:center;
+  justify-self:center;
+  width:min(100%,590px);
+  height:auto;
+  aspect-ratio:1810/680;
+  padding:0;
+  background:transparent;
+  -webkit-mask:none;
+  mask:none;
+  filter:none;
+}
+.mae-motion-v3 .mae-cinema-brand-drive {
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+  /* Logo PRINCIPAL oficial do Drive, com a cor roxa do manual. */
+  filter:brightness(0) saturate(100%) invert(12%) sepia(76%) saturate(4135%) hue-rotate(258deg) brightness(66%) contrast(120%);
+}
+.mae-motion-v3 .mae-cinema-auth {
+  display:block;
+  width:100%;
+  max-width:540px;
+  padding:clamp(1.3rem,2.9vw,2.6rem) clamp(1.35rem,2.9vw,2.6rem);
+  background:#fff;
+  border:1px solid rgba(255,255,255,.8);
+  border-radius:24px;
+  box-shadow:0 18px 45px rgba(55,29,92,.07),0 3px 12px rgba(45,27,81,.045);
+  color:#211432;
+}
+.mae-motion-v3 .mae-cinema-status {
+  margin:0 0 clamp(.7rem,2vh,1.3rem);
+  text-align:center;
+}
+.mae-motion-v3 .mae-cinema-auth h1 {
+  font-size:clamp(1.5rem,2.1vw,2rem);
+  font-weight:800;
+  text-align:center;
+  color:#280063;
+  line-height:1.2;
+}
+.mae-motion-v3 .mae-cinema-description {
+  margin:.6rem 0 clamp(1.1rem,2.5vh,1.7rem);
+  font-size:clamp(.78rem,1vw,.92rem);
+  line-height:1.42;
+  text-align:center;
+  color:#302344;
+}
+.mae-motion-v3 .auth-form { gap:clamp(.55rem,1.5vh,.85rem); }
+.mae-motion-v3 .auth-field {
+  gap:.34rem;
+  color:#271a3b;
+  font-weight:700;
+  font-size:.88rem;
+}
+.mae-motion-v3 .auth-input {
+  min-height:clamp(46px,5.5vh,57px);
+  padding-inline:.92rem;
+  color:#280063;
+  background:#e2d7eb;
+  background-color:#e2d7eb;
+  border:1px solid #d6cae4;
+  border-radius:12px;
+}
+.mae-motion-v3 .auth-input::placeholder { color:#726483; }
+.mae-motion-v3 .auth-input:focus-visible {
+  outline:3px solid rgba(171,135,243,.7);
+  outline-offset:1px;
+  background:#fff;
+  border-color:#6d4aab;
+}
+.mae-motion-v3 .auth-primary-button {
+  isolation:isolate;
+  position:relative;
+  overflow:hidden;
+  min-height:clamp(48px,5.6vh,58px);
+  width:100%;
+  border:1px solid #73459d;
+  border-radius:12px;
+  color:#fff;
+  background:
+    radial-gradient(ellipse 80% 115% at 44% -52%, rgba(255,255,255,.38),transparent 84%),
+    linear-gradient(107deg,#65518f 0%,#ba91c4 38%,#9c5dac 61%,#551076 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.62),
+    inset 0 -2px 5px rgba(47,0,90,.26),
+    0 5px 13px rgba(61,24,113,.18);
+  text-shadow:0 1px 2px rgba(44,13,69,.35);
+  transition:transform .18s ease,filter .22s ease,box-shadow .22s ease;
+}
+.mae-motion-v3 .auth-primary-button-label {
+  position:relative;
+  z-index:2;
+  pointer-events:none;
+}
+.mae-motion-v3 .auth-primary-button::before {
+  z-index:1;
+  inset:-70% auto -70% -62%;
+  width:28%;
+  opacity:.9;
+  background:linear-gradient(95deg,transparent 0%,rgba(255,255,255,.04) 22%,rgba(255,255,255,.48) 49%,rgba(255,255,255,.06) 73%,transparent 100%);
+  filter:blur(3px);
+  animation:mae-purple-crystal-sheen 5.8s ease-in-out infinite;
+}
+.mae-motion-v3 .auth-primary-button::after {
+  z-index:1;
+  inset:1px 5px auto;
+  height:42%;
+  background:linear-gradient(180deg,rgba(255,255,255,.23),transparent);
+}
+.mae-motion-v3 .auth-primary-button:hover:not(:disabled) {
+  filter:brightness(1.09);
+  transform:translateY(-1px);
+  background:
+    radial-gradient(ellipse 80% 115% at 44% -52%, rgba(255,255,255,.44),transparent 84%),
+    linear-gradient(107deg,#6d56a5 0%,#c5a0db 38%,#9550bc 61%,#570d87 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -2px 5px rgba(47,0,90,.26),0 9px 20px rgba(61,24,113,.26);
+}
+.mae-motion-v3 .auth-primary-button:focus-visible {
+  outline:3px solid #ab87f3;
+  outline-offset:3px;
+}
+.mae-motion-v3 .auth-primary-button:disabled { opacity:.65; cursor:progress; filter:none; }
+.mae-motion-v3 .auth-primary-button:disabled::before { animation:none; opacity:0; }
+.mae-motion-v3 .auth-google-button {
+  width:100%;
+  min-height:clamp(46px,5.5vh,56px);
+  background:#fff;
+  border:1px solid #9286a0;
+  border-radius:12px;
+  color:#33204e;
+}
+.mae-motion-v3 .mae-cinema-footer {
+  z-index:3;
+  background:#211247;
+  border-top-color:rgba(255,255,255,.2);
+}
+.mae-motion-v3 .mae-cinema-footer-product { display:none; }
+@media (min-width:851px) {
+  .mae-motion-v3 .mae-cinema-footer {
+    min-height:48px;
+    grid-template-columns:minmax(90px,1fr) minmax(0,3fr) minmax(160px,1fr);
+  }
+}
+
+/* Figma mobile: logotipo central, formulário diretamente sobre o fundo,
+   curvas somente nas bordas e rodapé compacto já acessível no aparelho. */
+@media (max-width:850px) {
+  .mae-motion-v3 .mae-cinema-main {
+    padding:max(7.7rem,calc(env(safe-area-inset-top) + 6.6rem)) clamp(.9rem,5vw,1.5rem) 1.1rem;
+    align-items:flex-start;
+  }
+  .mae-motion-v3 .mae-cinema-center {
+    width:min(100%,430px);
+    grid-template-columns:minmax(0,1fr);
+    justify-items:center;
+    gap:clamp(1rem,3vh,1.75rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand {
+    width:min(69vw,270px);
+    height:auto;
+    justify-self:center;
+  }
+  .mae-motion-v3 .mae-cinema-auth {
+    width:100%;
+    max-width:430px;
+    background:transparent;
+    border:0;
+    border-radius:0;
+    padding:0;
+    box-shadow:none;
+  }
+  .mae-motion-v3 .mae-cinema-status { margin-bottom:.8rem; }
+  .mae-motion-v3 .mae-cinema-auth h1 { font-size:clamp(1.37rem,5.1vw,1.76rem); }
+  .mae-motion-v3 .mae-cinema-description {
+    margin:.5rem 0 1rem;
+    font-size:clamp(.76rem,3vw,.87rem);
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+    left:23%; top:-9%; width:clamp(230px,60vw,310px); opacity:.9;
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-top { display:none; }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-bottom {
+    left:-38%; bottom:-46%; width:115vw; height:110vw; max-height:520px;
+    transform:rotate(48deg); opacity:.96; background:#5c4798;
+  }
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-cream {
+    display:block;
+    right:-30%; top:1%; bottom:auto; width:clamp(215px,61vw,310px);
+    transform:rotate(-18deg); opacity:.45; color:#f44e04;
+  }
+}
+@media (max-width:390px) {
+  .mae-motion-v3 .mae-cinema-main {
+    padding-top:max(6.8rem,calc(env(safe-area-inset-top) + 5.9rem));
+    padding-inline:.85rem;
+  }
+  .mae-motion-v3 .mae-cinema-center { gap:.9rem; }
+  .mae-motion-v3 .mae-cinema-brand { width:min(66vw,245px); }
+  .mae-motion-v3 .mae-cinema-description { margin-bottom:.65rem; }
+  .mae-motion-v3 .auth-input,.mae-motion-v3 .auth-primary-button,
+  .mae-motion-v3 .auth-google-button { min-height:46px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .mae-motion-v3 .auth-primary-button::before { animation:none !important; }
+  .mae-motion-v3 .auth-primary-button { transition:none; }
+}
+
+
+/* ============================================================
+ * PR #19 · V6 revisada com referência: abertura 5s + login
+ * Fonte única da marca: SVG vetorial OFICIAL (inclui subtítulo).
+ * Este bloco consolida as decisões finais, sem tocar no pós-login.
+ * ============================================================ */
+.mae-gsap-intro-v6 .mae-gsap-stage-light {
+  background:
+    radial-gradient(ellipse 41% 70% at 0% 11%, rgba(92,71,152,.30), transparent 97%),
+    radial-gradient(ellipse 45% 65% at 100% 100%, rgba(171,135,243,.22), transparent 94%),
+    linear-gradient(120deg,#f3ecf7 0%,#fffaf7 50%,#eee2f7 100%);
+}
+.mae-gsap-intro-v6 .mae-gsap-orb { opacity: .12; filter: blur(100px); }
+.mae-gsap-intro-v6 .mae-gsap-orb-a { background: #ab87f3; }
+.mae-gsap-intro-v6 .mae-gsap-orb-b { background: #5c4798; }
+.mae-gsap-intro-v6 .mae-gsap-orb-c { background: #f9f3ef; }
+.mae-gsap-intro-v6 .mae-gsap-reveal-wrap,
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(85vw, 900px, 156dvh);
+  max-height: 61dvh;
+  aspect-ratio: 1810 / 680;
+  height: auto;
+  min-width: 0;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+.mae-gsap-intro-v6 .mae-gsap-flash,
+.mae-gsap-intro-v6 .mae-gsap-reveal {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: #280063;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+.mae-gsap-intro-v6 .mae-gsap-official-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  /* Texto "Monitoramento" faz parte do vetor, não é composto via CSS. */
+  -webkit-mask: url("/brands/mae-aps-logo-preta-drive.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-logo-preta-drive.svg") center / contain no-repeat;
+}
+.mae-gsap-intro-v6 .mae-gsap-stage-dark {
+  background:
+    radial-gradient(ellipse 72% 80% at 50% 45%, #52279a 0%, #38117f 48%, #280063 100%);
+  opacity: 1;
+  visibility: visible;
+  will-change: clip-path;
+}
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  color: #fff;
+  filter: none;
+  opacity: 1;
+  visibility: visible;
+}
+/* O fundo roxo nunca encobre a marca: o SVG branco está na mesma posição
+   e tem o mesmo tamanho do vetor roxo da primeira cena. */
+.mae-gsap-intro-v6 .mae-gsap-white-logo .mae-gsap-official-logo {
+  filter: drop-shadow(0 0 1px rgba(255,255,255,.15));
+}
+.mae-gsap-intro-v6 .mae-gsap-skip { z-index: 30; }
+
+/* Desktop: sem cabeçalho redundante, marca à esquerda, card à direita,
+   identificação institucional SOMENTE na faixa inferior. */
+.mae-cinema.mae-motion-v3 {
+  background:
+    radial-gradient(ellipse 34% 59% at -2% 10%, rgba(130,89,185,.22), transparent 97%),
+    radial-gradient(ellipse 36% 47% at 100% 96%, rgba(106,64,168,.25), transparent 97%),
+    linear-gradient(118deg,#f4edf8 0%,#fffdfa 50%,#f4edf9 100%);
+}
+.mae-motion-v3 .mae-cinema-institutional-bar { display: none !important; }
+.mae-motion-v3 .mae-cinema-ambient { z-index: 0; }
+.mae-motion-v3 .mae-cinema-main {
+  padding: clamp(1rem,2.7dvh,2rem) clamp(1.2rem,4vw,4.2rem);
+  align-items: center;
+  justify-content: center;
+}
+.mae-motion-v3 .mae-cinema-center {
+  width: min(100%, 1260px);
+  grid-template-columns: minmax(0,1fr) minmax(0,570px);
+  gap: clamp(2rem,5vw,5.5rem);
+  align-items: center;
+}
+.mae-motion-v3 .mae-cinema-brand {
+  justify-self: start;
+  width: min(100%,595px);
+  max-width: 100%;
+  aspect-ratio: 1810 / 680;
+  height: auto;
+}
+.mae-motion-v3 .mae-cinema-brand-drive {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(12%) sepia(76%) saturate(4135%) hue-rotate(258deg) brightness(66%) contrast(120%);
+}
+.mae-motion-v3 .mae-cinema-auth {
+  justify-self: end;
+  width: 100%;
+  max-width: 570px;
+  min-height: min(683px, calc(100dvh - 105px));
+  padding: clamp(1.45rem,2.7vw,2.25rem);
+  background: #fff;
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 24px;
+  box-shadow: 0 12px 34px rgba(40,0,99,.055);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.mae-motion-v3 .mae-cinema-status { margin: 0 0 clamp(1rem,2.1dvh,1.45rem); }
+.mae-motion-v3 .mae-cinema-auth h1 {
+  font-size: clamp(1.45rem,2.35vw,2rem);
+  font-weight: 800;
+  color: #280063;
+}
+.mae-motion-v3 .mae-cinema-description {
+  margin: .55rem 0 clamp(1.2rem,3.1dvh,2.1rem);
+  color: #302144;
+  font-size: clamp(.82rem,1.1vw,.98rem);
+  line-height: 1.42;
+}
+.mae-motion-v3 .auth-signin-stack { gap: clamp(.65rem,1.65dvh,1rem); }
+.mae-motion-v3 .auth-form { gap: clamp(.65rem,1.65dvh,1rem); }
+.mae-motion-v3 .auth-field { color:#24143b; font-weight:700; font-size:.9rem; }
+.mae-motion-v3 .auth-input {
+  min-height: clamp(50px,5.9dvh,61px);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #e2d8ed;
+  color: #280063;
+}
+.mae-motion-v3 .auth-input::placeholder { color: #766b86; }
+.mae-motion-v3 .auth-primary-button {
+  min-height: clamp(50px,5.9dvh,61px);
+  color: #fff;
+  border-radius: 12px;
+}
+.mae-motion-v3 .auth-google-button {
+  min-height: clamp(50px,5.9dvh,61px);
+  border-radius: 12px;
+}
+.mae-motion-v3 .auth-secondary-links { margin-top: .38rem; }
+
+/* Marca de canto sem ocupar o conteúdo ou criar uma barra no topo. */
+.mae-motion-v3 .mae-cinema-ambient .mae-motion-ribbons { inset: 0 0 53px; }
+.mae-motion-v3 .mae-ribbon-orange { opacity: .88; }
+.mae-motion-v3 .mae-ribbon-purple-top { opacity: .94; }
+.mae-motion-v3 .mae-ribbon-purple-bottom { opacity: .91; }
+.mae-motion-v3 .mae-ribbon-cream { opacity: .80; }
+.mae-motion-v3 .mae-gsap-replay {
+  top: .65rem;
+  right: .9rem;
+  bottom: auto;
+  font-size: .68rem;
+  z-index: 6;
+  opacity: .82;
+}
+.mae-motion-v3 .mae-cinema-footer {
+  background: #211247;
+  color: #fff;
+}
+/* A faixa institucional não depende de largura fixa e não deve cobrir
+   links ou campos quando houver zoom, teclado virtual ou tela curta. */
+@media (min-width: 851px) and (max-width: 1100px) {
+  .mae-motion-v3 .mae-cinema-center {
+    grid-template-columns: minmax(0,1fr) minmax(0,51%);
+    gap: 1.5rem;
+  }
+}
+@media (max-width: 850px) {
+  .mae-gsap-intro-v6 .mae-gsap-reveal-wrap,
+  .mae-gsap-intro-v6 .mae-gsap-white-logo {
+    width: min(94vw, 640px);
+    max-height: 45dvh;
+  }
+  .mae-motion-v3 .mae-cinema-main {
+    padding: max(2.65rem,calc(env(safe-area-inset-top) + 2rem))
+      clamp(.85rem,4.5vw,1.45rem) 1.4rem;
+    align-items: flex-start;
+  }
+  .mae-motion-v3 .mae-cinema-center {
+    width: min(100%, 470px);
+    grid-template-columns: minmax(0,1fr);
+    justify-items: center;
+    gap: clamp(1rem,2.6dvh,1.6rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand {
+    justify-self: center;
+    width: min(80vw,325px);
+    height: auto;
+  }
+  .mae-motion-v3 .mae-cinema-auth {
+    width: 100%;
+    min-height: 0;
+    max-width: 470px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    display: block;
+  }
+  .mae-motion-v3 .mae-cinema-description { margin-bottom: 1rem; }
+  .mae-motion-v3 .mae-gsap-replay { top: .45rem; right: .45rem; }
+  .mae-motion-v3 .mae-ribbon-purple-bottom { opacity: .55; }
+}
+@media (max-width: 390px) {
+  .mae-motion-v3 .mae-cinema-main { padding-top: max(2.7rem,calc(env(safe-area-inset-top) + 2.2rem)); }
+  .mae-motion-v3 .mae-cinema-center { gap: .9rem; }
+  .mae-motion-v3 .mae-cinema-brand { width: min(78vw,285px); }
+  .mae-motion-v3 .mae-cinema-description { margin-bottom: .65rem; }
+  .mae-motion-v3 .auth-input,
+  .mae-motion-v3 .auth-primary-button,
+  .mae-motion-v3 .auth-google-button { min-height: 46px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-gsap-intro-v6, .mae-gsap-intro-v6 * { animation: none !important; }
+}
+
+
+/* PR #19 · Correção da revisão visual em 15/10:
+   duas camadas isoladas: quando o círculo cobre a tela, só a marca
+   BRANCA fica na frente (não a versão roxa da cena clara). */
+.mae-gsap-intro-v6 .mae-gsap-stage-light {
+  z-index: 0;
+  isolation: isolate;
+}
+.mae-gsap-intro-v6 .mae-gsap-stage-dark {
+  z-index: 2;
+  isolation: isolate;
+}
+.mae-gsap-intro-v6 .mae-gsap-skip { z-index: 10; }
+.mae-gsap-intro-v6 .mae-gsap-reveal-wrap,
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  width: min(88vw, 930px, 148dvh);
+  max-height: 62dvh;
+  aspect-ratio: 1610 / 635;
+  overflow: visible;
+}
+.mae-gsap-intro-v6 .mae-gsap-flash,
+.mae-gsap-intro-v6 .mae-gsap-reveal,
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  -webkit-mask: none;
+  mask: none;
+  background: none;
+}
+.mae-gsap-intro-v6 .mae-gsap-official-logo {
+  /* Arte oficial: só símbolo + "MAE APS".
+     A assinatura completa fica em texto HTML, evitando os caracteres
+     ausentes da outra variante vetorial fornecida pelo Drive. */
+  -webkit-mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  mask: url("/brands/mae-aps-horizontal-azul.svg") center / contain no-repeat;
+  background: currentColor;
+}
+.mae-gsap-intro-v6 .mae-gsap-logo-description {
+  position: absolute;
+  display: block;
+  top: 72%;
+  left: 30.5%;
+  right: 0;
+  max-width: none;
+  width: 69.5%;
+  color: inherit;
+  font-family: var(--mae-font-body);
+  font-size: clamp(.65rem, 1.72vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -.026em;
+  white-space: nowrap;
+  text-align: left;
+}
+.mae-gsap-intro-v6 .mae-gsap-white-logo {
+  color: #fff !important;
+}
+.mae-gsap-intro-v6 .mae-gsap-white-logo .mae-gsap-official-logo {
+  color: #fff;
+  background: #fff;
+}
+.mae-gsap-intro-v6 .mae-gsap-white-logo .mae-gsap-logo-description {
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(16,0,45,.12);
+}
+
+/* Tela posterior: mesma geometria da marca oficial que abre a vinheta,
+   com as duas linhas COMPLETAS de assinatura, sem máscara de texto. */
+.mae-motion-v3 .mae-cinema-brand {
+  position: relative;
+  aspect-ratio: 1610 / 635;
+  overflow: visible;
+}
+.mae-motion-v3 .mae-cinema-brand-drive {
+  position: relative;
+  z-index: 0;
+  aspect-ratio: 1610 / 635;
+  object-fit: contain;
+}
+.mae-motion-v3 .mae-cinema-brand-description {
+  z-index: 1;
+  top: 72%;
+  left: 30.5%;
+  right: 0;
+  width: 69.5%;
+  max-width: none;
+  color: #280063;
+  font-family: var(--mae-font-body);
+  font-size: clamp(.73rem,1.43vw,1.2rem);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -.027em;
+  white-space: nowrap;
+}
+@media (max-width: 850px) {
+  .mae-gsap-intro-v6 .mae-gsap-reveal-wrap,
+  .mae-gsap-intro-v6 .mae-gsap-white-logo {
+    width: min(93vw, 630px);
+    max-height: 44dvh;
+  }
+  .mae-gsap-intro-v6 .mae-gsap-logo-description {
+    font-size: clamp(.49rem,2.08vw,.91rem);
+  }
+  .mae-motion-v3 .mae-cinema-brand-description {
+    font-size: clamp(.45rem,2.04vw,.8rem);
+  }
+}
+@media (max-width: 390px) {
+  .mae-gsap-intro-v6 .mae-gsap-logo-description { font-size: clamp(.45rem,1.94vw,.7rem); }
+  .mae-motion-v3 .mae-cinema-brand-description { font-size: clamp(.43rem,1.91vw,.7rem); }
+}
+
+
+/* ===============================================================
+ * PR #19 · V7: refinamento sobre o print 1440x1024 e abertura de 5s.
+ * A curva laranja agora usa a geometria extraída da própria referência.
+ * NÃO girar, animar, redimensionar com "clamp" nem usar o stroke
+ * antigo: isto criava a quebra visual e separava as voltas.
+ * =============================================================== */
+.mae-motion-v3 .mae-cinema-ambient .mae-motion-ribbons {
+  position: absolute;
+  inset: 0 0 53px;
+  width: 100%;
+  overflow: hidden;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  display: block;
+  color: #f44e04;
+  opacity: 1;
+  transform: none;
+  animation: none !important;
+  filter: none;
+  will-change: auto;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange path {
+  fill: currentColor;
+  stroke: none;
+}
+/* Texto mostrado por elemento independente, NÃO dentro do clip-path
+   usado para desenhar a marca. Ele só transita em opacidade/posição. */
+.mae-gsap-intro-v7 .mae-gsap-reveal {
+  clip-path: inset(0 100% 0 0);
+}
+.mae-gsap-intro-v7 .mae-gsap-tagline-light {
+  display: block;
+  z-index: 3;
+  overflow: visible;
+  opacity: 0;
+  color: #280063;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+.mae-gsap-intro-v7 .mae-gsap-reveal-wrap,
+.mae-gsap-intro-v7 .mae-gsap-stage-light,
+.mae-gsap-intro-v7 .mae-gsap-stage-dark,
+.mae-gsap-intro-v7 .mae-gsap-white-logo {
+  overflow: visible;
+}
+.mae-gsap-intro-v7 .mae-gsap-stage-light,
+.mae-gsap-intro-v7 .mae-gsap-stage-dark { overflow: hidden; }
+.mae-gsap-intro-v7 .mae-gsap-stage-light { z-index: 0; }
+.mae-gsap-intro-v7 .mae-gsap-stage-dark { z-index: 2; }
+.mae-gsap-intro-v7 .mae-gsap-white-logo,
+.mae-gsap-intro-v7 .mae-gsap-white-logo .mae-gsap-logo-description {
+  color: #ffffff !important;
+}
+.mae-gsap-intro-v7 .mae-gsap-white-logo .mae-gsap-official-logo {
+  background: #ffffff !important;
+}
+.mae-gsap-intro-v7 .mae-gsap-logo-description {
+  letter-spacing: -.025em;
+  line-height: 1.16;
+  overflow: visible;
+}
+@media (max-width: 850px) {
+  /* A curva continua no fundo e não atravessa o formulário. */
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .90;
+    transform: none;
+  }
+  .mae-gsap-intro-v7 .mae-gsap-logo-description {
+    font-size: clamp(.47rem, 2.0vw, .9rem);
+    letter-spacing: -.035em;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange { animation: none !important; }
+  .mae-gsap-intro-v7 .mae-gsap-tagline-light { will-change: auto; }
+}
