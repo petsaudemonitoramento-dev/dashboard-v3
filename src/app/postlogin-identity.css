@@ -1158,3 +1158,29 @@
     grid-template-columns: minmax(0,1fr);
   }
 }
+
+.management-shell .dashboard-summary-ranking-grid {
+  display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: clamp(.65rem,1.1vw,1rem); margin-top: 1rem;
+}
+.management-shell .dashboard-summary-ranking {
+  display: grid; gap: .4rem; padding: .2rem 0 0; margin: 0; list-style: none;
+}
+.management-shell .dashboard-summary-ranking li {
+  min-width: 0; display: flex; align-items: center;
+  justify-content: space-between; gap: .7rem;
+  padding: .7rem 0; border-bottom: 1px solid #eee6f4;
+  font-size: .74rem; color: var(--post-purple);
+}
+.management-shell .dashboard-summary-ranking li span { min-width: 0; }
+.management-shell .dashboard-summary-ranking li strong { display: block; }
+.management-shell .dashboard-summary-ranking li small {
+  display: block; margin-top: .22rem; font-size: .7rem;
+  color: var(--post-muted); line-height: 1.35;
+}
+.management-shell .dashboard-summary-ranking li b {
+  flex: 0 0 auto; font-variant-numeric: tabular-nums; color: var(--post-plum);
+}
+@container mae-dashboard (max-width: 770px) {
+  .management-dashboard .dashboard-summary-ranking-grid { grid-template-columns: minmax(0,1fr); }
+}
