@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import {
   BarChart3, Bell, Building2, ChevronDown, DatabaseZap,
   GitCompareArrows, LayoutDashboard, LandPlot, LogOut,
-  Menu, Settings2, ShieldCheck, UserRound, X,
+  Menu, Settings2, ShieldCheck, UserRound,
 } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
@@ -70,15 +70,21 @@ export function ManagementShell({ children, email, role, userId, displayName, no
     return () => window.removeEventListener("resize", syncViewport);
   }, []);
   useEffect(() => {
-    try {
-      const list: unknown = JSON.parse(window.sessionStorage.getItem(storageKey) ?? "[]");
-      setSeenIds(Array.isArray(list) ? list.filter((id): id is string => typeof id === "string") : []);
-    } catch { setSeenIds([]); }
+    // Carregamento após a hidratação, sem disparar setState diretamente no effect.
+    function readSession() {
+      try {
+        const list: unknown = JSON.parse(window.sessionStorage.getItem(storageKey) ?? "[]");
+        setSeenIds(Array.isArray(list) ? list.filter((id): id is string => typeof id === "string") : []);
+      } catch { setSeenIds([]); }
+    }
+    const raf = window.requestAnimationFrame(readSession);
+    return () => window.cancelAnimationFrame(raf);
   }, [storageKey]);
-  useEffect(() => {
-    if (mobile) setMenuOpen(false);
+
+  function closeAfterNavigation() {
     setBellOpen(false);
-  }, [pathname]); // fechar menus ao navegar; não modifica a sessão
+    if (mobile) setMenuOpen(false);
+  }
 
   const unread = notices.filter((n) => !seenIds.includes(n.id));
   function readAll() {
@@ -102,7 +108,7 @@ export function ManagementShell({ children, email, role, userId, displayName, no
           aria-controls="management-side-navigation" aria-expanded={menuOpen}
           onClick={() => setMenuOpen((open) => !open)}><Menu aria-hidden="true" /></button>
 
-        <Link href={homeHref} className="management-brand" aria-label="MAE APS: início do módulo">
+        <Link href={homeHref} onClick={closeAfterNavigation} className="management-brand" aria-label="MAE APS: início do módulo">
           <Image className="management-brand-symbol" src="/brands/mae-aps-simbolo-cabecalho.svg" alt="" width={560} height={740} priority />
           <span className="management-brand-copy">
             <strong>MAE APS</strong>
@@ -152,7 +158,7 @@ export function ManagementShell({ children, email, role, userId, displayName, no
             <div className="management-user-popover">
               <strong>{roleLabel.toUpperCase()}</strong>
               <p>{email}</p>
-              <Link href="/sistema/perfil" className="management-profile-link"><UserRound className="size-4" /> Editar perfil e configurações</Link>
+              <Link href="/sistema/perfil" onClick={closeAfterNavigation} className="management-profile-link"><UserRound className="size-4" /> Editar perfil e configurações</Link>
               <form action={signOutAction}><button type="submit"><LogOut className="size-4" /> Sair</button></form>
             </div>
           </details>
@@ -168,18 +174,18 @@ export function ManagementShell({ children, email, role, userId, displayName, no
             <span className="management-nav-label">Administração e segurança</span>
             {adminItems.map(({ href, label, icon: Icon }) => {
               const active = href === "/sistema/administracao" ? pathname === href : pathname.startsWith(href);
-              return <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
+              return <Link key={href} href={href} onClick={closeAfterNavigation} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
                 <Icon className="size-5" /><span>{label}</span>
               </Link>;
             })}
           </> : <>
-            <Link href="/sistema/gestao" className={isDashboardHome ? "active" : ""}
+            <Link href="/sistema/gestao" onClick={closeAfterNavigation} className={isDashboardHome ? "active" : ""}
               aria-current={isDashboardHome ? "page" : undefined}>
               <LayoutDashboard className="size-5" /><span>Início</span>
             </Link>
             {role === "gestao" ? <>
               <span className="management-nav-label">Gestão de dados</span>
-              <Link href="/sistema/importar" aria-label="Importar SIAPS" className={isImport ? "active" : ""}
+              <Link href="/sistema/importar" onClick={closeAfterNavigation} aria-label="Importar SIAPS" className={isImport ? "active" : ""}
                 aria-current={isImport ? "page" : undefined}>
                 <DatabaseZap className="size-5" /><span>Importar SIAPS</span>
               </Link>
@@ -187,13 +193,13 @@ export function ManagementShell({ children, email, role, userId, displayName, no
             <span className="management-nav-label">Análises</span>
             {analysisItems.map(({ href, label, icon: Icon }) => {
               const active = pathname.startsWith(href);
-              return <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
+              return <Link key={href} href={href} onClick={closeAfterNavigation} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
                 <Icon className="size-5" /><span>{label}</span>
               </Link>;
             })}
           </>}
           <span className="management-nav-separator" />
-          <Link href="/sistema/perfil" className={pathname === "/sistema/perfil" ? "active" : ""}
+          <Link href="/sistema/perfil" onClick={closeAfterNavigation} className={pathname === "/sistema/perfil" ? "active" : ""}
             aria-current={pathname === "/sistema/perfil" ? "page" : undefined}>
             <Settings2 className="size-5" /><span>Configurações</span>
           </Link>
