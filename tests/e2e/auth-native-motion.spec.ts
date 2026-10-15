@@ -30,7 +30,7 @@ test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async 
   await expect(scene).toBeVisible();
   await expect(scene.locator(".mae-cinema-brand")).toBeVisible();
   await expect(scene.locator(".mae-cinema-institutional-bar")).toHaveCount(0);
-  await expect(scene.locator(".mae-cinema-brand-drive")).toHaveAttribute("src", /mae-aps-horizontal-azul/);
+  await expect(scene.locator(".mae-cinema-brand-drive")).toHaveAttribute("src", /mae-aps-assinatura-unificada\.svg/);
   await expect(scene.locator(".mae-cinema-brand-description")).toHaveCount(0);
   const svg = await page.request.get("/brands/mae-aps-assinatura-unificada.svg");
   expect(svg.ok()).toBeTruthy();
