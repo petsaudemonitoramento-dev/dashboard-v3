@@ -479,20 +479,6 @@ export default async function ManagementDashboard({
 
   const classificationOption: EChartsOption = {
     tooltip: { trigger: "item", formatter: "{b}: {c} equipes ({d}%)", confine: false, appendTo: "body", extraCssText: "z-index:9999;max-width:320px;white-space:normal;" },
-    title: {
-      text: `${teamCount}\nequipes`,
-      left: "50%",
-      // O centro da rosca está em 34% da altura do gráfico.
-      // Mantemos o bloco de duas linhas equilibrado dentro do círculo.
-      top: "34%",
-      textAlign: "center",
-      textStyle: {
-        color: "#143154",
-        fontSize: 18,
-        fontWeight: 800,
-        lineHeight: 23,
-      },
-    },
     legend: {
       orient: "horizontal",
       left: "center",
@@ -750,6 +736,7 @@ export default async function ManagementDashboard({
             accessibleData={classificationAccessibleData}
             option={classificationOption}
             ariaLabel="Distribuição das equipes por classificação C3"
+            centerLabel={`${teamCount}\nequipes`}
             height={330}
           />
         </article>
