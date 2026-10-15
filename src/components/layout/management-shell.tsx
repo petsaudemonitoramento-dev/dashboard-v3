@@ -135,7 +135,7 @@ export function ManagementShell({ children, email, role }: Props) {
           {role === "gestao" && (
             <Link
               href="/sistema/importar"
-              aria-label="Importar dados"
+              aria-label="Importar SIAPS"
               className={isImport ? "active" : ""}
               aria-current={isImport ? "page" : undefined}
             >
