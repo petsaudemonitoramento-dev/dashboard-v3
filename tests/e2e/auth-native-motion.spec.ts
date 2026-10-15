@@ -57,7 +57,21 @@ test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async 
   expect(await loginButton.evaluate(e => getComputedStyle(e, "::before").animationName)).toBe("mae-purple-crystal-sheen");
   await expect(loginButton.locator(".auth-primary-button-label")).toHaveText("Entrar");
   expect(await loginButton.evaluate(e => getComputedStyle(e, "::before").zIndex)).toBe("1");
-  expect(await loginButton.evaluate(e => getComputedStyle(e).borderRadius)).toBe("12px");
+  expect(await loginButton.evaluate(e => getComputedStyle(e).borderRadius)).toBe("13px");
+  const style = await loginButton.evaluate(e => ({
+    background: getComputedStyle(e).backgroundImage,
+    color: getComputedStyle(e).color,
+    labelColor: getComputedStyle(e.querySelector(".auth-primary-button-label")!).color,
+    labelLayer: getComputedStyle(e.querySelector(".auth-primary-button-label")!).zIndex,
+    glareLayer: getComputedStyle(e, "::before").zIndex,
+    glareOpacity: Number(getComputedStyle(e, "::before").opacity),
+  }));
+  expect(style.background).toContain("linear-gradient(");
+  expect(style.background).toContain("55, 16, 113"); // #371071 — início do gradiente Importar SIAPS
+  expect(style.color).toBe("rgb(255, 255, 255)");
+  expect(style.labelColor).toBe("rgb(255, 255, 255)");
+  expect(Number(style.labelLayer)).toBeGreaterThan(Number(style.glareLayer));
+  expect(style.glareOpacity).toBeLessThanOrEqual(.5);
 });
 
 for (const width of [320, 390, 768]) {
