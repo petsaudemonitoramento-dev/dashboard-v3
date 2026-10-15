@@ -14,7 +14,7 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Acesso ao MAE APS" })).toBeVisible();
 });
 
-test("layout Figma desktop: logo preta oficial, formulário sem cartão e cristal roxo", async ({ page }) => {
+test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v5", "played"));
   await page.goto("/entrar");
@@ -25,7 +25,12 @@ test("layout Figma desktop: logo preta oficial, formulário sem cartão e crista
   await expect(scene.locator(".mae-cinema-institutional-ufcg img")).toBeVisible();
   const card = scene.locator(".mae-cinema-auth");
   await expect(card).toBeVisible();
-  expect(await card.evaluate(e => getComputedStyle(e).backgroundColor)).not.toBe("rgb(255, 255, 255)");
+  expect(await card.evaluate(e => getComputedStyle(e).backgroundColor)).toBe("rgb(255, 255, 255)");
+  const brandRect = await scene.locator(".mae-cinema-brand").boundingBox();
+  const cardRect = await card.boundingBox();
+  expect(brandRect).not.toBeNull();
+  expect(cardRect).not.toBeNull();
+  expect(brandRect!.x + brandRect!.width).toBeLessThan(cardRect!.x + 10);
   const columns = await scene.locator(".mae-cinema-center").evaluate(e => getComputedStyle(e).gridTemplateColumns);
   expect(columns.split(" ").length).toBe(2);
   await expect(card.locator('input[name="email"]')).toBeVisible();
@@ -33,6 +38,8 @@ test("layout Figma desktop: logo preta oficial, formulário sem cartão e crista
   const loginButton = card.getByRole("button", { name: "Entrar" });
   await expect(loginButton).toBeVisible();
   expect(await loginButton.evaluate(e => getComputedStyle(e, "::before").animationName)).toBe("mae-purple-crystal-sheen");
+  await expect(loginButton.locator(".auth-primary-button-label")).toHaveText("Entrar");
+  expect(await loginButton.evaluate(e => getComputedStyle(e, "::before").zIndex)).toBe("1");
   expect(await loginButton.evaluate(e => getComputedStyle(e).borderRadius)).toBe("11px");
 });
 
@@ -43,6 +50,7 @@ for (const width of [320, 390, 768]) {
     await page.goto("/entrar");
     await expect(page.locator(".mae-cinema-brand")).toBeVisible();
     await expect(page.locator(".mae-cinema-auth")).toBeVisible();
+    expect(await page.locator(".mae-cinema-auth").evaluate(e => getComputedStyle(e).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);
     const template = await page.locator(".mae-cinema-center").evaluate(e => getComputedStyle(e).gridTemplateColumns);
