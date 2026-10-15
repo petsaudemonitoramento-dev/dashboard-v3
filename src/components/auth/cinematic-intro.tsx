@@ -108,13 +108,14 @@ export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: b
         <span className="mae-gsap-orb mae-gsap-orb-b" />
         <span className="mae-gsap-orb mae-gsap-orb-c" />
         <div className="mae-gsap-reveal-wrap">
-          <div className="mae-gsap-flash"><span className="mae-gsap-official-logo" /></div>
-          <div className="mae-gsap-reveal"><span className="mae-gsap-official-logo" /></div>
+          <div className="mae-gsap-flash"><span className="mae-gsap-official-logo" /><span className="mae-gsap-logo-description">Monitoramento, atenção e estratégia<br />na Atenção Primária à Saúde</span></div>
+          <div className="mae-gsap-reveal"><span className="mae-gsap-official-logo" /><span className="mae-gsap-logo-description">Monitoramento, atenção e estratégia<br />na Atenção Primária à Saúde</span></div>
         </div>
       </div>
       <div className="mae-gsap-stage-dark" aria-hidden="true">
         <div className="mae-gsap-white-logo">
           <span className="mae-gsap-official-logo" />
+          <span className="mae-gsap-logo-description">Monitoramento, atenção e estratégia<br />na Atenção Primária à Saúde</span>
         </div>
       </div>
       <button className="mae-gsap-skip" type="button" onClick={complete}>
