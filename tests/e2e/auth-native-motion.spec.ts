@@ -4,7 +4,8 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
   await page.goto("/entrar");
   await expect(page.locator(".mae-gsap-intro")).toBeVisible();
   await expect(page.locator(".mae-gsap-intro video")).toHaveCount(0);
-  await expect(page.locator(".mae-gsap-intro .mae-ribbon")).toHaveCount(4);
+  await expect(page.locator(".mae-gsap-intro .mae-ribbon")).toHaveCount(0);
+  await expect(page.locator(".mae-cinema-ambient .mae-ribbon")).toHaveCount(4);
   await page.getByRole("button", { name: /pular/i }).click();
   await expect(page.locator(".mae-gsap-intro")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /rever abertura/i })).toBeVisible();
@@ -13,7 +14,7 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
 
 test("layout desktop preserva logo oficial e login autenticável no cartão claro", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-organica-oficial-v3", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v4", "played"));
   await page.goto("/entrar");
   const scene = page.locator(".mae-motion-v3");
   await expect(scene).toBeVisible();
@@ -31,7 +32,7 @@ test("layout desktop preserva logo oficial e login autenticável no cartão clar
 for (const width of [320, 390, 768]) {
   test(`layout responsivo em ${width}px sem transbordamento horizontal`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
-    await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-organica-oficial-v3", "played"));
+    await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v4", "played"));
     await page.goto("/entrar");
     await expect(page.locator(".mae-cinema-brand")).toBeVisible();
     await expect(page.locator(".mae-cinema-auth")).toBeVisible();
