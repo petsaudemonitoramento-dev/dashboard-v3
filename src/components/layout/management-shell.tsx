@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   Bell,
+  LandPlot,
+  ShieldCheck,
   Building2,
   ChevronDown,
   DatabaseZap,
@@ -20,7 +22,7 @@ import { signOutAction } from "@/app/(auth)/actions";
 type Props = {
   children: React.ReactNode;
   email: string;
-  role: "gestao" | "leitura";
+  role: "gestao" | "leitura" | "admin";
 };
 
 const analysisItems = [
@@ -44,13 +46,22 @@ export function ManagementShell({ children, email, role }: Props) {
   const isImport = pathname.startsWith("/sistema/importar");
   const isDashboardHome = pathname === "/sistema/gestao";
   const initials = initialsFromEmail(email);
+  const isAdmin = role === "admin";
+  const homeHref = isAdmin ? "/sistema/administracao" : "/sistema/gestao";
+  const roleLabel = isAdmin ? "Administração" : role === "gestao" ? "Gestão" : "Leitura";
+  const adminItems = [
+    { href: "/sistema/administracao", label: "Contas e aprovações", icon: ShieldCheck },
+    { href: "/sistema/territorio", label: "Território", icon: LandPlot },
+    { href: "/sistema/administracao/escopos-importacao", label: "Escopos de importação", icon: DatabaseZap },
+  ];
+
 
   return (
-    <div className="management-shell">
+    <div className={`management-shell${isAdmin ? " management-shell-admin" : ""}`}>
       <a className="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
 
       <header className="management-topbar">
-        <Link href="/sistema/gestao" className="management-brand">
+        <Link href={homeHref} className="management-brand">
           <Image
             className="management-brand-symbol"
             src="/brands/mae-aps-simbolo-cabecalho.svg"
@@ -62,7 +73,7 @@ export function ManagementShell({ children, email, role }: Props) {
           <span className="management-brand-copy">
             <strong>MAE APS</strong>
             <small>Monitoramento, Atenção e Estratégia na APS</small>
-            <em>Módulo da Gestão</em>
+            <em>{isAdmin ? "Módulo Administrativo" : "Módulo da Gestão"}</em>
           </span>
         </Link>
 
@@ -84,13 +95,13 @@ export function ManagementShell({ children, email, role }: Props) {
             <summary aria-label="Abrir menu da conta">
               <span>{initials}</span>
               <span className="management-user-copy">
-                <strong>{role === "gestao" ? "Gestão" : "Leitura"}</strong>
+                <strong>{roleLabel}</strong>
                 <small>{email}</small>
               </span>
               <ChevronDown className="size-4" aria-hidden="true" />
             </summary>
             <div className="management-user-popover">
-              <strong>{role === "gestao" ? "GESTÃO" : "LEITURA"}</strong>
+              <strong>{roleLabel.toUpperCase()}</strong>
               <p>{email}</p>
               <form action={signOutAction}>
                 <button type="submit"><LogOut className="size-4" /> Sair</button>
@@ -101,7 +112,18 @@ export function ManagementShell({ children, email, role }: Props) {
       </header>
 
       <aside className="management-sidebar">
-        <nav aria-label="Navegação da Gestão">
+        <nav aria-label={isAdmin ? "Navegação da Administração" : "Navegação da Gestão"}>
+          {isAdmin ? <>
+            <span className="management-nav-label">Administração e segurança</span>
+            {adminItems.map(({ href, label, icon: Icon }) => {
+              const active = href === "/sistema/administracao"
+                ? pathname === href
+                : pathname.startsWith(href);
+              return <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
+                <Icon className="size-5" /><span>{label}</span>
+              </Link>;
+            })}
+          </> : <>
           <Link
             href="/sistema/gestao"
             className={isDashboardHome ? "active" : ""}
@@ -113,7 +135,7 @@ export function ManagementShell({ children, email, role }: Props) {
           {role === "gestao" && (
             <Link
               href="/sistema/importar"
-              aria-label="Importar dados"
+              aria-label="Importar SIAPS"
               className={isImport ? "active" : ""}
               aria-current={isImport ? "page" : undefined}
             >
@@ -136,6 +158,7 @@ export function ManagementShell({ children, email, role }: Props) {
               </Link>
             );
           })}
+          </>}
         </nav>
 
         <div className="management-sidebar-note">

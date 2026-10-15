@@ -1,0 +1,757 @@
+/*
+ * MAE APS — PR #20 · identidade pós-login
+ * Referências: marca MAE APS, paleta e composições usadas na PR #19;
+ * pasta "MAE APS - PET saúde digital" (Drive).
+ *
+ * Estilos restritos a .management-shell; não altera a tela de entrada,
+ * lógica clínica, RLS, formulários, cálculos ou classificação de risco.
+ * Estados de alerta/perigo/sucesso preservam suas cores semânticas.
+ */
+.management-shell {
+  --post-purple: #280063;
+  --post-plum: #49218a;
+  --post-violet: #7154b3;
+  --post-lilac: #ab87f3;
+  --post-pale: #f3ecfa;
+  --post-warm: #fffdfa;
+  --post-border: #e7ddee;
+  --post-muted: #695e7b;
+  --post-shadow: 0 12px 34px rgba(40,0,99,.065);
+  --post-shadow-hover: 0 16px 36px rgba(40,0,99,.095);
+  color: #2f2245;
+  background:
+    radial-gradient(ellipse 52% 45% at -7% 4%, rgba(171,135,243,.19), transparent 82%),
+    radial-gradient(ellipse 48% 42% at 102% 94%, rgba(132,90,196,.18), transparent 83%),
+    linear-gradient(135deg, #f7f2fb 0%, #fffdfa 47%, #f5effa 100%);
+}
+.management-shell,
+.management-shell * { box-sizing: border-box; }
+.management-shell :where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid #7854b6;
+  outline-offset: 3px;
+}
+.management-shell .management-topbar {
+  min-height: 81px;
+  padding: .56rem clamp(.85rem, 2.1vw, 1.8rem);
+  background: rgba(255,253,251,.95);
+  border-bottom: 1px solid rgba(84,45,145,.12);
+  box-shadow: 0 4px 24px rgba(40,0,99,.055);
+  backdrop-filter: blur(16px);
+}
+.management-shell .management-brand {
+  gap: .78rem;
+  min-width: 0;
+  text-decoration: none;
+}
+.management-shell .management-brand-symbol {
+  width: 38px;
+  height: 55px;
+  flex: none;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(11%) sepia(98%) saturate(4155%) hue-rotate(263deg) brightness(80%) contrast(124%);
+}
+.management-shell .management-brand-copy strong {
+  color: var(--post-purple);
+  font-size: 1.23rem;
+  font-weight: 850;
+  letter-spacing: -.045em;
+}
+.management-shell .management-brand-copy small {
+  color: var(--post-plum);
+  font-size: .71rem;
+  line-height: 1.3;
+}
+.management-shell .management-brand-copy em {
+  color: var(--post-muted);
+  font-size: .69rem;
+  font-weight: 700;
+}
+.management-shell .management-ufcg-logo {
+  display: block;
+  width: clamp(110px, 11.8vw, 158px);
+  height: auto;
+  max-height: 52px;
+  object-fit: contain;
+}
+.management-shell .management-institutions { gap: clamp(.55rem, 1.35vw, 1.2rem); }
+.management-shell .management-bell {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border: 1px solid var(--post-border);
+  border-radius: 11px;
+  color: var(--post-plum);
+  background: #fff;
+}
+.management-shell .management-bell svg { width: 18px; height: 18px; }
+.management-shell .management-user summary {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: .3rem .42rem;
+  color: var(--post-purple);
+}
+.management-shell .management-user summary:hover,
+.management-shell .management-user[open] summary {
+  background: var(--post-pale);
+  border-color: var(--post-border);
+}
+.management-shell .management-user summary > span:first-child {
+  width: 36px; height: 36px;
+  color: var(--post-purple);
+  background: #e8ddf5;
+  border: 1px solid rgba(89,43,150,.1);
+}
+.management-shell .management-user-popover {
+  z-index: 75;
+  border: 1px solid var(--post-border);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(40,0,99,.16);
+}
+.management-shell .management-user-popover button {
+  color: var(--post-purple);
+  background: var(--post-pale);
+}
+
+/* Navegação estável; páginas reais e RBAC não são duplicados. */
+.management-shell .management-sidebar {
+  top: 81px;
+  width: 236px;
+  padding: 1.05rem .65rem .95rem;
+  background:
+    radial-gradient(circle at 10% 6%, rgba(171,135,243,.17), transparent 48%),
+    linear-gradient(169deg, #280063 0%, #351078 55%, #23104d 100%);
+  box-shadow: 8px 0 25px rgba(40,0,99,.085);
+  color: #fff;
+}
+.management-shell .management-sidebar nav { gap: .18rem; }
+.management-shell .management-sidebar nav a {
+  min-height: 42px;
+  margin: .08rem 0;
+  padding: .68rem .8rem;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  font-size: .83rem;
+  font-weight: 700;
+  letter-spacing: -.008em;
+  color: #ebe1fb;
+  transition: background-color .18s ease, border-color .18s ease;
+}
+.management-shell .management-sidebar nav a svg { color: #d7c3f7; flex: none; }
+.management-shell .management-sidebar nav a:hover {
+  background: rgba(194,159,247,.16);
+  color: #fff;
+  transform: none;
+}
+.management-shell .management-sidebar nav a.active,
+.management-shell .management-sidebar nav a[aria-current="page"] {
+  background: linear-gradient(105deg, #7e5abd 0%, #5d319e 100%);
+  border-color: rgba(236,225,255,.23);
+  box-shadow: 0 7px 16px rgba(15,0,52,.18);
+  outline: none;
+  color: #fff;
+}
+.management-shell .management-sidebar nav a.active svg { color: #fff; }
+.management-shell .management-nav-label {
+  padding: .12rem .38rem;
+  margin: .82rem .36rem .25rem;
+  color: #d4c0f4;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.management-shell .management-sidebar-note {
+  border-top: 1px solid rgba(226,209,255,.16);
+  padding: .9rem .6rem .15rem;
+  font-size: .75rem;
+  color: #e3d7f7;
+}
+.management-shell .management-sidebar-note small {
+  color: #cdb4ef;
+  font-weight: 650;
+}
+
+/* Área de conteúdo consistente em todas as rotas protegidas. */
+.management-shell .management-main {
+  width: calc(100% - 236px);
+  max-width: none;
+  margin-left: 236px;
+  min-width: 0;
+  padding: clamp(1.1rem, 2.35vw, 2rem) clamp(.9rem, 2.4vw, 2.2rem) 2.8rem;
+}
+.management-shell :is(.management-dashboard, .management-module) {
+  width: 100%;
+  max-width: 1570px;
+  min-width: 0;
+  margin: 0 auto;
+}
+.management-shell .management-footer {
+  margin-left: 236px;
+  padding: .85rem 1rem 1.25rem;
+  border-top: 1px solid rgba(107,70,150,.1);
+  color: var(--post-muted);
+  font-size: .69rem;
+}
+.management-shell .management-footer strong { color: var(--post-purple); }
+.management-shell :is(.dashboard-welcome, .module-header) {
+  position: relative;
+  margin-bottom: 1.1rem;
+  padding: .2rem 0 .65rem;
+  align-items: center;
+  gap: 1rem;
+}
+.management-shell :is(.dashboard-welcome h1, .module-header h1) {
+  color: var(--post-purple);
+  font-family: var(--mae-font-display, inherit);
+  font-size: clamp(1.65rem, 2.25vw, 2.15rem);
+  line-height: 1.16;
+  letter-spacing: -.04em;
+  font-weight: 800;
+}
+.management-shell :is(.dashboard-welcome p, .module-header p) {
+  color: var(--post-muted);
+  max-width: 800px;
+  line-height: 1.55;
+  font-size: .86rem;
+}
+.management-shell :is(.dashboard-overline, .module-header > div:first-child > span) {
+  color: var(--post-violet);
+  font-size: .67rem;
+  letter-spacing: .12em;
+  font-weight: 850;
+}
+.management-shell :is(.dashboard-date-block, .module-header-badge) {
+  background: rgba(255,255,255,.86);
+  border: 1px solid var(--post-border);
+  border-radius: 14px;
+  color: var(--post-purple);
+  box-shadow: 0 5px 16px rgba(40,0,99,.035);
+}
+.management-shell .dashboard-date-block { padding: .72rem 1rem; }
+.management-shell .dashboard-date-block strong { color: var(--post-plum); }
+.management-shell .dashboard-scope-chips span {
+  border-color: var(--post-border);
+  color: var(--post-plum);
+  background: #fff;
+}
+.management-shell :is(.dashboard-card, .dashboard-kpi, .panel, .metric-card) {
+  min-width: 0;
+  border: 1px solid var(--post-border);
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: var(--post-shadow);
+}
+.management-shell :is(.dashboard-card, .panel) { padding: clamp(.95rem, 1.5vw, 1.3rem); }
+.management-shell :is(.dashboard-card, .dashboard-kpi, .panel):hover {
+  box-shadow: var(--post-shadow-hover);
+}
+.management-shell :is(.dashboard-card-heading h2, .panel-heading h2, .dashboard-kpi-title, .metric-card strong) {
+  color: var(--post-purple);
+  letter-spacing: -.02em;
+}
+.management-shell :is(.dashboard-card-heading > div > span, .panel-heading .eyebrow) {
+  color: var(--post-violet);
+  font-size: .67rem;
+  letter-spacing: .07em;
+  font-weight: 850;
+}
+.management-shell :is(.dashboard-card-heading p, .panel-heading p) {
+  color: var(--post-muted);
+  line-height: 1.5;
+}
+.management-shell :is(.dashboard-card-heading > a, .module-detail-link) {
+  color: var(--post-plum);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.management-shell .dashboard-kpi {
+  position: relative;
+  overflow: visible;
+  background:
+    linear-gradient(145deg, #fff 0%, #fdfbff 79%, #f7f1fc 100%);
+}
+.management-shell .dashboard-kpi-icon {
+  background: #eee3fa;
+  color: var(--post-plum);
+  border-radius: 12px;
+}
+.management-shell .dashboard-import-cta {
+  background: linear-gradient(110deg, #371071, #6741a8 70%, #8960c3);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 18px;
+  box-shadow: 0 16px 34px rgba(40,0,99,.15);
+}
+.management-shell .dashboard-card-pill {
+  border-radius: 9px;
+  color: var(--post-muted);
+  border-color: var(--post-border);
+  background: #faf7fd;
+}
+.management-shell :is(.dashboard-filter-zone, .dashboard-filter-grid, .module-filter-bar, .filter-bar) {
+  border-color: var(--post-border);
+  background: rgba(255,253,255,.96);
+  box-shadow: 0 8px 28px rgba(40,0,99,.055);
+  border-radius: 16px;
+}
+.management-shell :is(.dashboard-filter-grid, .module-filter-bar, .filter-bar) {
+  padding: clamp(.8rem, 1.4vw, 1.15rem);
+}
+.management-shell :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .field) {
+  background-color: #fff;
+  border-color: #cbbadf;
+  border-radius: 10px;
+  color: #342149;
+  min-width: 0;
+}
+.management-shell :is(input, select, textarea)::placeholder { color: #82758b; }
+.management-shell :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+  outline: 2px solid rgba(114,77,170,.5);
+  outline-offset: 1px;
+  border-color: var(--post-violet);
+}
+.management-shell :is(.primary-button, .dashboard-filter-actions button) {
+  background: linear-gradient(120deg, #5a2694, #351072);
+  color: white;
+  border-radius: 10px;
+  border: 1px solid #613a97;
+  font-weight: 800;
+  box-shadow: 0 6px 15px rgba(51,16,104,.14);
+}
+.management-shell :is(.primary-button, .dashboard-filter-actions button):hover:not(:disabled) {
+  background: linear-gradient(120deg, #6e3ca5, #431680);
+  transform: none;
+}
+.management-shell :is(.primary-button, .dashboard-filter-actions button):disabled { opacity: .57; cursor: not-allowed; }
+/* Alert and classification semantic classes keep established color mapping.
+ * No global remapping of red, amber, emerald, clinical categories or statuses. */
+.management-shell .hero-panel {
+  overflow: hidden;
+  position: relative;
+  border-radius: 20px;
+  padding: clamp(1.45rem, 2.35vw, 2.25rem);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(222,200,255,.23), transparent 34%),
+    linear-gradient(116deg, #280063 0%, #4a2086 63%, #7052ad 100%);
+  box-shadow: 0 17px 35px rgba(40,0,99,.135);
+}
+.management-shell .hero-panel h1 {
+  color: #fff;
+  font-size: clamp(1.65rem,2.5vw,2.25rem);
+}
+.management-shell .hero-panel .eyebrow { color: #dbc6fb; }
+.management-shell .hero-panel p { color: #f0e4ff; }
+.management-shell .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 11px;
+  scrollbar-color: #b7a0d7 transparent;
+}
+.management-shell .data-table {
+  color: #3b2d4a;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.management-shell .data-table th {
+  background: #f5effb;
+  color: #49218a;
+  border-bottom: 1px solid var(--post-border);
+  font-size: .74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.management-shell .data-table td {
+  background: transparent;
+  border-bottom-color: #eee8f3;
+  font-size: .82rem;
+  line-height: 1.55;
+}
+.management-shell .data-table tbody tr:hover { background: #faf7fe; }
+.management-shell .data-table tbody tr:hover td { background: #faf7fe; }
+.management-shell :is(.module-comparison-selector, .module-ranking-card, .module-summary-narrative, .module-table-card) {
+  border-radius: 17px;
+}
+.management-shell .module-classification {
+  font-weight: 700;
+}
+.management-shell :is(.dashboard-chart-row, .dashboard-secondary-charts, .dashboard-bottom-grid, .module-two-column, .module-stat-grid) {
+  min-width: 0;
+  gap: clamp(.75rem, 1.4vw, 1.35rem);
+}
+.management-shell .mae-chart { min-width: 0; }
+.management-shell .management-sidebar-note p { line-height: 1.5; }
+.management-shell .management-footer { gap: .45rem 1.25rem; }
+
+/* Pequenos laptops: conter a navegação e priorizar área analítica. */
+@media (min-width: 851px) and (max-width: 1140px) {
+  .management-shell .management-sidebar { width: 208px; }
+  .management-shell .management-main,
+  .management-shell .management-footer { margin-left: 208px; }
+  .management-shell .management-main { width: calc(100% - 208px); padding-inline: 1rem; }
+  .management-shell .management-brand-copy small { max-width: 220px; }
+}
+@media (max-width: 850px) {
+  .management-shell .management-topbar {
+    min-height: 70px;
+    padding: .45rem .75rem;
+  }
+  .management-shell .management-brand-symbol { width: 30px; height: 44px; }
+  .management-shell .management-brand-copy strong { font-size: 1.05rem; }
+  .management-shell .management-ufcg-logo { width: min(24vw, 120px); }
+  .management-shell .management-bell { display: none; }
+  .management-shell .management-sidebar {
+    position: sticky;
+    top: 70px;
+    height: auto;
+    bottom: auto;
+    width: 100%;
+    overflow-x: auto;
+    flex-direction: row;
+    padding: .32rem .6rem;
+    box-shadow: 0 7px 17px rgba(40,0,99,.09);
+    scrollbar-width: thin;
+    border-radius: 0;
+  }
+  .management-shell .management-sidebar nav {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    width: max-content;
+    min-width: 100%;
+  }
+  .management-shell .management-sidebar nav a {
+    flex: none;
+    padding: .6rem .75rem;
+    white-space: nowrap;
+    font-size: .77rem;
+    gap: .45rem;
+  }
+  .management-shell .management-sidebar nav a span { display: inline; }
+  .management-shell .management-sidebar nav a svg { width: 17px; height: 17px; }
+  .management-shell .management-nav-label,
+  .management-shell .management-sidebar-note { display: none; }
+  .management-shell .management-main,
+  .management-shell .management-footer { margin-left: 0; }
+  .management-shell .management-main {
+    width: 100%;
+    padding: 1.1rem clamp(.8rem, 3.4vw, 1.35rem) 2rem;
+  }
+  .management-shell :is(.dashboard-welcome, .module-header) { gap: .6rem; }
+}
+@media (max-width: 560px) {
+  .management-shell .management-institutions { gap: .35rem; }
+  .management-shell .management-ufcg-logo { display: none; }
+  .management-shell .management-brand-copy small,
+  .management-shell .management-brand-copy em { display: none; }
+  .management-shell :is(.dashboard-welcome, .module-header) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .management-shell :is(.dashboard-welcome h1, .module-header h1) { font-size: 1.65rem; }
+  .management-shell .management-sidebar nav a span { display: inline; }
+  .management-shell .dashboard-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .management-shell :is(.dashboard-card, .dashboard-kpi, .panel) { border-radius: 14px; padding: .8rem; }
+  .management-shell .hero-panel { border-radius: 16px; }
+  .management-shell .management-footer { font-size: .64rem; }
+}
+@media (max-width: 390px) {
+  .management-shell .dashboard-kpi-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .management-shell *, .management-shell *::before, .management-shell *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+/* PR #20 — ajuste de filtros e cartões (15/10)
+ * Em notebooks, a coluna de importação retirava espaço da seleção:
+ * "janeiro de 2026" era visualmente cortado. Layout responsivo por área útil.
+ * KPIs possuem faixas uniformes: ícone/título, número, explicação.
+ */
+.management-shell .dashboard-filter-grid,
+.management-shell .dashboard-filter-secondary,
+.management-shell .dashboard-period-selects {
+  min-width: 0;
+}
+.management-shell .dashboard-filter-grid > label,
+.management-shell .dashboard-filter-secondary > label,
+.management-shell .dashboard-period-group {
+  min-width: 0;
+}
+.management-shell .dashboard-period-selects {
+  grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr);
+  gap: .45rem;
+}
+.management-shell .dashboard-filter-grid select,
+.management-shell .dashboard-filter-grid input {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  padding-inline: .75rem 1.65rem;
+  border-radius: 10px;
+  font-size: .79rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-overflow: clip;
+}
+.management-shell .dashboard-filter-grid input {
+  padding-right: .75rem;
+}
+.management-shell .dashboard-filter-grid select:disabled {
+  color: #625879;
+  opacity: .75;
+}
+.management-shell .dashboard-filter-secondary {
+  min-width: 0;
+}
+.management-shell .dashboard-filter-actions {
+  min-width: 0;
+}
+
+/* Cada valor começa exatamente na mesma faixa em todos os seis cards,
+ * independentemente do comprimento do título ou da largura do ícone. */
+.management-shell .dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: .8rem;
+  align-items: stretch;
+}
+.management-shell .dashboard-kpi {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 66px 42px minmax(38px, 1fr);
+  align-items: start;
+  min-width: 0;
+  min-height: 177px;
+  width: 100%;
+  padding: 1rem 1rem .85rem;
+  gap: .15rem;
+  overflow: visible; /* tooltips permanecem acessíveis */
+  border-radius: 16px;
+}
+.management-shell .dashboard-kpi-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: start;
+  gap: .6rem;
+  width: 100%;
+  min-width: 0;
+}
+.management-shell .dashboard-kpi-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 0;
+  flex: none;
+}
+.management-shell .dashboard-kpi-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.management-shell .dashboard-kpi-title {
+  display: flex;
+  gap: .35rem;
+  min-width: 0;
+  min-height: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 0;
+  font-size: .75rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.management-shell .dashboard-kpi-title > span {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow-wrap: normal;
+  hyphens: auto;
+  font-size: inherit;
+  line-height: inherit;
+}
+.management-shell .dashboard-kpi-title .dashboard-help {
+  flex: 0 0 auto;
+  margin-top: .05rem;
+}
+.management-shell .dashboard-kpi > .dashboard-kpi-value {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  font-size: clamp(1.55rem, 1.88vw, 1.95rem);
+  line-height: 1.22;
+  font-weight: 800;
+  color: var(--kpi);
+  letter-spacing: -.045em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+.management-shell .dashboard-kpi > .dashboard-kpi-description {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: .12rem 0 0;
+  color: var(--post-muted);
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.32;
+  overflow-wrap: break-word;
+}
+
+/* Num notebook o filtro e o botão de importação não disputam largura. */
+@media (max-width: 1750px) {
+  .management-shell .dashboard-filter-zone {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .7rem;
+  }
+  .management-shell .dashboard-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    column-gap: 1rem;
+    row-gap: .8rem;
+  }
+  .management-shell .dashboard-period-group {
+    grid-column: auto;
+  }
+  .management-shell .dashboard-filter-secondary {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(185px, .9fr) minmax(230px, 1.4fr) auto;
+    align-items: end;
+  }
+  .management-shell .dashboard-import-cta {
+    min-height: 82px;
+    padding: .8rem 1rem;
+    border-radius: 15px;
+  }
+  .management-shell .dashboard-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1080px) {
+  .management-shell .dashboard-filter-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .management-shell .dashboard-filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .management-shell .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .management-shell .dashboard-filter-grid,
+  .management-shell .dashboard-filter-secondary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .management-shell .dashboard-filter-secondary {
+    grid-column: auto;
+  }
+  .management-shell .dashboard-filter-actions {
+    grid-column: auto;
+  }
+  .management-shell .dashboard-period-group {
+    grid-column: auto;
+  }
+  .management-shell .dashboard-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .management-shell .dashboard-kpi {
+    grid-template-rows: 60px 42px minmax(34px, 1fr);
+    min-height: 165px;
+  }
+  .management-shell .dashboard-kpi > .dashboard-kpi-value {
+    font-size: clamp(1.7rem, 7vw, 1.95rem);
+  }
+}
+@media (max-width: 390px) {
+  .management-shell .dashboard-period-selects {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .management-shell .dashboard-period-selects > span {
+    display: none;
+  }
+}
+
+
+/* PR #20 · estabilização de alinhamento e contenção no celular.
+ * Retira a animação individual dos cards, que iniciava cada valor
+ * alguns pixels fora da linha dos outros durante a apresentação.
+ * A rolagem horizontal pertence somente ao nav, nunca à página. */
+.management-shell .dashboard-kpi {
+  animation: none;
+}
+@media (max-width: 850px) {
+  .management-shell {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .management-shell .management-topbar,
+  .management-shell .management-main,
+  .management-shell .management-footer {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin-left: 0;
+  }
+  .management-shell .management-topbar,
+  .management-shell .management-brand,
+  .management-shell .management-institutions {
+    min-width: 0;
+  }
+  .management-shell .management-sidebar {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .management-shell .management-sidebar nav {
+    flex: 0 0 auto;
+    min-width: 100%;
+    width: max-content;
+  }
+  .management-shell .management-dashboard,
+  .management-shell .dashboard-filter-zone,
+  .management-shell .dashboard-kpi-grid,
+  .management-shell .dashboard-chart-row,
+  .management-shell .dashboard-secondary-charts {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+
+/* Legenda no centro matemático da rosca ECharts: center [50%,34%].
+   Usa o mesmo retângulo do canvas com translate(-50%,-50%).
+   Não depende de altura fixa em pixels ou da métrica da fonte. */
+.management-shell .mae-chart-plot-with-center {
+  position: relative;
+}
+.management-shell .mae-chart-center-label {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  display: block;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  white-space: pre-line;
+  color: #143154;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 23px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}

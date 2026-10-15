@@ -9,7 +9,7 @@ test("Gestão possui visão municipal e acesso à importação", async ({ page }
     page.getByRole("heading", { name: "Olá, Gestão de Saúde" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Importar dados" }),
+    page.getByRole("link", { name: "Importar SIAPS" }),
   ).toBeVisible();
   await page.goto("/sistema/importar");
   await expect(
@@ -24,7 +24,7 @@ test("Leitura acessa dashboard, mas não a importação", async ({ page }) => {
     page.getByRole("heading", { name: "Olá, Gestão de Saúde" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Importar dados" }),
+    page.getByRole("link", { name: "Importar SIAPS" }),
   ).toHaveCount(0);
 
   await page.goto("/sistema/importar");

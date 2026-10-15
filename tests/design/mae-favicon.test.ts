@@ -41,7 +41,10 @@ describe("Ícones MAE APS — Prancheta 30_4", () => {
     const management = readFileSync(join(process.cwd(), "src/components/layout/management-shell.tsx"), "utf8");
     const administration = readFileSync(join(process.cwd(), "src/app/(sistema)/sistema/layout.tsx"), "utf8");
     expect(management).toContain("/brands/mae-aps-simbolo-cabecalho.svg");
-    expect(administration).toContain("/brands/mae-aps-simbolo-cabecalho.svg");
+    // Administração usa o ManagementShell unificado, que já contém o
+    // mesmo símbolo oficial. Não deve duplicar uma segunda marca.
+    expect(administration).toContain('import { ManagementShell }');
+    expect(administration).toContain('<ManagementShell email={profile.email} role={profile.role}>');
     expect(management).not.toContain("/brands/mae-aps-wordmark.webp");
     expect(administration).not.toContain('className="brand-mark">MAE');
   });
