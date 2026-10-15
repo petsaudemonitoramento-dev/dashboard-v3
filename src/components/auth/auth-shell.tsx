@@ -80,7 +80,8 @@ export function AuthShell({
                 alt="Universidade Federal de Campina Grande — UFCG"
                 width={1472}
                 height={462}
-                sizes="(max-width: 560px) 67px, 94px"
+                sizes="(max-width: 850px) 148px, 184px"
+                unoptimized
               />
             </span>
             <span className="mae-cinema-footer-product">
