@@ -482,7 +482,9 @@ export default async function ManagementDashboard({
     title: {
       text: `${teamCount}\nequipes`,
       left: "50%",
-      top: "27%",
+      // O centro da rosca está em 34% da altura do gráfico.
+      // Mantemos o bloco de duas linhas equilibrado dentro do círculo.
+      top: "34%",
       textAlign: "center",
       textStyle: {
         color: "#143154",
