@@ -110,21 +110,27 @@ test("vinheta de seis segundos termina sem intervenção e preserva o SVG oficia
 });
 
 
-test("ornamentos da prancheta: círculo superior direito e símbolo M inferior esquerdo", async ({ page }) => {
+test("ornamentos: anel circular contínuo atrás do card e M inferior proporcional", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1024 });
   await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
   await page.goto("/entrar");
   const circle = page.locator(".mae-motion-ribbons .mae-ribbon-purple-top");
   const mSymbol = page.locator(".mae-motion-ribbons .mae-ribbon-purple-bottom");
-  await expect(circle).toHaveAttribute("data-reference-geometry", "top-right-original-trace");
-  await expect(circle.locator("path")).toHaveCount(1);
-  await expect(circle).toHaveCSS("border-top-style", "none");
+  await expect(circle).toHaveAttribute("data-reference-geometry", "upper-right-continuous-ring");
+  await expect(circle.locator("path")).toHaveCount(0);
+  await expect(circle).toHaveCSS("border-top-style", "solid");
+  await expect(circle).toHaveCSS("border-radius", "50%");
+  await expect(page.locator(".mae-cinema-ambient")).toHaveCSS("z-index", "0");
+  await expect(page.locator(".mae-cinema-main")).toHaveCSS("z-index", "1");
   await expect(circle).toHaveCSS("mask-image", "none");
   await expect(circle).toHaveCSS("transform", "none");
   await expect(mSymbol).toHaveAttribute("data-reference-geometry", "bottom-left-original-trace");
   await expect(mSymbol.locator("path")).toHaveCount(1);
   await expect(mSymbol).toHaveCSS("mask-image", "none");
   await expect(mSymbol).toHaveCSS("transform", "none");
+  const mBox = await mSymbol.boundingBox();
+  expect(mBox).not.toBeNull();
+  expect(mBox!.width).toBeLessThanOrEqual(500);
 });
 
 test("tela notebook sem corte de Monitoramento e sem rodapé abaixo do viewport", async ({ page }) => {
@@ -149,4 +155,26 @@ test("tela notebook sem corte de Monitoramento e sem rodapé abaixo do viewport"
   expect(footerRect!.y + footerRect!.height).toBeLessThanOrEqual(637);
   const overflow = await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight);
   expect(overflow).toBeLessThanOrEqual(2);
+});
+
+
+test("UFCG: PNG oficial em resolução integral, com tamanho legível no rodapé", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+  await page.goto("/entrar");
+  const png = page.locator(".mae-cinema-footer .mae-cinema-ufcg img");
+  await expect(png).toBeVisible();
+  await expect(png).toHaveAttribute("src", "/brands/ufcg-oficial.png");
+  const details = await png.evaluate((element) => {
+    const image = element as HTMLImageElement;
+    return { nativeWidth: image.naturalWidth, renderedWidth: image.getBoundingClientRect().width };
+  });
+  expect(details.nativeWidth).toBe(1472);
+  expect(details.renderedWidth).toBeGreaterThan(165);
+  const logoBox = await png.boundingBox();
+  const footerBox = await page.locator(".mae-cinema-footer").boundingBox();
+  expect(logoBox).not.toBeNull();
+  expect(footerBox).not.toBeNull();
+  expect(logoBox!.y).toBeGreaterThanOrEqual(footerBox!.y - 1);
+  expect(logoBox!.y + logoBox!.height).toBeLessThanOrEqual(footerBox!.y + footerBox!.height + 1);
 });
