@@ -10,6 +10,8 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
   await expect(page.locator(".mae-gsap-white-logo .mae-gsap-official-logo")).toHaveCount(1);
   await expect(page.locator(".mae-gsap-intro")).toHaveAttribute("data-intro-duration-ms", "5000");
   await expect(page.locator(".mae-gsap-logo-description")).toHaveCount(3);
+  await expect(page.locator(".mae-gsap-reveal .mae-gsap-logo-description")).toHaveCount(0);
+  await expect(page.locator(".mae-gsap-tagline-light")).toHaveCount(1);
   await expect(page.locator(".mae-gsap-stage-dark")).toHaveCSS("z-index", "2");
   await expect(page.locator(".mae-gsap-white-logo")).toHaveCSS("color", "rgb(255, 255, 255)");
   await expect(page.locator(".mae-gsap-white-logo .mae-gsap-logo-description")).toContainText("na Atenção Primária à Saúde");
@@ -22,7 +24,7 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
 
 test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v6-5s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v7-5s", "played"));
   await page.goto("/entrar");
   const scene = page.locator(".mae-motion-v3");
   await expect(scene).toBeVisible();
@@ -30,7 +32,9 @@ test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async 
   await expect(scene.locator(".mae-cinema-institutional-bar")).toHaveCount(0);
   await expect(scene.locator(".mae-cinema-brand-drive")).toHaveAttribute("src", /mae-aps-horizontal-azul/);
   await expect(scene.locator(".mae-cinema-brand-description")).toContainText("na Atenção Primária à Saúde");
-  await expect(scene.locator(".mae-cinema-institutional-ufcg img")).toBeVisible();
+  await expect(scene.locator(".mae-cinema-footer-identification img")).toBeVisible();
+  await expect(scene.locator(".mae-ribbon-orange")).toHaveAttribute("data-reference-geometry", "1440x1024");
+  await expect(scene.locator(".mae-ribbon-orange")).toHaveCSS("animation-name", "none");
   const card = scene.locator(".mae-cinema-auth");
   await expect(card).toBeVisible();
   expect(await card.evaluate(e => getComputedStyle(e).backgroundColor)).toBe("rgb(255, 255, 255)");
@@ -48,13 +52,13 @@ test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async 
   expect(await loginButton.evaluate(e => getComputedStyle(e, "::before").animationName)).toBe("mae-purple-crystal-sheen");
   await expect(loginButton.locator(".auth-primary-button-label")).toHaveText("Entrar");
   expect(await loginButton.evaluate(e => getComputedStyle(e, "::before").zIndex)).toBe("1");
-  expect(await loginButton.evaluate(e => getComputedStyle(e).borderRadius)).toBe("11px");
+  expect(await loginButton.evaluate(e => getComputedStyle(e).borderRadius)).toBe("12px");
 });
 
 for (const width of [320, 390, 768]) {
   test(`layout responsivo em ${width}px sem transbordamento horizontal`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
-    await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v6-5s", "played"));
+    await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v7-5s", "played"));
     await page.goto("/entrar");
     await expect(page.locator(".mae-cinema-brand")).toBeVisible();
     await expect(page.locator(".mae-cinema-auth")).toBeVisible();
