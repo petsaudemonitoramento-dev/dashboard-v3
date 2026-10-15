@@ -61,7 +61,10 @@ export function AuthShell({
               className="mae-cinema-brand"
               role="img"
               aria-label="MAE APS — Monitoramento, Atenção e Estratégia na Atenção Primária à Saúde"
-            />
+            >
+              <span className="mae-cinema-brand-art" aria-hidden="true" />
+              <span className="mae-cinema-brand-description" aria-hidden="true">Monitoramento, atenção e estratégia<br/>na Atenção Primária à Saúde</span>
+            </div>
             <div className="mae-cinema-auth">
               <div className="mae-cinema-status"><SystemStatus /></div>
               <h1 id="auth-access-title">{title}</h1>
