@@ -85,11 +85,39 @@
 }
 
 /* Fundo creme e massa roxa no canto mantidos da referência. */
+/* Fundo procedural da tela de login.
+ * Tom extraído das duas referências: lilás perceptível nas bordas,
+ * centro creme quase branco para leitura e profundidade sem fotografia.
+ * Somente CSS gradients, estático, sem imagens, canvas ou filtros pesados. */
 .mae-cinema.mae-motion-v3 {
-  background:
-    radial-gradient(ellipse 34% 59% at -2% 10%, rgba(130,89,185,.22), transparent 97%),
-    radial-gradient(ellipse 36% 47% at 100% 96%, rgba(106,64,168,.25), transparent 97%),
-    linear-gradient(118deg,#f4edf8 0%,#fffdfa 50%,#f4edf9 100%);
+  background-color: #f1e7fa;
+  background-image:
+    radial-gradient(ellipse 60% 69% at -9% -8%,
+      rgba(121,74,191,.51) 0%,
+      rgba(165,124,214,.36) 32%,
+      rgba(217,198,238,.18) 60%,
+      transparent 81%),
+    radial-gradient(ellipse 62% 80% at 106% 103%,
+      rgba(126,83,195,.48) 0%,
+      rgba(168,131,217,.32) 36%,
+      rgba(221,201,240,.14) 68%,
+      transparent 92%),
+    radial-gradient(ellipse 43% 58% at -8% 106%,
+      rgba(151,111,210,.29) 0%,
+      rgba(200,176,234,.15) 52%,
+      transparent 87%),
+    radial-gradient(ellipse 38% 46% at 104% -8%,
+      rgba(160,122,211,.24) 0%,
+      transparent 88%),
+    linear-gradient(118deg,
+      #eadcf7 0%,
+      #f5eff9 24%,
+      #fffdfb 49%,
+      #f9f5fb 70%,
+      #e8dcf5 100%);
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 .mae-motion-v3 .mae-cinema-main {
   min-width: 0;
