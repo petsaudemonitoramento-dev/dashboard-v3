@@ -307,13 +307,13 @@
   bottom: .2%;
   top: auto;
   color: var(--mae-cream);
-  opacity: .72;
+  opacity: .98;
 }
 .mae-cinema.mae-motion-v3 {
   background:
     radial-gradient(ellipse 40% 60% at 2% 19%, rgba(92, 71, 152, .47), transparent 96%),
     radial-gradient(ellipse 37% 52% at 96% 6%, rgba(171, 135, 243, .36), transparent 94%),
-    radial-gradient(ellipse 40% 60% at 95% 99%, rgba(92, 71, 152, .62), transparent 97%),
+    radial-gradient(ellipse 40% 60% at 95% 99%, rgba(72, 20, 132, .83), transparent 97%),
     linear-gradient(115deg, #eee1f5 0%, #faf5f1 49%, #eadcf5 100%);
 }
 .mae-motion-v3 .mae-cinema-center {
