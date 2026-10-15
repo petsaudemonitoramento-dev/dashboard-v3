@@ -9,7 +9,10 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
   await expect(page.locator(".mae-gsap-reveal .mae-gsap-official-logo")).toHaveCount(1);
   await expect(page.locator(".mae-gsap-white-logo .mae-gsap-official-logo")).toHaveCount(1);
   await expect(page.locator(".mae-gsap-intro")).toHaveAttribute("data-intro-duration-ms", "5000");
-  await expect(page.locator(".mae-gsap-logo-description")).toHaveCount(0);
+  await expect(page.locator(".mae-gsap-logo-description")).toHaveCount(3);
+  await expect(page.locator(".mae-gsap-stage-dark")).toHaveCSS("z-index", "2");
+  await expect(page.locator(".mae-gsap-white-logo")).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.locator(".mae-gsap-white-logo .mae-gsap-logo-description")).toContainText("na Atenção Primária à Saúde");
   await expect(page.locator(".mae-cinema-ambient .mae-ribbon")).toHaveCount(4);
   await page.getByRole("button", { name: /pular/i }).click();
   await expect(page.locator(".mae-gsap-intro")).toHaveCount(0);
@@ -25,7 +28,8 @@ test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async 
   await expect(scene).toBeVisible();
   await expect(scene.locator(".mae-cinema-brand")).toBeVisible();
   await expect(scene.locator(".mae-cinema-institutional-bar")).toHaveCount(0);
-  await expect(scene.locator(".mae-cinema-brand-drive")).toHaveAttribute("src", /mae-aps-logo-preta-drive/);
+  await expect(scene.locator(".mae-cinema-brand-drive")).toHaveAttribute("src", /mae-aps-horizontal-azul/);
+  await expect(scene.locator(".mae-cinema-brand-description")).toContainText("na Atenção Primária à Saúde");
   await expect(scene.locator(".mae-cinema-institutional-ufcg img")).toBeVisible();
   const card = scene.locator(".mae-cinema-auth");
   await expect(card).toBeVisible();
@@ -90,7 +94,8 @@ test("vinheta de cinco segundos termina sem intervenção e preserva o SVG ofici
   await expect(intro).toHaveAttribute("data-intro-duration-ms", "5000");
   const image = intro.locator(".mae-gsap-reveal .mae-gsap-official-logo");
   await expect(image).toHaveCount(1);
-  expect(await image.evaluate(el => getComputedStyle(el).maskImage)).toContain("mae-aps-logo-preta-drive.svg");
+  expect(await image.evaluate(el => getComputedStyle(el).maskImage)).toContain("mae-aps-horizontal-azul.svg");
+  await expect(page.locator(".mae-gsap-stage-dark")).toHaveCSS("z-index", "2");
   await expect(page.locator(".mae-gsap-intro-v6")).toHaveCount(0, { timeout: 6500 });
   await expect(page.getByRole("heading", { name: "Acesso ao MAE APS" })).toBeVisible();
 });
