@@ -3,7 +3,9 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { initialProfileFormState, updateDisplayNameAction } from "@/app/(sistema)/sistema/perfil/actions";
+import { updateDisplayNameAction, type ProfileFormState } from "@/app/(sistema)/sistema/perfil/actions";
+
+const initialProfileFormState: ProfileFormState = { ok: false, message: "", name: "" };
 
 function SubmitButton() {
   const { pending } = useFormStatus();
