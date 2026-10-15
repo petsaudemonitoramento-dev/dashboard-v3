@@ -1050,7 +1050,7 @@
 }
 .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-purple-bottom {
   display:block;
-  left:-25%; bottom:-64%;
+  left:-32%; bottom:-82%;
   width:clamp(460px,52vw,760px);
   height:clamp(500px,56vw,830px);
   transform:rotate(44deg);
@@ -1141,7 +1141,8 @@
   min-height:clamp(46px,5.5vh,57px);
   padding-inline:.92rem;
   color:#280063;
-  background:#e6ddef;
+  background:#e2d7eb;
+  background-color:#e2d7eb;
   border:1px solid #d6cae4;
   border-radius:12px;
 }
