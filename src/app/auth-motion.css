@@ -1631,3 +1631,92 @@
   .mae-gsap-intro-v6 .mae-gsap-logo-description { font-size: clamp(.45rem,1.94vw,.7rem); }
   .mae-motion-v3 .mae-cinema-brand-description { font-size: clamp(.43rem,1.91vw,.7rem); }
 }
+
+
+/* ===============================================================
+ * PR #19 · V7: refinamento sobre o print 1440x1024 e abertura de 5s.
+ * A curva laranja agora usa a geometria extraída da própria referência.
+ * NÃO girar, animar, redimensionar com "clamp" nem usar o stroke
+ * antigo: isto criava a quebra visual e separava as voltas.
+ * =============================================================== */
+.mae-motion-v3 .mae-cinema-ambient .mae-motion-ribbons {
+  position: absolute;
+  inset: 0 0 53px;
+  width: 100%;
+  overflow: hidden;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  display: block;
+  color: #f44e04;
+  opacity: 1;
+  transform: none;
+  animation: none !important;
+  filter: none;
+  will-change: auto;
+}
+.mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange path {
+  fill: currentColor;
+  stroke: none;
+}
+/* Texto mostrado por elemento independente, NÃO dentro do clip-path
+   usado para desenhar a marca. Ele só transita em opacidade/posição. */
+.mae-gsap-intro-v7 .mae-gsap-reveal {
+  clip-path: inset(0 100% 0 0);
+}
+.mae-gsap-intro-v7 .mae-gsap-tagline-light {
+  display: block;
+  z-index: 3;
+  overflow: visible;
+  opacity: 0;
+  color: #280063;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+.mae-gsap-intro-v7 .mae-gsap-reveal-wrap,
+.mae-gsap-intro-v7 .mae-gsap-stage-light,
+.mae-gsap-intro-v7 .mae-gsap-stage-dark,
+.mae-gsap-intro-v7 .mae-gsap-white-logo {
+  overflow: visible;
+}
+.mae-gsap-intro-v7 .mae-gsap-stage-light,
+.mae-gsap-intro-v7 .mae-gsap-stage-dark { overflow: hidden; }
+.mae-gsap-intro-v7 .mae-gsap-stage-light { z-index: 0; }
+.mae-gsap-intro-v7 .mae-gsap-stage-dark { z-index: 2; }
+.mae-gsap-intro-v7 .mae-gsap-white-logo,
+.mae-gsap-intro-v7 .mae-gsap-white-logo .mae-gsap-logo-description {
+  color: #ffffff !important;
+}
+.mae-gsap-intro-v7 .mae-gsap-white-logo .mae-gsap-official-logo {
+  background: #ffffff !important;
+}
+.mae-gsap-intro-v7 .mae-gsap-logo-description {
+  letter-spacing: -.025em;
+  line-height: 1.16;
+  overflow: visible;
+}
+@media (max-width: 850px) {
+  /* A curva continua no fundo e não atravessa o formulário. */
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .90;
+    transform: none;
+  }
+  .mae-gsap-intro-v7 .mae-gsap-logo-description {
+    font-size: clamp(.47rem, 2.0vw, .9rem);
+    letter-spacing: -.035em;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-motion-v3 .mae-cinema-ambient .mae-ribbon-orange { animation: none !important; }
+  .mae-gsap-intro-v7 .mae-gsap-tagline-light { will-change: auto; }
+}
