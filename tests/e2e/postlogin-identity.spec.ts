@@ -57,8 +57,11 @@ test("Navegação mobile abre por botão e fecha sem cortar o conteúdo", async 
   await toggle.click();
   await expect(page.locator(".management-sidebar")).toBeVisible();
   await expect(page.getByRole("button", { name: "Recolher menu lateral" })).toHaveAttribute("aria-expanded", "true");
-  await page.getByRole("button", { name: "Fechar menu" }).click();
+  await expect(page.locator(".management-sidebar")).toHaveCSS("overflow-y", "visible");
+  await expect(page.locator(".management-sidebar")).toHaveCSS("position", "relative");
+  await page.getByRole("button", { name: "Recolher menu lateral" }).click();
   await expect(page.getByRole("button", { name: "Abrir menu lateral" })).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".management-sidebar")).toBeHidden();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
@@ -204,5 +207,33 @@ test("Menu físico comprime e libera o dashboard sem perder valores ou filtros",
     expect(again.clip).toBeLessThanOrEqual(1);
     expect(again.cardsFit).toBe(true);
     expect(await page.locator(".dashboard-kpi-value").allTextContents()).toEqual(values);
+  }
+});
+
+test("barra lateral compartilha a única rolagem do documento", async ({ page }) => {
+  for (const width of [1024, 1366, 1920]) {
+    await page.setViewportSize({ width, height: 620 });
+    await signIn(page, "gestao");
+    const sidebar = page.locator(".management-sidebar");
+    await expect(sidebar).toBeVisible();
+    await expect(sidebar).toHaveCSS("position", "relative");
+    await expect(sidebar).toHaveCSS("overflow-y", "visible");
+    await expect(sidebar).toHaveCSS("max-height", "none");
+    const docHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    expect(docHeight).toBeGreaterThan(620);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const rectBefore = await sidebar.boundingBox();
+    await sidebar.locator("nav").hover();
+    await page.mouse.wheel(0, 360);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    const rectAfter = await sidebar.boundingBox();
+    expect(rectBefore).not.toBeNull();
+    expect(rectAfter).not.toBeNull();
+    expect(rectAfter!.y).toBeLessThan(rectBefore!.y);
+    expect(await sidebar.evaluate(el => el.scrollTop)).toBe(0);
+    await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+    await expect(page.locator(".management-shell")).toHaveClass(/management-shell-nav-collapsed/);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
   }
 });
