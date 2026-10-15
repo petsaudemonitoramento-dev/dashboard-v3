@@ -288,6 +288,11 @@ export default async function ManagementDashboard({
   const summary = ratio(selectedFacts);
   const teamCount = new Set(selectedFacts.map((fact) => fact.team_id)).size;
   const ubsCount = new Set(selectedFacts.map((fact) => fact.establishment_id)).size;
+  // Rastreabilidade territorial no recorte atual, por UBS única (não soma mensal).
+  const unknownDistrictUbs = new Set(
+    selectedFacts.filter((fact) => fact.district_id === null).map((fact) => fact.establishment_id),
+  ).size;
+  const selectedCompetencies = new Set(selectedFacts.map((fact) => fact.competency.slice(0, 7))).size;
 
   const componentTotals: Record<string, number> = Object.fromEntries(Object.keys(C3_COMPONENTS).map((code) => [code, 0]));
   const componentTotalsByMonth = new Map(
@@ -869,6 +874,41 @@ export default async function ManagementDashboard({
           </div>
           <p className="analysis-motto">Dados oficiais para apoiar uma gestão mais eficiente e um cuidado materno mais seguro.</p>
         </article>
+      </section>
+
+      <section className="dashboard-summary-highlights" aria-labelledby="resumo-executivo-titulo">
+        <div className="dashboard-card-heading">
+          <div>
+            <span>Síntese executiva</span>
+            <h2 id="resumo-executivo-titulo">Qualidade do recorte analisado</h2>
+            <p>Resumo territorial e distribuição de equipes, calculados sobre os mesmos filtros desta página.</p>
+          </div>
+        </div>
+        <div className="dashboard-summary-mini-grid">
+          <article className="dashboard-card">
+            <span>Competências no recorte</span>
+            <strong>{selectedCompetencies}</strong>
+            <small>{selectedCompetencies ? "Meses com registros oficiais disponíveis" : "Sem dados no período"}</small>
+          </article>
+          <article className="dashboard-card">
+            <span>Equipes e estabelecimentos</span>
+            <strong>{formatNumber(teamCount)} / {formatNumber(ubsCount)}</strong>
+            <small>Equipes / UBS com dados no recorte</small>
+          </article>
+          <article className="dashboard-card">
+            <span>UBS sem distrito informado</span>
+            <strong>{formatNumber(unknownDistrictUbs)}</strong>
+            <small>Vínculo territorial não identificado nos registros filtrados</small>
+          </article>
+          <article className="dashboard-card">
+            <span>Classificação das equipes</span>
+            <div className="dashboard-summary-bands">
+              {Object.entries(classificationCounts).map(([band, total]) =>
+                <span key={band}><b>{band}</b><strong>{formatNumber(total)}</strong></span>,
+              )}
+            </div>
+          </article>
+        </div>
       </section>
 
       <div className="dashboard-data-note">
