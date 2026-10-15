@@ -1086,3 +1086,75 @@
 @media (prefers-reduced-motion: reduce) {
   .management-shell { transition: none; }
 }
+
+
+/* Informações anteriormente isoladas em "Resumo", agora presentes no Início. */
+.management-shell .dashboard-summary-highlights {
+  margin-top: clamp(1.2rem, 2vw, 1.8rem);
+  min-width: 0;
+}
+.management-shell .dashboard-summary-highlights > .dashboard-card-heading { margin-bottom: .75rem; }
+.management-shell .dashboard-summary-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: clamp(.65rem,1.1vw,1rem);
+}
+.management-shell .dashboard-summary-mini-grid > article {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  min-width: 0;
+  padding: 1.05rem;
+}
+.management-shell .dashboard-summary-mini-grid > article > span {
+  color: #655083; font-size: .72rem; font-weight: 800;
+}
+.management-shell .dashboard-summary-mini-grid > article > strong {
+  display: block;
+  color: var(--post-plum);
+  font-size: clamp(1.45rem, 1.8vw, 1.85rem);
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.management-shell .dashboard-summary-mini-grid > article > small {
+  color: var(--post-muted);
+  font-size: .69rem;
+  line-height: 1.4;
+}
+.management-shell .dashboard-summary-bands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.management-shell .dashboard-summary-bands > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .3rem;
+  flex: 1 0 44%;
+  min-width: 0;
+  padding: .4rem .55rem;
+  border: 1px solid #e9def3;
+  border-radius: 9px;
+  background: #fcf9ff;
+  color: var(--post-purple);
+}
+.management-shell .dashboard-summary-bands b {
+  min-width: 0;
+  font-size: .65rem;
+  overflow-wrap: anywhere;
+}
+.management-shell .dashboard-summary-bands strong {
+  font-variant-numeric: tabular-nums;
+  font-size: .7rem;
+}
+@container mae-dashboard (max-width: 1250px) {
+  .management-dashboard .dashboard-summary-mini-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+@container mae-dashboard (max-width: 520px) {
+  .management-dashboard .dashboard-summary-mini-grid {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
