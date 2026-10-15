@@ -45,10 +45,16 @@ export function AuthShell({
     return (
       <div className="mae-cinema mae-motion-v3">
         <CinematicIntro initialPlayback={introOnLoad} />
-        <div className="mae-cinema-program-signature" aria-label="PET Saúde Digital da UFCG">
-          <span>PET Saúde Digital</span>
-          <span className="mae-cinema-program-separator" aria-hidden="true">·</span>
-          <span>UFCG</span>
+        <div className="mae-cinema-institutional-bar">
+          <span className="mae-cinema-institutional-ufcg">
+            <Image src="/brands/ufcg-oficial.png" alt="Universidade Federal de Campina Grande — UFCG"
+              width={1472} height={462} sizes="(max-width: 700px) 82px, 108px" />
+          </span>
+          <span className="mae-cinema-program-signature" aria-label="PET Saúde Digital da UFCG">
+            <span>PET Saúde Digital</span>
+            <span className="mae-cinema-program-separator" aria-hidden="true">·</span>
+            <span>UFCG</span>
+          </span>
         </div>
         <div className="mae-cinema-ambient" aria-hidden="true">
           <MotionRibbons />
@@ -62,8 +68,9 @@ export function AuthShell({
               role="img"
               aria-label="MAE APS — Monitoramento, Atenção e Estratégia na Atenção Primária à Saúde"
             >
-              <span className="mae-cinema-brand-art" aria-hidden="true" />
-              <span className="mae-cinema-brand-description" aria-hidden="true">Monitoramento, atenção e estratégia{" "}<br/>na Atenção Primária à Saúde</span>
+              <Image className="mae-cinema-brand-drive" src="/brands/mae-aps-logo-preta-drive.svg"
+                alt="" aria-hidden="true" width={1810} height={680}
+                sizes="(max-width: 850px) 240px, 530px" priority />
             </div>
             <div className="mae-cinema-auth">
               <div className="mae-cinema-status"><SystemStatus /></div>
