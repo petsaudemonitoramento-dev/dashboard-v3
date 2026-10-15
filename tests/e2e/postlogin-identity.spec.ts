@@ -95,7 +95,7 @@ test("filtros selecionados têm espaço de leitura e os KPIs respeitam o card no
       numberFits: value.scrollWidth <= value.clientWidth + 1,
       headerBeforeValue: header.getBoundingClientRect().bottom <= valueRect.top,
     };
-  })));
+  }));
   expect(metrics.every(Boolean)).toBe(true);
   const m = metrics.filter((v): v is NonNullable<typeof v> => v !== null);
   expect(m.length).toBe(6);
