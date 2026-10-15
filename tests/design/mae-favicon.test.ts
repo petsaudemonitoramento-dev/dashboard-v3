@@ -44,7 +44,7 @@ describe("Ícones MAE APS — Prancheta 30_4", () => {
     // Administração usa o ManagementShell unificado, que já contém o
     // mesmo símbolo oficial. Não deve duplicar uma segunda marca.
     expect(administration).toContain('import { ManagementShell }');
-    expect(administration).toContain('<ManagementShell email={profile.email} role={profile.role}>');
+    expect(administration).toContain('<ManagementShell email={profile.email} role={profile.role} userId={user.id}');
     expect(management).not.toContain("/brands/mae-aps-wordmark.webp");
     expect(administration).not.toContain('className="brand-mark">MAE');
   });
