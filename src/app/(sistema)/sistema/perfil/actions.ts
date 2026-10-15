@@ -7,7 +7,6 @@ import { getActiveProfileContext } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
 export type ProfileFormState = { ok: boolean; message: string; name: string };
-export const initialProfileFormState: ProfileFormState = { ok: false, message: "", name: "" };
 const nameSchema = z.string().trim().min(2, "Informe um nome com pelo menos 2 caracteres.")
   .max(80, "O nome deve ter no máximo 80 caracteres.")
   .refine((value) => !/[<>\u0000-\u001f\u007f]/.test(value), "Nome contém caracteres inválidos.");
