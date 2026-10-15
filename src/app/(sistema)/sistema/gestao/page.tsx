@@ -909,6 +909,30 @@ export default async function ManagementDashboard({
             </div>
           </article>
         </div>
+        <div className="dashboard-summary-ranking-grid">
+          <article className="dashboard-card">
+            <div className="dashboard-card-heading">
+              <div><span>Pontos de atenção</span><h2>Menores coberturas entre A–K</h2></div>
+            </div>
+            <ol className="dashboard-summary-ranking">
+              {practiceRanking.slice(0, 4).map(({ code, label, rate }) =>
+                <li key={code}><span><strong>{code} · {label}</strong><small>{C3_COMPONENTS[code as keyof typeof C3_COMPONENTS]}</small></span><b>{formatPercent(rate)}</b></li>,
+              )}
+              {!practiceRanking.length && <li>Sem dados disponíveis neste recorte.</li>}
+            </ol>
+          </article>
+          <article className="dashboard-card">
+            <div className="dashboard-card-heading">
+              <div><span>Destaques</span><h2>Maiores coberturas entre A–K</h2></div>
+            </div>
+            <ol className="dashboard-summary-ranking">
+              {practiceRanking.slice(-3).reverse().map(({ code, label, rate }) =>
+                <li key={code}><span><strong>{code} · {label}</strong><small>{C3_COMPONENTS[code as keyof typeof C3_COMPONENTS]}</small></span><b>{formatPercent(rate)}</b></li>,
+              )}
+              {!practiceRanking.length && <li>Sem dados disponíveis neste recorte.</li>}
+            </ol>
+          </article>
+        </div>
       </section>
 
       <div className="dashboard-data-note">
