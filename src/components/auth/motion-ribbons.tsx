@@ -24,7 +24,14 @@ export function MotionRibbons() {
         />
       </svg>
       <span className="mae-ribbon mae-ribbon-purple-top" />
-      <span className="mae-ribbon mae-ribbon-purple-bottom" />
+      <svg className="mae-ribbon mae-ribbon-purple-bottom" viewBox="0 0 552 285"
+        preserveAspectRatio="xMinYMax meet" fill="none" focusable="false"
+        data-reference-geometry="bottom-left-1440x1024"
+      >
+        <path fill="currentColor"
+          d="M0 43 L0 113 L41 80 L95 61 L144 58 L200 73 L154 120 L128 174 L131 219 L142 238 L169 258 L203 266 L226 264 L274 238 L298 205 L310 163 L307 122 L293 87 L347 81 L417 103 L460 139 L485 179 L494 208 L494 285 L548 285 L548 209 L527 144 L485 88 L419 45 L346 28 L298 31 L255 44 L202 16 L145 5 L68 13 Z"
+        />
+      </svg>
       <svg className="mae-ribbon mae-ribbon-cream" viewBox="0 0 420 400" fill="none" focusable="false">
         <path d="M405-24C343 43 318 82 327 134C339 221 242 295 155 270C79 249 57 178-11 118"
           stroke="currentColor" strokeWidth="46" strokeLinecap="round" strokeLinejoin="round" />
