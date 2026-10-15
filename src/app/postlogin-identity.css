@@ -1184,3 +1184,60 @@
 @container mae-dashboard (max-width: 770px) {
   .management-dashboard .dashboard-summary-ranking-grid { grid-template-columns: minmax(0,1fr); }
 }
+
+
+/* PR #21 — UMA ÚNICA ROLAGEM POR PÁGINA.
+ * Não existe mais coluna lateral com altura de viewport e overflow-y:auto.
+ * A barra é um item real da grade: acompanha o documento em vez de
+ * criar um segundo painel rolável sobre o dashboard. */
+@media (min-width: 851px) {
+  .management-shell .management-sidebar {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    height: auto;
+    min-height: calc(100dvh - 81px);
+    max-height: none;
+    align-self: stretch;
+    justify-content: flex-start;
+    overflow: visible;
+    overflow-x: visible;
+    overflow-y: visible;
+    overscroll-behavior: auto;
+  }
+  .management-shell .management-sidebar-note {
+    margin-top: clamp(2rem, 7vh, 5rem);
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar {
+    overflow: hidden;
+    min-height: 0;
+  }
+}
+/* No celular o menu EXPANDE na mesma página em vez de abrir
+ * uma janela com scrollbar independente. Fecha antes de navegar. */
+@media (max-width: 850px) {
+  .management-shell .management-sidebar {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    z-index: 20;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    padding: .7rem clamp(.8rem, 3.4vw, 1.35rem);
+    display: flex;
+    overflow: visible;
+    overflow-x: visible;
+    overflow-y: visible;
+    transform: none;
+    box-shadow: 0 8px 22px rgba(40, 0, 99, .09);
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar {
+    display: none;
+  }
+  .management-shell .management-side-backdrop { display: none; }
+}
