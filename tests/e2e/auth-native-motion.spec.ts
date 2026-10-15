@@ -103,3 +103,47 @@ test("vinheta de cinco segundos termina sem intervenção e preserva o SVG ofici
   await expect(page.locator(".mae-gsap-intro-v6")).toHaveCount(0, { timeout: 6500 });
   await expect(page.getByRole("heading", { name: "Acesso ao MAE APS" })).toBeVisible();
 });
+
+
+test("ornamentos da prancheta: círculo superior direito e símbolo M inferior esquerdo", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1024 });
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v7-5s", "played"));
+  await page.goto("/entrar");
+  const circle = page.locator(".mae-motion-ribbons .mae-ribbon-purple-top");
+  const mSymbol = page.locator(".mae-motion-ribbons .mae-ribbon-purple-bottom");
+  await expect(circle).toHaveCSS("border-top-style", "solid");
+  await expect(circle).toHaveCSS("border-radius", "50%");
+  await expect(circle).toHaveCSS("mask-image", "none");
+  await expect(circle).toHaveCSS("transform", "none");
+  await expect(mSymbol).toHaveAttribute("data-reference-geometry", "bottom-left-1440x1024");
+  await expect(mSymbol.locator("path")).toHaveCount(1);
+  await expect(mSymbol).toHaveCSS("mask-image", "none");
+  await expect(mSymbol).toHaveCSS("transform", "none");
+});
+
+test("tela notebook sem corte de Monitoramento e sem rodapé abaixo do viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 635 });
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-animacao-referencia-oficial-v7-5s", "played"));
+  await page.goto("/entrar");
+  const brand = page.locator(".mae-cinema-brand");
+  const description = brand.locator(".mae-cinema-brand-description");
+  const card = page.locator(".mae-cinema-auth");
+  const footer = page.locator(".mae-cinema-footer");
+  await expect(description).toContainText("Monitoramento, atenção e estratégia");
+  await expect(description).toContainText("na Atenção Primária à Saúde");
+  const [brandRect, descRect, cardRect, footerRect] = await Promise.all([
+    brand.boundingBox(), description.boundingBox(), card.boundingBox(), footer.boundingBox(),
+  ]);
+  expect(brandRect).not.toBeNull();
+  expect(descRect).not.toBeNull();
+  expect(cardRect).not.toBeNull();
+  expect(footerRect).not.toBeNull();
+  // A haste do M fica na primeira terça parte do SVG; o texto deve
+  // começar à direita dela, sem alcançar o cartão do formulário.
+  expect(descRect!.x).toBeGreaterThan(brandRect!.x + brandRect!.width * .34);
+  expect(descRect!.x + descRect!.width).toBeLessThan(cardRect!.x);
+  expect(cardRect!.width).toBeLessThanOrEqual(520);
+  expect(footerRect!.y + footerRect!.height).toBeLessThanOrEqual(637);
+  const overflow = await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight);
+  expect(overflow).toBeLessThanOrEqual(2);
+});
