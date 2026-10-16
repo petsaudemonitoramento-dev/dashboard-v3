@@ -159,3 +159,55 @@
   .management-shell .management-sidebar { min-height: calc(100dvh - 86px); }
   .management-shell .management-sidebar-content { top: 96px; }
 }
+
+
+/* Navegação responsiva: feedback visível sem alterar o grid ou os indicadores. */
+@media screen {
+  .management-shell .management-nav-pending {
+    position: fixed;
+    top: clamp(75px, 10vh, 120px);
+    right: clamp(.75rem, 2.3vw, 2rem);
+    z-index: 110;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .65rem;
+    width: fit-content;
+    max-width: min(92vw, 430px);
+    padding: .8rem 1rem;
+    background: #fff;
+    border: 1px solid #ddd0ec;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgb(40 0 99 / 14%);
+    color: #280063;
+    font-size: .93rem;
+    font-weight: 700;
+  }
+  .management-shell .management-nav-pending a {
+    color: #49218a;
+    font-size: .85rem;
+    text-decoration: underline;
+  }
+  .management-shell .management-loading-heading {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    color: #280063;
+    font-weight: 650;
+    font-size: 1rem;
+  }
+  .management-shell .management-nav-spinner {
+    display: inline-block;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #cbb4e4;
+    border-top-color: #49218a;
+    animation: mae-nav-loading-spin .75s linear infinite;
+  }
+}
+@keyframes mae-nav-loading-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .management-shell .management-nav-spinner { animation: none; }
+}
