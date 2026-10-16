@@ -32,17 +32,21 @@ describe("Ícones MAE APS — Prancheta 30_4", () => {
     expect(img.readUInt32BE(20)).toBe(size);
   });
 
-  it("usa o mesmo símbolo oficial nos cabeçalhos após o login", () => {
-    const headerSymbol = readFileSync(join(assets, "mae-aps-simbolo-cabecalho.svg"), "utf8");
-    expect(headerSymbol).toContain('viewBox="128 42 560 740"');
-    expect(headerSymbol).toContain('fill="#280063"');
-    expect(headerSymbol).not.toContain("<image");
-    expect(headerSymbol).not.toContain("<rect");
+  it("usa a assinatura horizontal MAE APS oficial nos cabeçalhos pós-login", () => {
+    const logo = readFileSync(join(assets, "mae-aps-logo-horizontal-roxa.svg"), "utf8");
+    expect(logo).toContain('viewBox="157 220 1610 635"');
+    expect(logo).toContain("fill: #280063");
+    expect(logo).toContain("<path");
+    expect(logo).not.toContain("<image");
+    expect(logo).not.toContain("<rect");
     const management = readFileSync(join(process.cwd(), "src/components/layout/management-shell.tsx"), "utf8");
     const administration = readFileSync(join(process.cwd(), "src/app/(sistema)/sistema/layout.tsx"), "utf8");
-    expect(management).toContain("/brands/mae-aps-simbolo-cabecalho.svg");
-    // Administração usa o ManagementShell unificado, que já contém o
-    // mesmo símbolo oficial. Não deve duplicar uma segunda marca.
+    expect(management).toContain("/brands/mae-aps-logo-horizontal-roxa.svg");
+    expect(management).toContain('className="management-header-module"');
+    expect(management).toContain("onClick={returnToStart}");
+    expect(management).toContain("if (pathname === homeHref)");
+    expect(management).toContain("window.scrollTo({ top: 0, behavior })");
+    // Administração reutiliza o mesmo ManagementShell, sem logo duplicada.
     expect(administration).toContain('import { ManagementShell }');
     expect(administration).toContain('<ManagementShell email={profile.email} role={profile.role} userId={user.id}');
     expect(management).not.toContain("/brands/mae-aps-wordmark.webp");
