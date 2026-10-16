@@ -1760,3 +1760,112 @@
   align-content: end;
   gap: .35rem;
 }
+
+
+/* PR #21 · Menu que acompanha o documento — sem rolagem dupla.
+ * A coluna da sidebar ocupa a área física inteira, empurrando o dashboard.
+ * Apenas os LINKS dentro da coluna são sticky sob o cabeçalho fixo.
+ * Sticky depende de overflow visível nos ancestrais — nunca usar auto/hidden. */
+@media (min-width: 851px) {
+  .management-shell .management-sidebar {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    grid-column: 1;
+    grid-row: 2 / 4;
+    align-self: stretch;
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: calc(100dvh - 81px);
+    max-height: none;
+    overflow: visible;
+    overflow-x: visible;
+    overflow-y: visible;
+    transform: none;
+  }
+  .management-shell .management-sidebar-content {
+    position: sticky;
+    top: 91px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: max-content;
+    overflow: visible;
+    background: transparent;
+  }
+  .management-shell .management-sidebar-content nav {
+    min-width: 0;
+  }
+  .management-shell .management-sidebar-content .management-sidebar-note {
+    margin-top: clamp(1.1rem, 4vh, 2.5rem);
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar {
+    width: 0;
+    min-height: 0;
+    padding: 0;
+    overflow: clip;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar-content {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+@media (min-width: 851px) and (max-height: 720px) {
+  /* Os links continuam clicáveis em notebooks de altura menor, sem scrollbar.
+     O rodapé decorativo pode ser reduzido, mas nunca os itens de navegação. */
+  .management-shell .management-sidebar-content { top: 85px; }
+  .management-shell .management-sidebar nav a { min-height: 37px; padding-block: .48rem; }
+  .management-shell .management-sidebar .management-nav-label { margin-top: .5rem; }
+  .management-shell .management-sidebar-content .management-sidebar-note { margin-top: .9rem; }
+}
+@media (max-width: 850px) {
+  /* No mobile o menu permanece no fluxo, sem um painel scrollável separado. */
+  .management-shell .management-sidebar-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* Assinatura MAE APS na impressão: SVG oficial isolado de molduras/fundos.
+ * O arquivo contém apenas caminhos vetoriais roxos (sem retângulos);
+ * nenhum estilo global de card, sombra ou background pode recobri-lo. */
+.management-report-document .management-report-doc-header .management-report-mae-logo {
+  display: block;
+  flex: 0 1 auto;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: multiply;
+  object-fit: contain;
+}
+@media print {
+  .management-shell .management-report-document .management-report-doc-header {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .management-shell .management-report-document .management-report-doc-header .management-report-mae-logo {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    mix-blend-mode: multiply;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
