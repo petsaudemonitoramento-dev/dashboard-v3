@@ -90,6 +90,9 @@ export function ManagementShell({ children, email, role, userId, displayName, no
       window.clearTimeout(fallbackTimer.current);
       fallbackTimer.current = null;
     }
+    // Limpar também o feedback após navegar ou usar Voltar/Avançar do navegador.
+    const frame = window.requestAnimationFrame(() => setPendingPage(null));
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
 
   useEffect(() => () => {
