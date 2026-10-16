@@ -1,0 +1,54 @@
+import { expect, test } from "@playwright/test";
+import { signIn } from "./support/auth";
+
+test("legendas pós-login maiores sem alterar estrutura dos seis KPIs nem filtros", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 850 });
+  await signIn(page, "gestao");
+
+  const shell = page.locator(".management-shell");
+  const nav = shell.locator(".management-sidebar");
+  const cards = shell.locator(".dashboard-kpi");
+  await expect(cards).toHaveCount(6);
+  await expect(nav.locator("nav a").first()).toHaveCSS("font-size", "14.4px");
+  await expect(shell.locator(".dashboard-kpi-title").first()).toHaveCSS("font-size", "12.64px");
+  await expect(shell.locator(".dashboard-kpi-description").first()).toHaveCSS("font-size", "12.32px");
+  await expect(shell.locator('select[name="inicio"]')).toHaveCSS("font-size", "13.76px");
+
+  const before = await cards.locator(".dashboard-kpi-value").allTextContents();
+  const gridColumns = await shell.locator(".dashboard-kpi-grid")
+    .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+  expect(gridColumns).toBe(3); // Menu aberto: mesmo breakpoint/container de antes
+
+  await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+  const after = await cards.locator(".dashboard-kpi-value").allTextContents();
+  expect(after).toEqual(before);
+  await expect.poll(() => shell.locator(".management-main").evaluate((el) => el.getBoundingClientRect().left)).toBeLessThan(2);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+  await expect.poll(() => shell.locator(".management-main").evaluate((el) => el.getBoundingClientRect().left)).toBeGreaterThan(190);
+});
+
+test("tipografia não causa corte de KPIs ou rolagem horizontal em desktop e celular", async ({ page }) => {
+  for (const width of [1024, 1366, 1920, 390]) {
+    await page.setViewportSize({ width, height: 850 });
+    await signIn(page, "gestao");
+    await expect(page.locator(".dashboard-kpi")).toHaveCount(6);
+    const result = await page.evaluate(() => {
+      const main = document.querySelector(".management-main")!.getBoundingClientRect();
+      const cards = [...document.querySelectorAll<HTMLElement>(".dashboard-kpi")];
+      return {
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        cardsFit: cards.every((el) => {
+          const b = el.getBoundingClientRect();
+          const title = el.querySelector<HTMLElement>(".dashboard-kpi-title")!;
+          const number = el.querySelector<HTMLElement>(".dashboard-kpi-value")!;
+          return b.width > 110 && b.right <= main.right + 1 &&
+            title.scrollWidth <= title.clientWidth + 1 &&
+            number.scrollWidth <= number.clientWidth + 1;
+        }),
+      };
+    });
+    expect(result.overflow, `largura ${width}`).toBeLessThanOrEqual(1);
+    expect(result.cardsFit, `largura ${width}`).toBe(true);
+  }
+});
