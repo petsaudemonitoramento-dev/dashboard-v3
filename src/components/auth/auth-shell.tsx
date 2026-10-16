@@ -24,6 +24,8 @@ const assuranceItems = [
   { label: "Acessibilidade verificada", icon: Accessibility },
 ];
 
+import { MAE_APS_VERSION } from "@/lib/app-version";
+
 export function AuthShell({
   eyebrow,
   title,
@@ -282,7 +284,7 @@ export function AuthShell({
       </main>
 
       <footer className="auth-portal-footer">
-        <span><strong>MAE APS</strong> · PET-Saúde UFCG</span>
+        <span><strong>MAE APS</strong> · PET-Saúde UFCG · v{MAE_APS_VERSION}</span>
         <span>Desenvolvimento: Lucca Araújo</span>
         <span>Design: Kethilly Nayara</span>
       </footer>
