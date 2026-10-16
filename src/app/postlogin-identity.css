@@ -1869,3 +1869,15 @@
     -webkit-print-color-adjust: exact;
   }
 }
+
+
+/* Correções da auditoria WCAG 2.2 AA: texto secundário com contraste mínimo.
+ * Ajusta somente os quatro elementos identificados pelo axe-core.
+ * O clipping horizontal impede que sombras/ornamentos externos
+ * criem uma barra de rolagem ao recolher o menu, sem criar scroll interno. */
+.management-shell {
+  overflow-x: clip;
+}
+.management-shell .management-panorama-totals span { color: #685779; }
+.management-shell .management-panorama-practices-heading small { color: #705b7e; }
+.management-shell .management-report-card > small { color: #6e5b7e; }
