@@ -237,3 +237,44 @@ test("barra lateral compartilha a única rolagem do documento", async ({ page })
     expect(overflow).toBeLessThanOrEqual(1);
   }
 });
+
+test("filtros compactos expandem somente as opções secundárias sem apagar valores", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await signIn(page, "gestao");
+  const advanced = page.locator("#management-advanced-filters");
+  await expect(advanced).toBeHidden();
+  await expect(page.getByRole("button", { name: "Mais filtros" })).toHaveAttribute("aria-expanded", "false");
+  const periodBefore = await page.locator('select[name="inicio"]').inputValue();
+  await page.getByRole("button", { name: "Mais filtros" }).click();
+  await expect(advanced).toBeVisible();
+  await expect(page.locator('select[name="classificacao"]')).toBeVisible();
+  await expect(page.locator('input[name="busca"]')).toBeVisible();
+  await page.getByRole("button", { name: "Menos filtros" }).click();
+  await expect(advanced).toBeHidden();
+  await expect(page.locator('select[name="inicio"]')).toHaveValue(periodBefore);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+});
+
+test("panorama priorizado, relatório completo com logos e notas pessoais ao final", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await signIn(page, "gestao");
+  const panorama = page.locator(".management-panorama");
+  await expect(panorama.getByRole("heading", { name: "Uma visão, os dados essenciais" })).toBeVisible();
+  const panoramaY = (await panorama.boundingBox())!.y;
+  const metricY = (await page.locator(".dashboard-kpi-grid").boundingBox())!.y;
+  expect(panoramaY).toBeLessThan(metricY);
+  const report = page.locator(".management-report-card");
+  await expect(report.getByRole("heading", { name: "Imprimir relatório" })).toBeVisible();
+  await expect(report.locator('input[type="checkbox"]')).not.toBeChecked();
+  await expect(page.locator(".management-notes-card")).toBeVisible();
+  await report.getByRole("button", { name: "Pré-visualizar relatório" }).click();
+  const dialog = page.getByRole("dialog", { name: "Prévia do relatório" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Relatório de acompanhamento da Gestão" })).toBeVisible();
+  await expect(dialog.locator('img[alt="MAE APS"]')).toBeVisible();
+  await expect(dialog.locator('img[alt="Universidade Federal de Campina Grande"]')).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: /Práticas de cuidado A/ })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: /Rastreabilidade e histórico/ })).toBeVisible();
+  await dialog.getByRole("button", { name: "Fechar pré-visualização" }).click();
+  await expect(dialog).toHaveCount(0);
+});
