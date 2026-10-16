@@ -146,14 +146,21 @@ test("total de equipes fica exatamente no centro da rosca C3", async ({ page }) 
   const center = chart.locator(".mae-chart-center-label");
   await expect(center).toBeVisible();
   await expect(center).toContainText("equipes");
-  const plot = await chart.boundingBox();
-  const label = await center.boundingBox();
-  expect(plot).not.toBeNull();
-  expect(label).not.toBeNull();
-  const targetX = plot!.x + plot!.width * .5;
-  const targetY = plot!.y + plot!.height * .34;
-  expect(Math.abs(label!.x + label!.width / 2 - targetX)).toBeLessThan(2);
-  expect(Math.abs(label!.y + label!.height / 2 - targetY)).toBeLessThan(2);
+  // Ler ambos os retângulos no mesmo frame evita falso positivo quando
+  // ECharts redimensiona a rosca entre duas chamadas Playwright separadas.
+  const geometry = await chart.evaluate((plot) => {
+    const label = plot.querySelector(".mae-chart-center-label");
+    if (!label) return null;
+    const a = plot.getBoundingClientRect();
+    const b = label.getBoundingClientRect();
+    return {
+      dx: Math.abs(b.x + b.width / 2 - (a.x + a.width * .5)),
+      dy: Math.abs(b.y + b.height / 2 - (a.y + a.height * .34)),
+    };
+  });
+  expect(geometry).not.toBeNull();
+  expect(geometry!.dx).toBeLessThan(2);
+  expect(geometry!.dy).toBeLessThan(2);
 });
 
 
