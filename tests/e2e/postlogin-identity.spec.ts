@@ -327,6 +327,22 @@ test("menu permanece acessível durante rolagem da página única, sem rolagem p
   const navBefore = await inner.boundingBox();
   // Reproduz o gesto real: roda do mouse sobre os itens de navegação.
   await page.mouse.wheel(0, 1100);
+  const scrollDiagnostics = await page.evaluate(() => {
+    const els = ["html", "body", ".management-shell", ".management-main", ".management-dashboard", ".management-sidebar", ".management-sidebar-content"];
+    return {
+      windowY: window.scrollY,
+      scrollingTag: document.scrollingElement?.tagName,
+      elements: els.map(sel => {
+        const el = document.querySelector(sel);
+        if (!el) return { sel, found: false };
+        const s = getComputedStyle(el);
+        return { sel, found: true, overflowX: s.overflowX, overflowY: s.overflowY,
+          height: el.clientHeight, scrollHeight: el.scrollHeight, scrollTop: el.scrollTop,
+          pos: s.position, maxHeight: s.maxHeight };
+      }),
+    };
+  });
+  console.log("MAE_SCROLL_DIAGNOSTICS", JSON.stringify(scrollDiagnostics));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(700);
   const navAfter = await inner.boundingBox();
   expect(navBefore && navAfter).toBeTruthy();
