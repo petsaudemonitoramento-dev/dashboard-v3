@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BarChart3, Bell, Building2, ChevronDown, DatabaseZap,
   GitCompareArrows, LayoutDashboard, LandPlot, LogOut,
@@ -57,6 +57,8 @@ export function ManagementShell({ children, email, role, userId, displayName, no
   const [mobile, setMobile] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const [seenIds, setSeenIds] = useState<string[]>([]);
+  const [pendingPage, setPendingPage] = useState<{ href: string; label: string } | null>(null);
+  const fallbackTimer = useRef<number | null>(null);
   const storageKey = `maeaps-notices-read-v1:${userId}`;
 
   useEffect(() => {
@@ -81,6 +83,37 @@ export function ManagementShell({ children, email, role, userId, displayName, no
     const raf = window.requestAnimationFrame(readSession);
     return () => window.cancelAnimationFrame(raf);
   }, [storageKey]);
+
+  useEffect(() => {
+    // Cancelar o fallback quando o App Router conclui a navegação.
+    if (fallbackTimer.current !== null) {
+      window.clearTimeout(fallbackTimer.current);
+      fallbackTimer.current = null;
+    }
+    // Limpar também o feedback após navegar ou usar Voltar/Avançar do navegador.
+    const frame = window.requestAnimationFrame(() => setPendingPage(null));
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
+
+  useEffect(() => () => {
+    if (fallbackTimer.current !== null) window.clearTimeout(fallbackTimer.current);
+  }, []);
+
+  function navigateMenu(href: string, label: string) {
+    closeAfterNavigation();
+    if (fallbackTimer.current !== null) window.clearTimeout(fallbackTimer.current);
+    if (pathname === href) {
+      setPendingPage(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setPendingPage({ href, label });
+    // Se um payload RSC/cache no navegador impedir a troca de rota,
+    // executar navegação HTML convencional sem descartar o link acessível.
+    fallbackTimer.current = window.setTimeout(() => {
+      if (window.location.pathname !== href) window.location.assign(href);
+    }, 12000);
+  }
 
   function closeAfterNavigation() {
     setBellOpen(false);
@@ -189,18 +222,18 @@ export function ManagementShell({ children, email, role, userId, displayName, no
             <span className="management-nav-label">Administração e segurança</span>
             {adminItems.map(({ href, label, icon: Icon }) => {
               const active = href === "/sistema/administracao" ? pathname === href : pathname.startsWith(href);
-              return <Link key={href} href={href} onClick={closeAfterNavigation} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
+              return <Link key={href} href={href} onClick={() => navigateMenu(href, label)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
                 <Icon className="size-5" /><span>{label}</span>
               </Link>;
             })}
           </> : <>
-            <Link href="/sistema/gestao" onClick={closeAfterNavigation} className={isDashboardHome ? "active" : ""}
+            <Link href="/sistema/gestao" onClick={() => navigateMenu("/sistema/gestao", "Início")} className={isDashboardHome ? "active" : ""}
               aria-current={isDashboardHome ? "page" : undefined}>
               <LayoutDashboard className="size-5" /><span>Início</span>
             </Link>
             {role === "gestao" ? <>
               <span className="management-nav-label">Gestão de dados</span>
-              <Link href="/sistema/importar" onClick={closeAfterNavigation} aria-label="Importar SIAPS" className={isImport ? "active" : ""}
+              <Link href="/sistema/importar" onClick={() => navigateMenu("/sistema/importar", "Importar SIAPS")} aria-label="Importar SIAPS" className={isImport ? "active" : ""}
                 aria-current={isImport ? "page" : undefined}>
                 <DatabaseZap className="size-5" /><span>Importar SIAPS</span>
               </Link>
@@ -208,13 +241,13 @@ export function ManagementShell({ children, email, role, userId, displayName, no
             <span className="management-nav-label">Análises</span>
             {analysisItems.map(({ href, label, icon: Icon }) => {
               const active = pathname.startsWith(href);
-              return <Link key={href} href={href} onClick={closeAfterNavigation} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
+              return <Link key={href} href={href} onClick={() => navigateMenu(href, label)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
                 <Icon className="size-5" /><span>{label}</span>
               </Link>;
             })}
           </>}
           <span className="management-nav-separator" />
-          <Link href="/sistema/perfil" onClick={closeAfterNavigation} className={pathname === "/sistema/perfil" ? "active" : ""}
+          <Link href="/sistema/perfil" onClick={() => navigateMenu("/sistema/perfil", "Configurações")} className={pathname === "/sistema/perfil" ? "active" : ""}
             aria-current={pathname === "/sistema/perfil" ? "page" : undefined}>
             <Settings2 className="size-5" /><span>Configurações</span>
           </Link>
@@ -228,6 +261,13 @@ export function ManagementShell({ children, email, role, userId, displayName, no
       </aside>
 
       <main className="management-main" id="conteudo-principal" tabIndex={-1}>
+        {pendingPage && pathname !== pendingPage.href ? (
+          <div className="management-nav-pending" role="status" aria-live="polite">
+            <span className="management-nav-spinner" aria-hidden="true" />
+            <span>Abrindo {pendingPage.label}…</span>
+            <a href={pendingPage.href} aria-label={`Abrir ${pendingPage.label} diretamente`}>Abrir diretamente</a>
+          </div>
+        ) : null}
         {children}
       </main>
       <footer className="management-footer">

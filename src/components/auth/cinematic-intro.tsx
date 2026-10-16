@@ -5,7 +5,8 @@ import gsap from "gsap";
 
 // Abertura MAE APS · SVG unificado · 6 segundos de duração.
  // O símbolo e a assinatura são uma única arte e nunca sobrepõem-se.
- const INTRO_KEY = "mae-aps-v8-svg-unico-6s";
+ // Somente um opt-out explícito suprime a animação; visitas anteriores não.
+const INTRO_SKIP_KEY = "mae-aps-intro-skip";
  const INTRO_DURATION_MS = 6000;
  const FALLBACK_MS = 6600;
 
@@ -18,11 +19,6 @@ export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: b
   const complete = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
-    try {
-      window.sessionStorage.setItem(INTRO_KEY, "played");
-    } catch {
-      // A página continua acessível quando o storage está bloqueado.
-    }
     setVisible(false);
   }, []);
 
@@ -37,15 +33,15 @@ export function CinematicIntro({ initialPlayback = true }: { initialPlayback?: b
     const root = rootRef.current;
     if (!root) return;
 
-    let played = false;
+    let skipRequested = false;
     try {
-      played = window.sessionStorage.getItem(INTRO_KEY) === "played";
+      skipRequested = window.sessionStorage.getItem(INTRO_SKIP_KEY) === "true";
     } catch {
       // Sem bloqueios de navegação em navegadores com storage restrito.
     }
     const replayNow = replayRequestedRef.current;
     replayRequestedRef.current = false;
-    if ((!replayNow && played) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if ((!replayNow && skipRequested) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       complete();
       return;
     }
