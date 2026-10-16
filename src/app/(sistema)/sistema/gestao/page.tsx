@@ -8,12 +8,9 @@ import {
   CircleHelp,
   CheckCircle2,
   ClipboardList,
-  Database,
   FileSpreadsheet,
   Home,
   Clock3,
-  Printer,
-  Sparkles,
   Stethoscope,
   Users,
 } from "lucide-react";
