@@ -1753,3 +1753,10 @@
 @container mae-dashboard (max-width: 480px) {
   .management-shell .management-dashboard .management-filter-header { flex-wrap: wrap; }
 }
+
+.management-shell .management-dashboard .management-filter-advanced > label,
+.management-shell .management-dashboard .management-filter-advanced .dashboard-filter-secondary > label {
+  display: grid;
+  align-content: end;
+  gap: .35rem;
+}
