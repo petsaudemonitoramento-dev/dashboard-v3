@@ -32,17 +32,22 @@ describe("Ícones MAE APS — Prancheta 30_4", () => {
     expect(img.readUInt32BE(20)).toBe(size);
   });
 
-  it("usa o mesmo símbolo oficial nos cabeçalhos após o login", () => {
-    const headerSymbol = readFileSync(join(assets, "mae-aps-simbolo-cabecalho.svg"), "utf8");
-    expect(headerSymbol).toContain('viewBox="128 42 560 740"');
-    expect(headerSymbol).toContain('fill="#280063"');
-    expect(headerSymbol).not.toContain("<image");
-    expect(headerSymbol).not.toContain("<rect");
+  it("usa a marca oficial integral, roxa e clicável nos cabeçalhos após o login", () => {
+    const headerLogo = readFileSync(join(assets, "mae-aps-cabecalho-oficial.svg"), "utf8");
+    expect(headerLogo).toContain('viewBox="157 220 1610 635"');
+    expect(headerLogo).toContain("fill: #280063");
+    expect(headerLogo).toContain("<path");
+    expect(headerLogo).not.toContain("<image");
+    expect(headerLogo).not.toContain("data:image");
     const management = readFileSync(join(process.cwd(), "src/components/layout/management-shell.tsx"), "utf8");
     const administration = readFileSync(join(process.cwd(), "src/app/(sistema)/sistema/layout.tsx"), "utf8");
-    expect(management).toContain("/brands/mae-aps-simbolo-cabecalho.svg");
-    // Administração usa o ManagementShell unificado, que já contém o
-    // mesmo símbolo oficial. Não deve duplicar uma segunda marca.
+    expect(management).toContain("/brands/mae-aps-cabecalho-oficial.svg");
+    expect(management).toContain("management-brand-wordmark");
+    expect(management).toContain("management-brand-module");
+    expect(management).toContain("onClick={returnToStart}");
+    expect(management).toContain('window.scrollTo({ top: 0, behavior: "smooth" })');
+    expect(management).toContain("Módulo da Gestão");
+    // Administração reutiliza o mesmo cabeçalho, sem duplicar a marca.
     expect(administration).toContain('import { ManagementShell }');
     expect(administration).toContain('<ManagementShell email={profile.email} role={profile.role} userId={user.id}');
     expect(management).not.toContain("/brands/mae-aps-wordmark.webp");
