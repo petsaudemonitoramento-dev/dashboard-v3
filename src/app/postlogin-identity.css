@@ -1726,3 +1726,30 @@
   .management-shell .management-report-document tr { break-inside: avoid; }
   .management-shell .management-report-document .management-report-doc-stats { grid-template-columns: repeat(4,minmax(0,1fr)); }
 }
+
+/* Cabeçalho dos filtros inspirado no layout HTML de referência. */
+.management-shell .management-dashboard .management-filter-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  padding: .1rem .2rem .25rem;
+}
+.management-shell .management-filter-header h2 {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: 0;
+  color: #34116a;
+  font-size: .9rem;
+  font-weight: 840;
+}
+.management-shell .management-filter-header h2 svg { color: #7547a9; }
+.management-shell .management-filter-header small {
+  color: #95889f;
+  font-size: .7rem;
+}
+@container mae-dashboard (max-width: 480px) {
+  .management-shell .management-dashboard .management-filter-header { flex-wrap: wrap; }
+}
