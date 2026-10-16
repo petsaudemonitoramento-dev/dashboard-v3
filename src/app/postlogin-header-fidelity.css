@@ -148,3 +148,14 @@
   .management-shell .management-topbar { gap: .35rem; padding-inline: .4rem; }
   .management-shell .management-brand-art { width: 120px; }
 }
+
+/* O cabeçalho e a coluna lateral precisam compartilhar a altura real.
+   A sidebar permanece uma barreira física: só ajustamos sua referência vertical. */
+@media screen and (min-width: 1151px) {
+  .management-shell .management-sidebar { min-height: calc(100dvh - 110px); }
+  .management-shell .management-sidebar-content { top: 120px; }
+}
+@media screen and (min-width: 851px) and (max-width: 1150px) {
+  .management-shell .management-sidebar { min-height: calc(100dvh - 86px); }
+  .management-shell .management-sidebar-content { top: 96px; }
+}
