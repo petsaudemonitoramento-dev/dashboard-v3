@@ -948,7 +948,10 @@
     --mae-side-track: 236px;
     display: grid;
     grid-template-columns: var(--mae-side-track) minmax(0,1fr);
-    grid-template-rows: auto minmax(0,1fr) auto;
+    /* A linha do dashboard precisa crescer com TODO o conteúdo.
+       minmax(0,1fr) podia limitar a linha à altura da viewport e bloquear
+       a rolagem do documento mesmo com o conteúdo visualmente mais longo. */
+    grid-template-rows: auto minmax(min-content, auto) auto;
     transition: grid-template-columns .25s ease;
     min-width: 0;
   }
