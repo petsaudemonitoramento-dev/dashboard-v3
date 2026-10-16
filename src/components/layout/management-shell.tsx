@@ -238,7 +238,7 @@ export function ManagementShell({ children, email, role, userId, displayName, no
             <span className="management-nav-label">Análises</span>
             {analysisItems.map(({ href, label, icon: Icon }) => {
               const active = pathname.startsWith(href);
-              return <Link key={href} href={href} onClick={closeAfterNavigation} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
+              return <Link key={href} href={href} onClick={() => navigateMenu(href, label)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
                 <Icon className="size-5" /><span>{label}</span>
               </Link>;
             })}
