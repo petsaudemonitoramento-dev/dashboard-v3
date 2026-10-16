@@ -168,7 +168,7 @@ export function ManagementDashboardFilters({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selection, setSelection] = useOptimistic(initialSelection);
-  const [moreFilters, setMoreFilters] = useState(() => initialSelection.establishmentId !== "all" || initialSelection.teamId !== "all" || initialSelection.classification !== "all" || Boolean(initialSelection.query));
+  const [moreFilters, setMoreFilters] = useState(() => initialSelection.district !== "all" || initialSelection.establishmentId !== "all" || initialSelection.teamId !== "all" || initialSelection.classification !== "all" || Boolean(initialSelection.query));
   const queryInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const pendingFocusRef = useRef<string | null>(null);
