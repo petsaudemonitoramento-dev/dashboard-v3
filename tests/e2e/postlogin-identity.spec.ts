@@ -404,3 +404,36 @@ test("marca MAE APS retorna ao topo do Início, sem reiniciar os filtros", async
   await expect(page).toHaveURL(/\/sistema\/gestao(?:[?#].*)?$/);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(4);
 });
+
+
+test("menu navega de Início para todos os módulos da Gestão", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await signIn(page, "gestao");
+  const nav = page.getByRole("navigation", { name: "Navegação da Gestão" });
+  const destinations = [
+    ["Indicadores", "/sistema/gestao/indicadores"],
+    ["UBS e equipes", "/sistema/gestao/ubs-equipes"],
+    ["Comparativos", "/sistema/gestao/comparativos"],
+    ["Configurações", "/sistema/perfil"],
+    ["Importar SIAPS", "/sistema/importar"],
+    ["Início", "/sistema/gestao"],
+  ] as const;
+  for (const [label, href] of destinations) {
+    await nav.getByRole("link", { name: label, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`^${href.replaceAll("/", "\\/")}(?:[?#].*)?$`), { timeout: 15000 });
+    await expect(page.locator(".management-main")).toBeVisible();
+    await expect(nav.getByRole("link", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
+  }
+});
+
+test("menu móvel abre Indicadores e permanece funcional ao retornar ao Início", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, "gestao");
+  await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+  await page.getByRole("navigation", { name: "Navegação da Gestão" })
+    .getByRole("link", { name: "Indicadores", exact: true }).click();
+  await expect(page).toHaveURL(/\/sistema\/gestao\/indicadores(?:[?#].*)?$/, { timeout: 15000 });
+  await expect(page.getByRole("button", { name: "Abrir menu lateral" })).toBeVisible();
+  await page.getByRole("link", { name: "MAE APS: voltar ao início" }).click();
+  await expect(page).toHaveURL(/\/sistema\/gestao(?:[?#].*)?$/, { timeout: 15000 });
+});
