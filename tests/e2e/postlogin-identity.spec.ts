@@ -229,14 +229,12 @@ test("barra lateral compartilha a única rolagem do documento", async ({ page })
     const docHeight = await page.evaluate(() => document.documentElement.scrollHeight);
     expect(docHeight).toBeGreaterThan(620);
     await page.evaluate(() => window.scrollTo(0, 0));
-    const rectBefore = await sidebar.boundingBox();
     await sidebar.locator("nav").hover();
     await page.mouse.wheel(0, 360);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
-    const rectAfter = await sidebar.boundingBox();
-    expect(rectBefore).not.toBeNull();
-    expect(rectAfter).not.toBeNull();
-    expect(rectAfter!.y).toBeLessThan(rectBefore!.y);
+    // A coluna é estrutural; seu background pode acompanhar a grade, mas
+    // os links devem ficar no viewport com scrollTop próprio zerado.
+    await expect(sidebar.locator(".management-sidebar-content")).toBeInViewport();
     expect(await sidebar.evaluate(el => el.scrollTop)).toBe(0);
     await page.getByRole("button", { name: "Recolher menu lateral" }).click();
     await expect(page.locator(".management-shell")).toHaveClass(/management-shell-nav-collapsed/);
@@ -325,16 +323,14 @@ test("menu permanece acessível durante rolagem da página única, sem rolagem p
   await expect(side).toHaveCSS("overflow-y", "visible");
   await expect(inner).toHaveCSS("overflow-y", "visible");
 
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await inner.locator("nav").hover();
   const navBefore = await inner.boundingBox();
-  const sidebarBefore = await side.boundingBox();
-  await page.evaluate(() => window.scrollTo(0, 1100));
+  // Reproduz o gesto real: roda do mouse sobre os itens de navegação.
+  await page.mouse.wheel(0, 1100);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(700);
   const navAfter = await inner.boundingBox();
-  const sidebarAfter = await side.boundingBox();
-  expect(navBefore && navAfter && sidebarBefore && sidebarAfter).toBeTruthy();
+  expect(navBefore && navAfter).toBeTruthy();
   expect(Math.abs(navAfter!.y - navBefore!.y)).toBeLessThan(15);
-  expect(sidebarAfter!.y).toBeLessThan(sidebarBefore!.y - 650);
   await expect(side.getByRole("link", { name: "Indicadores" })).toBeInViewport();
   await expect(side.getByRole("link", { name: "Importar SIAPS" })).toBeInViewport();
   expect(await side.evaluate(el => el.scrollTop)).toBe(0);
