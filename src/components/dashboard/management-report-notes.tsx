@@ -45,8 +45,8 @@ function ReportBody({ data, notes }: { data: ManagementReportData; notes: string
   return (
     <div className="management-report-document">
       <header className="management-report-doc-header">
-        <Image src="/brands/mae-aps-assinatura-unificada.svg" alt="MAE APS" width={260} height={100} unoptimized />
-        <Image src="/brands/ufcg-oficial.png" alt="Universidade Federal de Campina Grande" width={220} height={75} unoptimized />
+        <Image src="/brands/mae-aps-assinatura-unificada.svg" alt="MAE APS" width={260} height={100} unoptimized loading="eager" />
+        <Image src="/brands/ufcg-oficial.png" alt="Universidade Federal de Campina Grande" width={220} height={75} unoptimized loading="eager" />
       </header>
       <div className="management-report-doc-heading">
         <span>MAE APS · Monitoramento, Atenção e Estratégia na APS</span>
@@ -149,8 +149,12 @@ export function ManagementReportAndNotes({
     });
   }
 
-  function print() {
+  async function print() {
     setPreview(false);
+    // As duas marcas institucionais devem terminar o carregamento antes
+    // da impressão, inclusive quando o documento estava oculto na página.
+    const images = Array.from(document.querySelectorAll<HTMLImageElement>(".management-print-report img"));
+    await Promise.all(images.map((img) => img.decode().catch(() => undefined)));
     // A versão de impressão é parte do DOM para respeitar CSP; nenhuma janela
     // nova, HTML arbitrário ou endpoint público de exportação.
     window.print();
