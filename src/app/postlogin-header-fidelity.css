@@ -1,0 +1,150 @@
+/*
+ * MAE APS — cabeçalho fiel à referência visual pós-PR #22.
+ * A logo é a arte horizontal oficial vetorial (sem recriar letras em CSS).
+ * Sem alterações de grid, sidebar, cartões, filtros ou dados clínicos.
+ */
+@media screen {
+  .management-shell .management-topbar {
+    min-height: 110px;
+    padding: .5rem clamp(.9rem, 2.15vw, 2.2rem);
+    gap: clamp(.7rem, 2.2vw, 2.4rem);
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .management-shell .management-menu-toggle {
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    color: #17141c;
+    border: 0;
+    background: #f0eff1;
+    border-radius: 50%;
+  }
+  .management-shell .management-menu-toggle svg {
+    width: 34px;
+    height: 34px;
+    stroke-width: 2.6;
+  }
+
+  .management-shell .management-brand {
+    display: flex;
+    align-items: center;
+    flex: 0 1 auto;
+    margin-right: 0;
+    min-width: 0;
+    line-height: 0;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .management-shell .management-brand-art {
+    display: block;
+    width: clamp(180px, 16vw, 260px);
+    max-width: 100%;
+    height: auto;
+    max-height: 100px;
+    object-fit: contain;
+    flex: none;
+  }
+  .management-shell .management-brand:hover { opacity: .9; }
+
+  .management-shell .management-header-module {
+    flex: 0 1 auto;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 52px;
+    padding-left: clamp(.7rem, 1.75vw, 1.85rem);
+    border-left: 2px solid #ded6e7;
+    color: #422361;
+    font-size: clamp(1.03rem, 1.53vw, 1.6rem);
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .management-shell .management-institutions {
+    flex: 0 0 auto;
+    margin-left: auto;
+    gap: clamp(.45rem, 1.3vw, 1.4rem);
+  }
+  .management-shell .management-institutions > a {
+    flex: 0 0 auto;
+    border-right: 1px solid #e5ddea;
+    padding-right: clamp(.55rem, 1.3vw, 1.4rem);
+  }
+  .management-shell .management-ufcg-logo {
+    padding-right: 0;
+    border-right: none;
+    max-height: 66px;
+    object-fit: contain;
+  }
+
+  .management-shell .management-bell {
+    width: 46px;
+    height: 52px;
+    background: transparent;
+    border: 0;
+    color: #60537c;
+  }
+  .management-shell .management-bell svg { width: 36px; height: 36px; }
+  .management-shell .management-user summary {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 50%;
+  }
+  .management-shell .management-user summary > span:first-child {
+    width: 67px;
+    height: 67px;
+    font-size: 1.4rem;
+    background: #e5d4fa;
+    color: #2e164d;
+  }
+  .management-shell .management-user-copy,
+  .management-shell .management-user summary > svg { display: none; }
+}
+
+@media screen and (max-width: 1150px) {
+  .management-shell .management-topbar {
+    min-height: 86px;
+    gap: clamp(.55rem, 1.3vw, 1rem);
+  }
+  .management-shell .management-menu-toggle { width: 48px; height: 48px; flex-basis: 48px; }
+  .management-shell .management-menu-toggle svg { width: 26px; height: 26px; }
+  .management-shell .management-brand-art { width: clamp(165px, 20vw, 225px); }
+  .management-shell .management-header-module {
+    font-size: clamp(.96rem, 1.5vw, 1.12rem);
+    min-height: 42px;
+    padding-left: .9rem;
+  }
+  .management-shell .management-user summary > span:first-child {
+    width: 48px; height: 48px; font-size: 1.05rem;
+  }
+  .management-shell .management-ufcg-logo { max-width: 100px; max-height: 50px; }
+  .management-shell .management-bell svg { width: 27px; height: 27px; }
+  .management-shell .management-bell { width: 39px; height: 42px; }
+}
+
+@media screen and (max-width: 850px) {
+  .management-shell .management-topbar { min-height: 70px; padding: .45rem .8rem; }
+  .management-shell .management-menu-toggle { width: 38px; height: 38px; flex-basis: 38px; }
+  .management-shell .management-brand-art { width: clamp(140px, 22vw, 183px); }
+  .management-shell .management-header-module { font-size: .94rem; }
+  .management-shell .management-user summary > span:first-child { width: 38px; height: 38px; font-size: .88rem; }
+  .management-shell .management-bell { width: 37px; height: 38px; }
+  .management-shell .management-bell svg { width: 25px; height: 25px; }
+}
+@media screen and (max-width: 700px) {
+  .management-shell .management-header-module { display: none; }
+  .management-shell .management-brand { margin-right: auto; }
+}
+@media screen and (max-width: 560px) {
+  .management-shell .management-brand-art { width: clamp(123px, 40vw, 165px); }
+  .management-shell .management-institutions > a { display: none; }
+  .management-shell .management-institutions { gap: .3rem; }
+}
+@media screen and (max-width: 350px) {
+  .management-shell .management-topbar { gap: .35rem; padding-inline: .4rem; }
+  .management-shell .management-brand-art { width: 120px; }
+}
