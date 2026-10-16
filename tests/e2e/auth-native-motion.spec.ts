@@ -22,9 +22,22 @@ test("abertura é nativa em SVG + GSAP, sem vídeo nem GIF", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Acesso ao MAE APS" })).toBeVisible();
 });
 
+test("abertura automática é reproduzida em cada novo acesso, mesmo após ser concluída na aba", async ({ page }) => {
+  await page.goto("/entrar");
+  await expect(page.locator(".mae-gsap-intro")).toBeVisible();
+  await page.getByRole("button", { name: /pular/i }).click();
+  await expect(page.locator(".mae-gsap-intro")).toHaveCount(0);
+
+  // A versão anterior gravava "played" e suprimia a abertura na visita seguinte.
+  await page.evaluate(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+  await page.reload();
+  await expect(page.locator(".mae-gsap-intro")).toBeVisible();
+  await page.getByRole("button", { name: /pular/i }).click();
+});
+
 test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-intro-skip", "true"));
   await page.goto("/entrar");
   const scene = page.locator(".mae-motion-v3");
   await expect(scene).toBeVisible();
@@ -77,7 +90,7 @@ test("layout Figma desktop: logo oficial, cartão branco e cristal roxo", async 
 for (const width of [320, 390, 768]) {
   test(`layout responsivo em ${width}px sem transbordamento horizontal`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
-    await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+    await page.addInitScript(() => sessionStorage.setItem("mae-aps-intro-skip", "true"));
     await page.goto("/entrar");
     await expect(page.locator(".mae-cinema-brand")).toBeVisible();
     await expect(page.locator(".mae-cinema-auth")).toBeVisible();
@@ -126,7 +139,7 @@ test("vinheta de seis segundos termina sem intervenção e preserva o SVG oficia
 
 test("ornamentos: anel circular contínuo atrás do card e M inferior proporcional", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1024 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-intro-skip", "true"));
   await page.goto("/entrar");
   const circle = page.locator(".mae-motion-ribbons .mae-ribbon-purple-top");
   const mSymbol = page.locator(".mae-motion-ribbons .mae-ribbon-purple-bottom");
@@ -149,7 +162,7 @@ test("ornamentos: anel circular contínuo atrás do card e M inferior proporcion
 
 test("tela notebook sem corte de Monitoramento e sem rodapé abaixo do viewport", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 635 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-intro-skip", "true"));
   await page.goto("/entrar");
   const brand = page.locator(".mae-cinema-brand");
   const brandImage = brand.locator(".mae-cinema-brand-drive");
@@ -174,7 +187,7 @@ test("tela notebook sem corte de Monitoramento e sem rodapé abaixo do viewport"
 
 test("UFCG: PNG oficial em resolução integral, com tamanho legível no rodapé", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-intro-skip", "true"));
   await page.goto("/entrar");
   const png = page.locator(".mae-cinema-footer .mae-cinema-ufcg img");
   await expect(png).toBeVisible();
@@ -196,7 +209,7 @@ test("UFCG: PNG oficial em resolução integral, com tamanho legível no rodapé
 
 test("fundo de login usa degradê CSS mais presente, sem imagem e sem afetar a abertura", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 635 });
-  await page.addInitScript(() => sessionStorage.setItem("mae-aps-v8-svg-unico-6s", "played"));
+  await page.addInitScript(() => sessionStorage.setItem("mae-aps-intro-skip", "true"));
   await page.goto("/entrar");
 
   const scene = page.locator(".mae-cinema.mae-motion-v3");
