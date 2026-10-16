@@ -181,3 +181,75 @@
     }
   }
 }
+
+
+/* PR #24 — cabeçalho oficial: marca vetorial original e módulo lado a lado.
+ * Escopo intencionalmente isolado: não modifica a área analítica nem o menu retrátil.
+ * O logo contém símbolo e lettering reais da marca; sem recriação tipográfica.
+ */
+@media screen {
+  .management-shell .management-topbar {
+    min-height: 100px;
+    gap: clamp(.5rem, 1.15vw, 1rem);
+  }
+  .management-shell .management-brand {
+    display: flex;
+    align-items: center;
+    gap: clamp(.7rem, 1.5vw, 1.5rem);
+    min-width: 0;
+    flex: 0 1 auto;
+    margin-right: auto;
+    text-decoration: none;
+  }
+  .management-shell .management-brand-wordmark {
+    display: block;
+    flex: 0 0 auto;
+    width: clamp(175px, 17vw, 255px);
+    height: auto;
+    max-height: 95px;
+    object-fit: contain;
+  }
+  .management-shell .management-brand-module {
+    display: flex;
+    align-items: center;
+    min-height: 3rem;
+    padding-left: clamp(.75rem, 1.6vw, 1.65rem);
+    border-left: 2px solid #e0d8e9;
+    color: #40305f;
+    font-size: clamp(1rem, 1.25vw, 1.4rem);
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .management-shell .management-brand:hover .management-brand-wordmark {
+    opacity: .85;
+  }
+  .management-shell .management-institutions { flex: 0 0 auto; }
+}
+@media screen and (min-width: 851px) and (max-width: 1150px) {
+  .management-shell .management-topbar { min-height: 88px; }
+  .management-shell .management-brand-wordmark { width: clamp(160px, 17vw, 210px); }
+  .management-shell .management-brand-module {
+    padding-left: .85rem;
+    font-size: .98rem;
+  }
+}
+@media screen and (max-width: 850px) {
+  .management-shell .management-topbar {
+    min-height: 70px;
+    gap: .45rem;
+  }
+  .management-shell .management-brand-wordmark {
+    width: clamp(130px, 27vw, 192px);
+    max-height: 63px;
+  }
+  .management-shell .management-brand-module { display: none; }
+}
+@media screen and (max-width: 390px) {
+  .management-shell .management-topbar {
+    padding-left: .55rem;
+    padding-right: .55rem;
+    gap: .25rem;
+  }
+  .management-shell .management-brand-wordmark { width: 128px; }
+}
