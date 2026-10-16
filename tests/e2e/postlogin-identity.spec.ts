@@ -355,3 +355,24 @@ test("marca do PDF é SVG sem moldura nem fundo também no modo de impressão", 
   await expect(printable).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(printable).toHaveCSS("box-shadow", "none");
 });
+
+test("marca MAE APS retorna ao topo do Início, sem reiniciar os filtros", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 720 });
+  await signIn(page, "gestao");
+
+  const brand = page.getByRole("link", { name: "MAE APS: voltar ao início" });
+  await expect(brand).toHaveAttribute("href", "/sistema/gestao");
+  const period = await page.locator('select[name="inicio"]').inputValue();
+  await page.evaluate(() => window.scrollTo({ top: 1100, behavior: "instant" }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(700);
+  await brand.click();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(4);
+  await expect(page.locator('select[name="inicio"]')).toHaveValue(period);
+
+  await page.getByRole("navigation", { name: "Navegação da Gestão" })
+    .getByRole("link", { name: "Indicadores" }).click();
+  await expect(page).toHaveURL(/\/sistema\/gestao\/indicadores(?:[?#].*)?$/);
+  await brand.click();
+  await expect(page).toHaveURL(/\/sistema\/gestao(?:[?#].*)?$/);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(4);
+});
