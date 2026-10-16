@@ -755,3 +755,1141 @@
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
+
+
+/* PR #21: menu retrátil, notificações e perfil. O conteúdo aumenta ao recolher;
+   painel mobile é um drawer vertical, sem causar scroll horizontal global. */
+.management-shell .management-topbar { gap: clamp(.55rem, 1.2vw, 1rem); }
+.management-shell .management-menu-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--post-border);
+  background: #f1ebf5;
+  color: var(--post-purple);
+  cursor: pointer;
+}
+.management-shell .management-menu-toggle:hover,
+.management-shell .management-menu-toggle[aria-expanded="true"]:hover { background: #e5d9f3; }
+.management-shell .management-menu-toggle svg { width: 23px; height: 23px; }
+.management-shell .management-brand { margin-right: auto; }
+.management-shell .management-institutions > a { display: flex; align-items: center; }
+.management-shell .management-institutions > a:hover { opacity: .8; }
+.management-shell .management-sidebar {
+  transition: transform .23s ease, opacity .23s ease;
+}
+.management-shell.management-shell-nav-collapsed .management-sidebar {
+  transform: translateX(-101%);
+  pointer-events: none;
+  visibility: hidden;
+}
+.management-shell.management-shell-nav-collapsed .management-main,
+.management-shell.management-shell-nav-collapsed .management-footer {
+  margin-left: 0;
+}
+.management-shell.management-shell-nav-collapsed .management-main { width: 100%; }
+.management-shell .management-nav-separator {
+  display: block;
+  height: 1px; background: rgba(235,214,255,.22);
+  margin: .85rem .45rem;
+}
+.management-shell .management-bell {
+  cursor: pointer;
+  position: relative;
+  display: grid;
+  width: 40px; height: 40px;
+}
+.management-shell .management-bell:hover,
+.management-shell .management-bell[aria-expanded="true"] { background: #f0e7fa; }
+.management-shell .management-notifications { position: relative; }
+.management-shell .management-bell-badge {
+  position: absolute;
+  right: -6px; top: -7px;
+  display: grid; place-items: center;
+  min-width: 19px; height: 19px; padding: 0 4px;
+  font-size: .64rem; font-weight: 800; color: white;
+  border: 2px solid white; border-radius: 30px; background: #d52e6b;
+}
+.management-shell .management-notice-popover {
+  position: absolute;
+  top: calc(100% + 13px); right: -62px;
+  z-index: 90;
+  width: min(370px, calc(100vw - 24px));
+  max-height: 70vh; overflow-y: auto;
+  border-radius: 15px;
+  border: 1px solid var(--post-border);
+  background: #fff;
+  box-shadow: 0 22px 58px rgba(40,0,99,.18);
+  padding: .9rem;
+  text-align: left;
+}
+.management-shell .management-popover-heading {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .5rem; padding: .1rem .2rem .8rem;
+  color: var(--post-purple); font-size: .9rem;
+}
+.management-shell .management-popover-heading button {
+  font-size: .7rem; color: var(--post-plum);
+  background: transparent; border: none; font-weight: 800;
+  cursor: pointer;
+}
+.management-shell .management-popover-heading button:disabled { opacity: .5; cursor: default; }
+.management-shell .management-notice-item {
+  display: flex; gap: .7rem; align-items: flex-start;
+  border-top: 1px solid #efe8f5;
+  color: #32234e; text-decoration: none;
+  padding: .85rem .25rem;
+}
+.management-shell .management-notice-item:hover { background: #faf6ff; }
+.management-shell .management-notice-item strong {
+  display: block; color: var(--post-purple); font-size: .77rem;
+  font-weight: 800; line-height: 1.4;
+}
+.management-shell .management-notice-item small {
+  display: block; margin-top: .22rem; color: var(--post-muted);
+  font-size: .69rem; line-height: 1.45;
+}
+.management-shell .management-notice-item.is-read { opacity: .72; }
+.management-shell .management-notice-dot {
+  flex: 0 0 9px; height: 9px; width: 9px; margin-top: .27rem;
+  border-radius: 50%; background: #cf4a55;
+}
+.management-shell .management-notice-dot.reminder { background: #a76b13; }
+.management-shell .management-notice-footer {
+  display: block; padding: .8rem .2rem .15rem;
+  color: var(--post-plum); text-decoration: underline;
+  font-weight: 750; font-size: .75rem;
+}
+.management-shell .management-notice-empty,
+.management-shell .management-notice-error {
+  font-size: .76rem; color: var(--post-muted); margin: .6rem .2rem;
+}
+.management-shell .management-notice-error { color: #a83c50; }
+.management-shell .management-profile-link {
+  display: flex; align-items: center; gap: .5rem;
+  text-decoration: none;
+  padding: .7rem .6rem;
+  font-size: .77rem; font-weight: 750; color: var(--post-purple);
+  border-radius: 9px;
+}
+.management-shell .management-profile-link:hover { background: #f1e9fa; }
+.management-shell .management-profile-settings { max-width: 670px; }
+.management-shell .management-profile-settings .dashboard-card-heading h2 {
+  display: flex; gap: .5rem; align-items: center;
+}
+.management-shell .management-profile-settings .dashboard-card-heading h2 svg { width: 19px; }
+.management-shell .management-profile-readonly { padding: .85rem 0; border-bottom: 1px solid var(--post-border); }
+.management-shell .management-profile-readonly span { display: block; color: var(--post-muted); font-size: .73rem; }
+.management-shell .management-profile-readonly strong { display: block; margin-top: .25rem; color: var(--post-purple); overflow-wrap: anywhere; }
+.management-shell .management-profile-form { display: grid; gap: .55rem; padding-top: 1.1rem; }
+.management-shell .management-profile-form label { font-weight: 750; font-size: .8rem; color: var(--post-purple); }
+.management-shell .management-profile-form input { padding: .7rem .8rem; width: 100%; }
+.management-shell .management-profile-form p,
+.management-shell .management-profile-hint { color: var(--post-muted); font-size: .75rem; line-height: 1.6; }
+.management-shell .management-profile-form .management-profile-save {
+  justify-self: start; padding: .65rem 1.1rem; border: none; border-radius: 10px;
+  background: var(--post-plum); color: white; font-size: .8rem; font-weight: 800;
+  cursor: pointer;
+}
+.management-shell .management-profile-form .management-form-success { color: #117954; }
+.management-shell .management-profile-form .management-form-error { color: #a82e4b; }
+.management-shell .management-side-backdrop { display: none; }
+@media (max-width: 850px) {
+  .management-shell .management-menu-toggle { width: 37px; height: 37px; flex-basis: 37px; }
+  .management-shell .management-bell { display: grid; width: 37px; height: 37px; }
+  .management-shell .management-institutions { margin-left: auto; }
+  .management-shell .management-sidebar {
+    position: fixed; z-index: 70; top: 70px; bottom: 0; left: 0;
+    width: min(275px, 84vw); max-width: 84vw; height: calc(100dvh - 70px);
+    display: flex; flex-direction: column; padding: .7rem;
+    overflow-y: auto; overflow-x: hidden;
+    transform: translateX(0);
+    box-shadow: 10px 0 35px rgba(40,0,99,.18);
+  }
+  .management-shell .management-sidebar nav {
+    display: grid; width: 100%; min-width: 0; align-items: stretch;
+  }
+  .management-shell .management-sidebar nav a {
+    width: 100%; white-space: normal; padding: .8rem;
+  }
+  .management-shell .management-side-backdrop {
+    display: block; position: fixed; z-index: 65;
+    inset: 70px 0 0; width: 100%; border: none;
+    background: rgba(18,6,39,.48); cursor: pointer;
+  }
+  .management-shell .management-main,
+  .management-shell.management-shell-nav-collapsed .management-main,
+  .management-shell .management-footer { width: 100%; max-width: 100%; margin-left: 0; }
+  .management-shell .management-notice-popover { right: -52px; }
+}
+@media (max-width: 560px) {
+  .management-shell .management-ufcg-logo { display: none; }
+  .management-shell .management-brand-copy small { display: none; }
+  .management-shell .management-notice-popover {
+    position: fixed; top: 66px; left: 9px; right: 9px;
+    width: calc(100vw - 18px); max-height: 75dvh;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .management-shell .management-sidebar { transition: none; }
+}
+
+
+/*
+ * PR #21 — Reflow do shell por grade física, não sobreposição.
+ * Duas faixas reais: menu + conteúdo; o conteúdo é sempre minmax(0,1fr).
+ * Componentes analíticos usam container queries, baseadas na largura REAL
+ * disponível (e não apenas no viewport).
+ */
+@media (min-width: 851px) {
+  .management-shell {
+    --mae-side-track: 236px;
+    display: grid;
+    grid-template-columns: var(--mae-side-track) minmax(0,1fr);
+    /* A linha do dashboard precisa crescer com TODO o conteúdo.
+       minmax(0,1fr) podia limitar a linha à altura da viewport e bloquear
+       a rolagem do documento mesmo com o conteúdo visualmente mais longo. */
+    grid-template-rows: auto minmax(min-content, auto) auto;
+    transition: grid-template-columns .25s ease;
+    min-width: 0;
+  }
+  .management-shell.management-shell-nav-collapsed {
+    --mae-side-track: 0px;
+  }
+  .management-shell .management-topbar {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .management-shell .management-sidebar {
+    grid-column: 1;
+    grid-row: 2 / 4;
+    position: sticky;
+    z-index: 22;
+    top: 81px;
+    left: auto;
+    bottom: auto;
+    align-self: start;
+    height: calc(100dvh - 81px);
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: none;
+    transition: opacity .2s ease, visibility .2s ease;
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar {
+    width: 0;
+    min-width: 0;
+    padding-inline: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: none;
+  }
+  .management-shell .management-main {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    container: mae-dashboard / inline-size;
+  }
+  .management-shell.management-shell-nav-collapsed .management-main {
+    width: 100%;
+    margin: 0;
+  }
+  .management-shell .management-footer,
+  .management-shell.management-shell-nav-collapsed .management-footer {
+    grid-column: 2;
+    grid-row: 3;
+    width: 100%;
+    margin: 0;
+    min-width: 0;
+  }
+}
+/* O layout se adapta ao espaço efetivo, não ao tamanho do monitor.
+ * Nada some: filtros e cards só mudam a organização da grade. */
+@container mae-dashboard (max-width: 1399px) {
+  .management-dashboard .dashboard-filter-zone {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .management-dashboard .dashboard-filter-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .management-dashboard .dashboard-filter-secondary {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0,1fr) minmax(0,1.45fr) auto;
+  }
+  .management-dashboard .dashboard-kpi-grid {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+}
+@container mae-dashboard (max-width: 1120px) {
+  .management-dashboard .dashboard-secondary-charts,
+  .management-dashboard .dashboard-chart-row,
+  .management-module .module-two-column {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .management-dashboard .dashboard-secondary-charts .dashboard-chart-donut,
+  .management-dashboard .dashboard-secondary-charts .dashboard-components-card {
+    grid-column: auto;
+    min-width: 0;
+    width: 100%;
+  }
+  .management-dashboard .dashboard-filter-secondary {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .management-dashboard .dashboard-filter-actions { grid-column: 1 / -1; }
+}
+@container mae-dashboard (max-width: 750px) {
+  .management-dashboard .dashboard-kpi-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .management-dashboard .dashboard-filter-grid,
+  .management-dashboard .dashboard-filter-secondary {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .management-dashboard .dashboard-filter-secondary,
+  .management-dashboard .dashboard-filter-actions {
+    grid-column: auto;
+  }
+  .management-module .module-stat-grid,
+  .management-module .module-two-column {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
+@container mae-dashboard (max-width: 440px) {
+  .management-dashboard .dashboard-kpi-grid {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
+/* Protege títulos, dados e gráficos da largura automática mínima.
+   Tabelas rolam dentro de sua própria área, nunca expandem a página. */
+.management-shell .management-main :is(
+  .management-dashboard,.management-module,
+  .dashboard-filter-zone,.dashboard-filter-grid,.dashboard-filter-secondary,
+  .dashboard-kpi-grid,.dashboard-chart-row,.dashboard-secondary-charts,
+  .dashboard-bottom-grid,.dashboard-card,.dashboard-kpi,.module-two-column,
+  .module-stat-grid,.mae-chart,.mae-chart-plot,.table-scroll
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+.management-shell .management-main .table-scroll {
+  overflow-x: auto;
+}
+@media (max-width: 850px) {
+  .management-shell { display: block; }
+  .management-shell .management-main { container: mae-dashboard / inline-size; }
+}
+/* Evita animação de geometria para usuários com movimento reduzido. */
+@media (prefers-reduced-motion: reduce) {
+  .management-shell { transition: none; }
+}
+
+
+/* Informações anteriormente isoladas em "Resumo", agora presentes no Início. */
+.management-shell .dashboard-summary-highlights {
+  margin-top: clamp(1.2rem, 2vw, 1.8rem);
+  min-width: 0;
+}
+.management-shell .dashboard-summary-highlights > .dashboard-card-heading { margin-bottom: .75rem; }
+.management-shell .dashboard-summary-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: clamp(.65rem,1.1vw,1rem);
+}
+.management-shell .dashboard-summary-mini-grid > article {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  min-width: 0;
+  padding: 1.05rem;
+}
+.management-shell .dashboard-summary-mini-grid > article > span {
+  color: #655083; font-size: .72rem; font-weight: 800;
+}
+.management-shell .dashboard-summary-mini-grid > article > strong {
+  display: block;
+  color: var(--post-plum);
+  font-size: clamp(1.45rem, 1.8vw, 1.85rem);
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.management-shell .dashboard-summary-mini-grid > article > small {
+  color: var(--post-muted);
+  font-size: .69rem;
+  line-height: 1.4;
+}
+.management-shell .dashboard-summary-bands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.management-shell .dashboard-summary-bands > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .3rem;
+  flex: 1 0 44%;
+  min-width: 0;
+  padding: .4rem .55rem;
+  border: 1px solid #e9def3;
+  border-radius: 9px;
+  background: #fcf9ff;
+  color: var(--post-purple);
+}
+.management-shell .dashboard-summary-bands b {
+  min-width: 0;
+  font-size: .65rem;
+  overflow-wrap: anywhere;
+}
+.management-shell .dashboard-summary-bands strong {
+  font-variant-numeric: tabular-nums;
+  font-size: .7rem;
+}
+@container mae-dashboard (max-width: 1250px) {
+  .management-dashboard .dashboard-summary-mini-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+@container mae-dashboard (max-width: 520px) {
+  .management-dashboard .dashboard-summary-mini-grid {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
+
+.management-shell .dashboard-summary-ranking-grid {
+  display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: clamp(.65rem,1.1vw,1rem); margin-top: 1rem;
+}
+.management-shell .dashboard-summary-ranking {
+  display: grid; gap: .4rem; padding: .2rem 0 0; margin: 0; list-style: none;
+}
+.management-shell .dashboard-summary-ranking li {
+  min-width: 0; display: flex; align-items: center;
+  justify-content: space-between; gap: .7rem;
+  padding: .7rem 0; border-bottom: 1px solid #eee6f4;
+  font-size: .74rem; color: var(--post-purple);
+}
+.management-shell .dashboard-summary-ranking li span { min-width: 0; }
+.management-shell .dashboard-summary-ranking li strong { display: block; }
+.management-shell .dashboard-summary-ranking li small {
+  display: block; margin-top: .22rem; font-size: .7rem;
+  color: var(--post-muted); line-height: 1.35;
+}
+.management-shell .dashboard-summary-ranking li b {
+  flex: 0 0 auto; font-variant-numeric: tabular-nums; color: var(--post-plum);
+}
+@container mae-dashboard (max-width: 770px) {
+  .management-dashboard .dashboard-summary-ranking-grid { grid-template-columns: minmax(0,1fr); }
+}
+
+
+/* PR #21 — UMA ÚNICA ROLAGEM POR PÁGINA.
+ * Não existe mais coluna lateral com altura de viewport e overflow-y:auto.
+ * A barra é um item real da grade: acompanha o documento em vez de
+ * criar um segundo painel rolável sobre o dashboard. */
+@media (min-width: 851px) {
+  .management-shell .management-sidebar {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    height: auto;
+    min-height: calc(100dvh - 81px);
+    max-height: none;
+    align-self: stretch;
+    justify-content: flex-start;
+    overflow: visible;
+    overflow-x: visible;
+    overflow-y: visible;
+    overscroll-behavior: auto;
+  }
+  .management-shell .management-sidebar-note {
+    margin-top: clamp(2rem, 7vh, 5rem);
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar {
+    overflow: hidden;
+    min-height: 0;
+  }
+}
+/* No celular o menu EXPANDE na mesma página em vez de abrir
+ * uma janela com scrollbar independente. Fecha antes de navegar. */
+@media (max-width: 850px) {
+  .management-shell .management-sidebar {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    z-index: 20;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    padding: .7rem clamp(.8rem, 3.4vw, 1.35rem);
+    display: flex;
+    overflow: visible;
+    overflow-x: visible;
+    overflow-y: visible;
+    transform: none;
+    box-shadow: 0 8px 22px rgba(40, 0, 99, .09);
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar {
+    display: none;
+  }
+  .management-shell .management-side-backdrop { display: none; }
+}
+
+
+/* PR #21 · Referências aprovadas (início 1–4):
+ * filtros compactos + panorama prioritário + relatório e diário por conta.
+ * Container queries usam a largura REAL após abertura/retração do menu. */
+.management-shell .management-dashboard .dashboard-filter-zone {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: .7rem;
+  margin-bottom: 1rem;
+}
+.management-shell .management-dashboard .dashboard-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(0,1.85fr) minmax(190px,1fr);
+  align-items: end;
+  column-gap: .9rem;
+  row-gap: .75rem;
+  padding: clamp(.8rem,1.2vw,1.15rem);
+}
+.management-shell .management-dashboard .management-filter-advanced {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  align-items: end;
+  gap: .85rem;
+  padding: .95rem 0 0;
+  border-top: 1px solid #eee6f5;
+}
+.management-shell .management-dashboard .management-filter-advanced[hidden] {
+  display: none !important;
+}
+.management-shell .management-dashboard .management-filter-advanced > label,
+.management-shell .management-dashboard .management-filter-advanced .dashboard-filter-secondary > label {
+  min-width: 0;
+}
+.management-shell .management-dashboard .management-filter-advanced .dashboard-filter-secondary {
+  display: contents;
+}
+.management-shell .management-dashboard .management-filter-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  grid-column: 1 / -1;
+  margin-top: .1rem;
+  min-width: 0;
+}
+.management-shell .management-dashboard .management-filter-controls .dashboard-filter-actions {
+  grid-column: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  justify-content: flex-end;
+}
+.management-shell .management-dashboard .management-more-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  border: 0;
+  background: transparent;
+  color: #65409a;
+  font-size: .76rem;
+  font-weight: 780;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: .65rem .25rem;
+}
+.management-shell .management-dashboard .management-more-filters svg {
+  width: .95rem;
+  height: .95rem;
+  transition: transform .2s ease;
+}
+.management-shell .management-dashboard .management-more-filters svg.rotated { transform: rotate(180deg); }
+.management-shell .management-dashboard .dashboard-period-selects select,
+.management-shell .management-dashboard .dashboard-filter-grid select,
+.management-shell .management-dashboard .dashboard-filter-grid input {
+  height: 41px;
+}
+.management-shell .management-dashboard .dashboard-import-cta {
+  min-width: 0;
+  width: 100%;
+  min-height: 70px;
+}
+.management-shell .management-dashboard .management-panorama {
+  min-width: 0;
+  background: white;
+  border: 1px solid #e8def0;
+  border-radius: 16px;
+  padding: clamp(1rem,1.6vw,1.45rem);
+  box-shadow: 0 7px 24px rgba(40,0,99,.065);
+  margin: .45rem 0 1rem;
+}
+.management-shell .management-panorama-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .8rem;
+  margin-bottom: .9rem;
+}
+.management-shell .management-panorama-heading span {
+  display: block;
+  text-transform: uppercase;
+  font-size: .65rem;
+  font-weight: 850;
+  color: #815aac;
+  letter-spacing: .08em;
+}
+.management-shell .management-panorama-heading h2 {
+  margin: .3rem 0 0;
+  font-size: clamp(1.1rem,1.8vw,1.45rem);
+  font-weight: 850;
+  color: #321267;
+}
+.management-shell .management-panorama-heading small {
+  display: block;
+  padding: .45rem .7rem;
+  background: #f6f0fc;
+  color: #65438d;
+  border-radius: 99px;
+  font-size: .7rem;
+  font-weight: 700;
+}
+.management-shell .management-panorama-grid {
+  display: grid;
+  grid-template-columns: .94fr 1.06fr;
+  gap: clamp(.8rem,2vw,1.5rem);
+  min-width: 0;
+}
+.management-shell .management-panorama-score {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #f8f4fd;
+  border: 1px solid #eee5f6;
+  border-radius: 12px;
+  padding: 1rem;
+}
+.management-shell .management-panorama-score-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: .6rem;
+  color: #625376;
+  font-size: .72rem;
+  font-weight: 700;
+}
+.management-shell .management-panorama-score-top b {
+  color: #5f3098;
+  background: #efe2fc;
+  border-radius: 99px;
+  padding: .35rem .65rem;
+  font-size: .7rem;
+}
+.management-shell .management-panorama-score > strong {
+  font-size: clamp(2.15rem,3.7vw,3.1rem);
+  letter-spacing: -.05em;
+  color: #502295;
+  line-height: 1.06;
+  margin: .4rem 0 .15rem;
+  font-variant-numeric: tabular-nums;
+}
+.management-shell .management-panorama-score > small {
+  color: #776b8b;
+  font-size: .7rem;
+}
+.management-shell .management-panorama-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #e7daf2;
+  margin-top: auto;
+  padding-top: .85rem;
+  gap: .7rem;
+}
+.management-shell .management-panorama-totals > div + div {
+  border-left: 1px solid #e7daf2;
+  padding-left: .8rem;
+}
+.management-shell .management-panorama-totals strong {
+  display: block;
+  font-size: 1.5rem;
+  color: #36176b;
+  font-variant-numeric: tabular-nums;
+}
+.management-shell .management-panorama-totals span {
+  font-size: .7rem;
+  color: #81758e;
+}
+.management-shell .management-panorama-practices { min-width: 0; padding: .15rem 0; }
+.management-shell .management-panorama-practices-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  font-size: .82rem;
+  margin-bottom: .8rem;
+  color: #382060;
+}
+.management-shell .management-panorama-practices-heading small { font-size: .65rem; font-weight: 400; color: #81748b; }
+.management-shell .management-panorama-practice {
+  display: grid;
+  grid-template-columns: minmax(80px, 1.1fr) minmax(70px,1.6fr) auto;
+  gap: .7rem;
+  align-items: center;
+  padding: .45rem 0;
+  min-width: 0;
+  color: #4e435b;
+  font-size: .69rem;
+}
+.management-shell .management-panorama-practice strong {
+  min-width: 48px;
+  text-align: right;
+  font-size: .73rem;
+  color: #36206b;
+  font-variant-numeric: tabular-nums;
+}
+.management-shell .management-panorama-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 50px;
+  background: #f1edf6;
+}
+.management-shell .management-panorama-track i {
+  display: block;
+  height: 100%;
+  border-radius: 50px;
+  background: #8554c8;
+}
+.management-shell .management-panorama-track i[data-color="1"] { background: #22a17e; }
+.management-shell .management-panorama-track i[data-color="2"] { background: #d76090; }
+.management-shell .management-panorama-track i[data-color="3"] { background: #e9a32a; }
+.management-shell .management-panorama-insight {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin: 1rem 0 0;
+  padding: .75rem .85rem;
+  border: 1px solid #e9dff4;
+  border-radius: 10px;
+  background: #faf7fd;
+  color: #635378;
+  font-size: .72rem;
+  line-height: 1.5;
+}
+.management-shell .management-panorama-insight svg { flex: 0 0 16px; color: #764aae; }
+.management-shell .management-dashboard .dashboard-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  align-items: stretch;
+}
+.management-shell .management-report-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .5rem;
+}
+.management-shell .management-report-card .dashboard-card-heading {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: .5rem;
+}
+.management-shell .management-report-card .dashboard-card-heading > svg { color: #6b42a5; flex: 0 0 24px; }
+.management-shell .management-report-card-icon {
+  margin: .5rem auto .3rem;
+  display: grid;
+  place-items: center;
+  width: 63px;
+  height: 63px;
+  border-radius: 18px;
+  background: #f1e7fc;
+  color: #632fac;
+}
+.management-shell .management-report-card-icon svg { height: 32px; width: 32px; }
+.management-shell .management-report-card-description {
+  color: #695b7a; line-height: 1.5; text-align: center;
+  font-size: .74rem; margin: .3rem 0;
+}
+.management-shell .management-report-check {
+  display: flex; gap: .45rem; align-items: flex-start;
+  font-size: .72rem; color: #463361;
+  margin-top: auto;
+}
+.management-shell .management-report-check input { margin-top: 2px; accent-color: #5b299b; }
+.management-shell .management-report-primary,
+.management-shell .management-report-secondary {
+  width: 100%;
+  min-height: 39px;
+  border: 1px solid #d2bee7;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: .76rem;
+  font-weight: 800;
+  color: #4d2585;
+  background: #fff;
+}
+.management-shell .management-report-primary {
+  background: #50238e;
+  border-color: #50238e;
+  color: white;
+}
+.management-shell .management-report-primary:hover { background: #401b78; }
+.management-shell .management-report-secondary:hover { background: #f9f5ff; }
+.management-shell .management-report-card > small {
+  color: #897d98;
+  line-height: 1.5;
+  font-size: .65rem;
+}
+.management-shell .dashboard-bottom-grid > .management-notes-card {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
+.management-shell .management-notes-card > label {
+  color: #4f3279;
+  font-size: .75rem;
+  font-weight: 750;
+}
+.management-shell .management-notes-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 160px;
+  padding: .9rem;
+  border: 1px solid #d7c6e7;
+  border-radius: 11px;
+  resize: vertical;
+  background: #fff;
+  font-size: .82rem;
+  line-height: 1.55;
+}
+.management-shell .management-notes-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+.management-shell .management-notes-controls > small {
+  font-size: .68rem; color: #766982;
+}
+.management-shell .management-notes-controls > div {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+}
+.management-shell .management-notes-controls button,
+.management-shell .management-report-modal-toolbar button {
+  display: inline-flex; align-items: center; gap: .35rem;
+  justify-content: center;
+  padding: .6rem .8rem;
+  border-radius: 9px;
+  border: 1px solid #d6c4e9;
+  font-size: .73rem;
+  font-weight: 790;
+  cursor: pointer;
+  background: white;
+  color: #633990;
+}
+.management-shell .management-notes-controls .management-notes-save {
+  background: #54238e;
+  color: white;
+  border-color: #54238e;
+}
+.management-shell .management-notes-controls button:disabled { opacity: .55; cursor: wait; }
+.management-shell .management-notes-message {
+  border-top: 1px solid #eee5f6;
+  padding-top: .8rem;
+  margin: .1rem 0 0;
+  color: #776c82;
+  font-size: .68rem;
+}
+.management-shell .management-print-report { display: none; }
+.management-shell .management-report-modal {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid; place-items: center;
+  padding: 1rem;
+  background: rgba(28,11,53,.73);
+}
+.management-shell .management-report-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(850px,100%);
+  max-height: 93dvh;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 24px 85px rgba(12,0,40,.3);
+}
+.management-shell .management-report-modal-toolbar {
+  display: flex;
+  align-items: center; justify-content: space-between;
+  padding: .7rem 1rem;
+  background: #f9f5fd;
+  border-bottom: 1px solid #e4d8f1;
+  color: #321268;
+  gap: .6rem;
+}
+.management-shell .management-report-modal-toolbar > div { display: flex; gap: .5rem; }
+.management-shell .management-report-modal-scroll { overflow: auto; padding: 1.25rem; }
+.management-report-document { background: white; color: #342444; font-size: 12px; line-height: 1.5; }
+.management-report-document .management-report-doc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; border-bottom: 3px solid #5c4798; padding-bottom: .8rem;
+}
+.management-report-document .management-report-doc-header img { object-fit: contain; max-width: 45%; height: auto; max-height: 65px; }
+.management-report-document .management-report-doc-heading { padding: .9rem 0 1rem; }
+.management-report-document .management-report-doc-heading > span { color: #8558ab; text-transform: uppercase; letter-spacing: .08em; font-size: .65rem; font-weight: 850; }
+.management-report-document h1 { margin: .2rem 0 .4rem; color: #280063; font-size: 1.55rem; line-height: 1.2; }
+.management-report-document h2 {
+  margin: 1.4rem 0 .55rem;
+  padding: .4rem .55rem;
+  font-size: 1.05rem;
+  color: #321168;
+  background: #f2e9fb;
+  border-left: 3px solid #7248b8;
+}
+.management-report-document h3 { color: #422378; font-size: .9rem; margin: .7rem 0 .3rem; }
+.management-report-document p { margin: .3rem 0; color: #625477; }
+.management-report-document section { break-inside: auto; }
+.management-report-document table { width: 100%; border-collapse: collapse; margin: .35rem 0 .85rem; table-layout: auto; }
+.management-report-document th {
+  background: #ede3f8; color: #37206a; text-align: left;
+  font-size: .7rem; font-weight: 830;
+}
+.management-report-document th, .management-report-document td { padding: .43rem .5rem; border-bottom: 1px solid #e9dff0; vertical-align: top; overflow-wrap: anywhere; }
+.management-report-document td { font-size: .71rem; }
+.management-report-document td small { display: block; color: #81758b; margin-top: .15rem; }
+.management-report-document tr { break-inside: avoid; }
+.management-report-document .management-report-doc-stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .55rem; }
+.management-report-document .management-report-doc-stats > div {
+  display: flex; flex-direction: column; gap: .25rem;
+  padding: .7rem; border: 1px solid #e6dcef; border-radius: 9px; background: #f9f5fd;
+}
+.management-report-document .management-report-doc-stats small { font-size: .64rem; color: #66547e; }
+.management-report-document .management-report-doc-stats strong { font-size: 1.2rem; color: #452084; }
+.management-report-document .management-report-doc-stats span { font-size: .62rem; color: #746884; }
+.management-report-document .management-report-doc-footnote { font-size: .67rem; color: #786d86; }
+.management-report-document .management-report-note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.management-report-document footer { margin-top: 1rem; padding-top: .5rem; border-top: 1px solid #d7c7e6; color: #7b7084; font-size: .68rem; }
+@container mae-dashboard (max-width: 990px) {
+  .management-shell .management-dashboard .management-filter-advanced { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .management-shell .management-dashboard .dashboard-bottom-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .management-shell .dashboard-bottom-grid > .management-report-card { grid-column: 1/-1; }
+  .management-shell .dashboard-bottom-grid > .management-notes-card { grid-column: 1/-1; }
+}
+@container mae-dashboard (max-width: 900px) {
+  .management-shell .management-panorama-grid { grid-template-columns: minmax(0,1fr); }
+  .management-shell .management-dashboard .dashboard-filter-grid { grid-template-columns: minmax(0,1fr); }
+}
+@container mae-dashboard (max-width: 680px) {
+  .management-shell .management-dashboard .management-filter-advanced,
+  .management-shell .management-dashboard .dashboard-bottom-grid { grid-template-columns: minmax(0,1fr); }
+  .management-shell .management-dashboard .management-filter-controls,
+  .management-shell .management-notes-controls { flex-wrap: wrap; }
+  .management-shell .management-dashboard .management-filter-controls .dashboard-filter-actions { width: 100%; justify-content: flex-end; }
+  .management-shell .management-report-document .management-report-doc-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@container mae-dashboard (max-width: 450px) {
+  .management-shell .management-panorama-practice { grid-template-columns: minmax(78px,1fr) minmax(70px,1fr) 48px; gap: .4rem; }
+  .management-shell .management-panorama-practice span { font-size: .64rem; }
+}
+@media print {
+  @page { size: A4 portrait; margin: 13mm; }
+  html,body { margin: 0 !important; padding: 0 !important; background: #fff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .management-shell { display: block !important; width: 100% !important; min-height: 0 !important; background: white !important; }
+  .management-shell .management-topbar, .management-shell .management-sidebar,
+  .management-shell .management-side-backdrop, .management-shell .management-footer,
+  .management-shell .management-report-modal { display: none !important; }
+  .management-shell .management-main {
+    display: block !important;
+    width: 100% !important; min-width: 0 !important;
+    margin: 0 !important; padding: 0 !important; background: white !important;
+  }
+  .management-shell .management-dashboard > :not(.dashboard-bottom-grid) { display: none !important; }
+  .management-shell .management-dashboard .dashboard-bottom-grid {
+    display: block !important; margin: 0 !important; padding: 0 !important;
+  }
+  .management-shell .dashboard-bottom-grid > :not(.management-print-report) { display: none !important; }
+  .management-shell .dashboard-bottom-grid > .management-print-report { display: block !important; }
+  .management-shell .management-print-report .management-report-document { font-size: 10pt; line-height: 1.4; }
+  .management-shell .management-report-document h2 { break-after: avoid; }
+  .management-shell .management-report-document table { font-size: 9pt; }
+  .management-shell .management-report-document tr { break-inside: avoid; }
+  .management-shell .management-report-document .management-report-doc-stats { grid-template-columns: repeat(4,minmax(0,1fr)); }
+}
+
+/* Cabeçalho dos filtros inspirado no layout HTML de referência. */
+.management-shell .management-dashboard .management-filter-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  padding: .1rem .2rem .25rem;
+}
+.management-shell .management-filter-header h2 {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: 0;
+  color: #34116a;
+  font-size: .9rem;
+  font-weight: 840;
+}
+.management-shell .management-filter-header h2 svg { color: #7547a9; }
+.management-shell .management-filter-header small {
+  color: #95889f;
+  font-size: .7rem;
+}
+@container mae-dashboard (max-width: 480px) {
+  .management-shell .management-dashboard .management-filter-header { flex-wrap: wrap; }
+}
+
+.management-shell .management-dashboard .management-filter-advanced > label,
+.management-shell .management-dashboard .management-filter-advanced .dashboard-filter-secondary > label {
+  display: grid;
+  align-content: end;
+  gap: .35rem;
+}
+
+
+/* PR #21 · Menu que acompanha o documento — sem rolagem dupla.
+ * A coluna da sidebar ocupa a área física inteira, empurrando o dashboard.
+ * Apenas os LINKS dentro da coluna são sticky sob o cabeçalho fixo.
+ * Sticky depende de overflow visível nos ancestrais — nunca usar auto/hidden. */
+@media (min-width: 851px) {
+  .management-shell .management-sidebar {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    grid-column: 1;
+    grid-row: 2 / 4;
+    align-self: stretch;
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: calc(100dvh - 81px);
+    max-height: none;
+    overflow: visible;
+    overflow-x: visible;
+    overflow-y: visible;
+    transform: none;
+  }
+  .management-shell .management-sidebar-content {
+    position: sticky;
+    top: 91px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: max-content;
+    overflow: visible;
+    background: transparent;
+  }
+  .management-shell .management-sidebar-content nav {
+    min-width: 0;
+  }
+  .management-shell .management-sidebar-content .management-sidebar-note {
+    margin-top: clamp(1.1rem, 4vh, 2.5rem);
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar {
+    width: 0;
+    min-height: 0;
+    padding: 0;
+    overflow: clip;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .management-shell.management-shell-nav-collapsed .management-sidebar-content {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+@media (min-width: 851px) and (max-height: 720px) {
+  /* Os links continuam clicáveis em notebooks de altura menor, sem scrollbar.
+     O rodapé decorativo pode ser reduzido, mas nunca os itens de navegação. */
+  .management-shell .management-sidebar-content { top: 85px; }
+  .management-shell .management-sidebar nav a { min-height: 37px; padding-block: .48rem; }
+  .management-shell .management-sidebar .management-nav-label { margin-top: .5rem; }
+  .management-shell .management-sidebar-content .management-sidebar-note { margin-top: .9rem; }
+}
+@media (max-width: 850px) {
+  /* No mobile o menu permanece no fluxo, sem um painel scrollável separado. */
+  .management-shell .management-sidebar-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* Assinatura MAE APS na impressão: SVG oficial isolado de molduras/fundos.
+ * O arquivo contém apenas caminhos vetoriais roxos (sem retângulos);
+ * nenhum estilo global de card, sombra ou background pode recobri-lo. */
+.management-report-document .management-report-doc-header .management-report-mae-logo {
+  display: block;
+  flex: 0 1 auto;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: multiply;
+  object-fit: contain;
+}
+@media print {
+  .management-shell .management-report-document .management-report-doc-header {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .management-shell .management-report-document .management-report-doc-header .management-report-mae-logo {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    mix-blend-mode: multiply;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+
+
+/* Correções da auditoria WCAG 2.2 AA: texto secundário com contraste mínimo.
+ * Ajusta somente os quatro elementos identificados pelo axe-core.
+ * O clipping horizontal impede que sombras/ornamentos externos
+ * criem uma barra de rolagem ao recolher o menu, sem criar scroll interno. */
+/* Nunca limitar overflow no shell nem no contêiner que organiza
+ * as colunas: ambos devem permitir que o DOCUMENTO role integralmente.
+ * Limitar exclusivamente conteúdo analítico interno quando necessário. */
+@media (min-width: 851px) {
+  .management-shell .management-main {
+    overflow: visible;
+  }
+  .management-shell .management-dashboard {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+}
+.management-shell .management-panorama-totals span { color: #685779; }
+.management-shell .management-panorama-practices-heading small { color: #705b7e; }
+.management-shell .management-report-card > small { color: #6e5b7e; }

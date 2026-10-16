@@ -8,16 +8,16 @@ import {
   CircleHelp,
   CheckCircle2,
   ClipboardList,
-  Database,
   FileSpreadsheet,
   Home,
-  Sparkles,
+  Clock3,
   Stethoscope,
   Users,
 } from "lucide-react";
 
 import { MaeChart } from "@/components/charts/mae-chart";
 import { ManagementDashboardFilters } from "@/components/dashboard/dashboard-filters";
+import { ManagementReportAndNotes, type ManagementReportData } from "@/components/dashboard/management-report-notes";
 import { aggregateC3, C3_COMPONENTS, classifyC3, type C3Fact } from "@/lib/analytics/c3";
 import { loadDashboardPracticeTotalsForPeriod } from "@/lib/analytics/dashboard-data";
 import {
@@ -288,6 +288,11 @@ export default async function ManagementDashboard({
   const summary = ratio(selectedFacts);
   const teamCount = new Set(selectedFacts.map((fact) => fact.team_id)).size;
   const ubsCount = new Set(selectedFacts.map((fact) => fact.establishment_id)).size;
+  // Rastreabilidade territorial no recorte atual, por UBS única (não soma mensal).
+  const unknownDistrictUbs = new Set(
+    selectedFacts.filter((fact) => fact.district_id === null).map((fact) => fact.establishment_id),
+  ).size;
+  const selectedCompetencies = new Set(selectedFacts.map((fact) => fact.competency.slice(0, 7))).size;
 
   const componentTotals: Record<string, number> = Object.fromEntries(Object.keys(C3_COMPONENTS).map((code) => [code, 0]));
   const componentTotalsByMonth = new Map(
@@ -571,6 +576,66 @@ export default async function ManagementDashboard({
     ? `${monthLabel(start)} – ${monthLabel(end)}`
     : "Sem dados";
 
+  // Anotações nunca chegam de terceiros: a chave é o usuário autenticado,
+  // e a autorização de SELECT também é garantida por RLS no banco.
+  const notesResult = await supabase.schema("app").from("management_private_notes")
+    .select("body")
+    .eq("user_id", profile.userId)
+    .eq("period_start", `${start}-01`)
+    .eq("period_end", `${end}-01`)
+    .maybeSingle();
+  const notesAvailable = !notesResult.error;
+  const initialNote = typeof notesResult.data?.body === "string" ? notesResult.data.body : "";
+
+  const report: ManagementReportData = {
+    period: heroPeriod,
+    periodStart: start,
+    periodEnd: end,
+    generatedFor: profile.email,
+    filters: [
+      district === "all" ? "Todos os distritos" : district === "unknown" ? "Distrito não informado" : districts.find((item) => String(item.id) === district)?.name ?? "Distrito filtrado",
+      establishmentId === "all" ? "Todas as UBS" : visibleEstablishments.find((item) => item.id === establishmentId)?.name ?? "UBS filtrada",
+      teamId === "all" ? "Todas as equipes" : visibleTeams.find((item) => item.id === teamId)?.name ?? "Equipe filtrada",
+      classification === "all" ? "Todas as classificações" : CLASSIFICATION_CODES[classification],
+      filters.query ? `Busca: ${filters.query}` : "Sem busca textual",
+    ],
+    latestUpdate: lastUpdate,
+    c3: formatC3(summary.c3),
+    classification: classifyC3(summary.c3),
+    eligible: formatNumber(summary.denominator),
+    teams: teamCount,
+    establishments: ubsCount,
+    unknownDistrictEstablishments: unknownDistrictUbs,
+    competencies: selectedCompetencies,
+    stats: [
+      { label: "Registros elegíveis", value: formatNumber(summary.denominator), detail: "Denominador acumulado no período" },
+      { label: "C3 consolidado", value: formatC3(summary.c3), detail: classifyC3(summary.c3) },
+      ...["A", "K", "G", "E"].map((code) => ({
+        label: PRACTICE_SHORT[code], value: formatPercent(practiceRate(code)),
+        detail: `${formatNumber(componentTotals[code] ?? 0)} registros com a prática`,
+      })),
+    ],
+    practices: Object.keys(C3_COMPONENTS).map((code) => ({
+      code, label: PRACTICE_SHORT[code], value: practiceRate(code),
+      fulfilled: componentTotals[code] ?? 0,
+      description: C3_COMPONENTS[code as keyof typeof C3_COMPONENTS],
+    })),
+    monthly: evolution.map((item) => ({ month: monthLabel(item.month), c3: item.c3, a: item.a, b: item.b })),
+    classified: Object.entries(classificationCounts).map(([label, total]) => ({ label, total })),
+    comparisonMode,
+    comparison: comparison.map((item) => ({ name: item.name, value: item.value })),
+    importVisible: canImport,
+    imports: canImport ? recentImports.map((item) => ({
+      date: new Date(item.uploaded_at).toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" }),
+      competency: longMonthLabel(item.competency), records: item.rows_total, status: item.status,
+    })) : [],
+    attention: attentionPractices.map((item) => ({
+      code: item.code, label: item.label, value: item.rate,
+      description: C3_COMPONENTS[item.code as keyof typeof C3_COMPONENTS],
+    })),
+  };
+
+
   return (
     <div className="management-dashboard">
       <section className="dashboard-welcome">
@@ -623,6 +688,43 @@ export default async function ManagementDashboard({
             </span>
           </Link>
         )}
+      </section>
+
+      <section className="management-panorama" aria-labelledby="management-panorama-title">
+        <div className="management-panorama-heading">
+          <div><span>Panorama municipal</span><h2 id="management-panorama-title">Uma visão, os dados essenciais</h2></div>
+          <small>{heroPeriod} · {report.filters[0]}</small>
+        </div>
+        <div className="management-panorama-grid">
+          <article className="management-panorama-score">
+            <div className="management-panorama-score-top">
+              <span>C3 consolidado no recorte</span><b>{classifyC3(summary.c3)}</b>
+            </div>
+            <strong>{formatC3(summary.c3)}</strong>
+            <small>Síntese do indicador C3</small>
+            <div className="management-panorama-totals">
+              <div><strong>{formatNumber(teamCount)}</strong><span>Equipes no recorte</span></div>
+              <div><strong>{formatNumber(ubsCount)}</strong><span>UBS no recorte</span></div>
+            </div>
+          </article>
+          <div className="management-panorama-practices">
+            <div className="management-panorama-practices-heading"><strong>Práticas de cuidado no período</strong><small>Percentual (%)</small></div>
+            {["A", "K", "G", "E"].map((code, index) => {
+              const value = practiceRate(code);
+              return <div key={code} className="management-panorama-practice">
+                <span>{PRACTICE_SHORT[code]}</span>
+                <div className="management-panorama-track"><i data-color={index} style={{ width: `${Math.max(0, Math.min(100, value ?? 0))}%` }} /></div>
+                <strong>{formatPercent(value)}</strong>
+              </div>;
+            })}
+          </div>
+        </div>
+        <p className="management-panorama-insight">
+          <Clock3 aria-hidden="true" className="size-4" />
+          {lowestPractice
+            ? `Leitura rápida: entre as práticas A–K, ${lowestPractice.label} apresenta a menor cobertura (${formatPercent(lowestPractice.rate)}). A avaliação de prioridades exige considerar as metas e os critérios oficiais.`
+            : "Sem dados de práticas disponíveis neste recorte. Revise o período ou os filtros."}
+        </p>
       </section>
 
       <section id="indicadores" className="dashboard-kpi-grid">
@@ -768,6 +870,70 @@ export default async function ManagementDashboard({
         </article>
       </section>
 
+      <section className="dashboard-summary-highlights" aria-labelledby="resumo-executivo-titulo">
+        <div className="dashboard-card-heading">
+          <div>
+            <span>Síntese executiva</span>
+            <h2 id="resumo-executivo-titulo">Qualidade do recorte analisado</h2>
+            <p>Resumo territorial e distribuição de equipes, calculados sobre os mesmos filtros desta página.</p>
+          </div>
+        </div>
+        <div className="dashboard-summary-mini-grid">
+          <article className="dashboard-card">
+            <span>Competências no recorte</span>
+            <strong>{selectedCompetencies}</strong>
+            <small>{selectedCompetencies ? "Meses com registros oficiais disponíveis" : "Sem dados no período"}</small>
+          </article>
+          <article className="dashboard-card">
+            <span>Equipes e estabelecimentos</span>
+            <strong>{formatNumber(teamCount)} / {formatNumber(ubsCount)}</strong>
+            <small>Equipes / UBS com dados no recorte</small>
+          </article>
+          <article className="dashboard-card">
+            <span>UBS sem distrito informado</span>
+            <strong>{formatNumber(unknownDistrictUbs)}</strong>
+            <small>Vínculo territorial não identificado nos registros filtrados</small>
+          </article>
+          <article className="dashboard-card">
+            <span>Classificação das equipes</span>
+            <div className="dashboard-summary-bands">
+              {Object.entries(classificationCounts).map(([band, total]) =>
+                <span key={band}><b>{band}</b><strong>{formatNumber(total)}</strong></span>,
+              )}
+            </div>
+          </article>
+        </div>
+        <div className="dashboard-summary-ranking-grid">
+          <article className="dashboard-card">
+            <div className="dashboard-card-heading">
+              <div><span>Pontos de atenção</span><h2>Menores coberturas entre A–K</h2></div>
+            </div>
+            <ol className="dashboard-summary-ranking">
+              {practiceRanking.slice(0, 4).map(({ code, label, rate }) =>
+                <li key={code}><span><strong>{code} · {label}</strong><small>{C3_COMPONENTS[code as keyof typeof C3_COMPONENTS]}</small></span><b>{formatPercent(rate)}</b></li>,
+              )}
+              {!practiceRanking.length && <li>Sem dados disponíveis neste recorte.</li>}
+            </ol>
+          </article>
+          <article className="dashboard-card">
+            <div className="dashboard-card-heading">
+              <div><span>Destaques</span><h2>Maiores coberturas entre A–K</h2></div>
+            </div>
+            <ol className="dashboard-summary-ranking">
+              {practiceRanking.slice(-3).reverse().map(({ code, label, rate }) =>
+                <li key={code}><span><strong>{code} · {label}</strong><small>{C3_COMPONENTS[code as keyof typeof C3_COMPONENTS]}</small></span><b>{formatPercent(rate)}</b></li>,
+              )}
+              {!practiceRanking.length && <li>Sem dados disponíveis neste recorte.</li>}
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <div className="dashboard-data-note">
+        <ClipboardList className="size-4" aria-hidden="true" />
+        <span>Os percentuais apresentados são derivados exclusivamente dos dados oficiais carregados no MAE APS; não são utilizados valores simulados no Dashboard.</span>
+      </div>
+
       <section id="resumo" className="dashboard-bottom-grid">
         <article className="dashboard-card dashboard-attention">
           <div className="dashboard-card-heading">
@@ -842,39 +1008,9 @@ export default async function ManagementDashboard({
           )}
         </article>
 
-        <article className="dashboard-card dashboard-analysis">
-          <div className="dashboard-card-heading">
-            <div>
-              <span>Visão municipal</span>
-              <div className="dashboard-heading-title">
-                <h2>Análise consolidada da gestão</h2>
-                <DashboardHelp text="Resumo automático produzido a partir dos filtros atuais. Ele combina C3 consolidado, registros elegíveis, quantidade de equipes e UBS e extremos de cobertura das práticas A–K." />
-              </div>
-            </div>
-          </div>
-          <div className="analysis-icon"><Database className="size-8" /></div>
-          <p>
-            No recorte selecionado, o C3 consolidado é <strong>{formatC3(summary.c3)}</strong> ({classifyC3(summary.c3)}),
-            com <strong>{formatNumber(summary.denominator)}</strong> registros elegíveis distribuídos em <strong>{teamCount}</strong> equipes e <strong>{ubsCount}</strong> UBS.
-          </p>
-          {lowestPractice && highestPractice && (
-            <p>
-              Entre as práticas A–K, <strong>{lowestPractice.code} · {lowestPractice.label}</strong> apresenta a menor cobertura ({formatPercent(lowestPractice.rate)}),
-              enquanto <strong>{highestPractice.code} · {highestPractice.label}</strong> apresenta a maior ({formatPercent(highestPractice.rate)}).
-            </p>
-          )}
-          <div className="analysis-note">
-            <Sparkles className="size-4" aria-hidden="true" />
-            Use filtros e comparativos para localizar diferenças entre territórios antes de aprofundar a análise.
-          </div>
-          <p className="analysis-motto">Dados oficiais para apoiar uma gestão mais eficiente e um cuidado materno mais seguro.</p>
-        </article>
+        <ManagementReportAndNotes key={`${start}:${end}`} data={report} initialNote={initialNote} notesAvailable={notesAvailable} />
       </section>
 
-      <div className="dashboard-data-note">
-        <ClipboardList className="size-4" aria-hidden="true" />
-        <span>Os percentuais apresentados são derivados exclusivamente dos dados oficiais carregados no MAE APS; não são utilizados valores simulados no Dashboard.</span>
-      </div>
     </div>
   );
 }

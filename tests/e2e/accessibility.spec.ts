@@ -165,6 +165,11 @@ test.describe("teclado e gerenciamento de foco", () => {
     await page.keyboard.press("Enter");
     await expect(page.locator("details.management-user")).toHaveAttribute("open", "");
     await page.keyboard.press("Tab");
+    // A nova opção de editar perfil precede o botão Sair na ordem de foco.
+    await expect(
+      page.getByRole("link", { name: "Editar perfil e configurações" }),
+    ).toBeFocused();
+    await page.keyboard.press("Tab");
     await expect(
       page.getByRole("button", { name: "Sair", exact: true }),
     ).toBeFocused();
@@ -176,6 +181,9 @@ test.describe("teclado e gerenciamento de foco", () => {
       "/sistema/gestao?inicio=2099-01&fim=2099-01&distrito=all&ubs=all&equipe=all",
     );
 
+    // Seletores de UBS e equipe ficam em "Mais filtros" no layout novo.
+    await page.getByRole("button", { name: "Mais filtros" }).click();
+    await expect(page.locator('select[name="ubs"]')).toBeVisible();
     const district = page.locator('select[name="distrito"]');
     await district.focus();
     await district.selectOption({ label: "E2E Distrito Norte" });

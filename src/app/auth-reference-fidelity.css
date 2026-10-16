@@ -456,3 +456,67 @@
 @media (max-width: 380px) {
   .mae-motion-v3 .mae-cinema-ufcg { width: 119px; }
 }
+
+
+/* PR #21 · Botão ENTRAR alinhado ao card "Importar SIAPS".
+ * Mesma direção e atmosfera do gradiente institucional, mantendo as
+ * faixas mais claras ESCURAS o suficiente para o texto branco ser lido.
+ * O brilho dinâmico permanece atrás do label, nunca por cima do texto. */
+.mae-motion-v3 .auth-primary-button {
+  isolation: isolate;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid rgba(210,183,250,.68);
+  border-radius: 13px;
+  background: linear-gradient(110deg,
+    #371071 0%,
+    #54308f 38%,
+    #6741a8 70%,
+    #7049ae 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 11px 25px rgba(40,0,99,.21);
+  text-shadow: 0 1px 2px rgba(24,0,56,.45);
+}
+.mae-motion-v3 .auth-primary-button > .auth-primary-button-label {
+  position: relative;
+  z-index: 3;
+  display: inline-block;
+  color: #fff;
+  opacity: 1;
+  font-weight: 850;
+  font-size: inherit;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(28,0,58,.5);
+  pointer-events: none;
+}
+.mae-motion-v3 .auth-primary-button::before {
+  z-index: 1;
+  /* Reflexo sutil em vez de película branca opaca. */
+  opacity: .42;
+}
+.mae-motion-v3 .auth-primary-button::after {
+  z-index: 1;
+  background: linear-gradient(180deg,rgba(255,255,255,.11),transparent);
+}
+.mae-motion-v3 .auth-primary-button:hover:not(:disabled) {
+  color: #fff;
+  background: linear-gradient(110deg,
+    #45167e 0%, #6137a1 40%, #714aaf 70%, #7751b6 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.29),
+    0 13px 28px rgba(40,0,99,.24);
+}
+.mae-motion-v3 .auth-primary-button:focus-visible {
+  outline: 3px solid #ab87f3;
+  outline-offset: 3px;
+}
+.mae-motion-v3 .auth-primary-button:disabled {
+  opacity: .78;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mae-motion-v3 .auth-primary-button::before {
+    animation: none !important;
+  }
+}

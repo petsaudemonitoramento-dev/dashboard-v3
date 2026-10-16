@@ -12,7 +12,6 @@ test("Gestão navega pelos módulos existentes com a identidade unificada", asyn
     ["Indicadores", "/sistema/gestao/indicadores", "Indicadores"],
     ["UBS e equipes", "/sistema/gestao/ubs-equipes", "UBS e equipes"],
     ["Comparativos", "/sistema/gestao/comparativos", "Comparativos"],
-    ["Resumo", "/sistema/gestao/resumo", "Resumo"],
   ] as const;
 
   for (const [name, href] of expected) {
@@ -48,14 +47,21 @@ test("Administração utiliza o mesmo shell sem ganhar acesso de Gestão", async
   await expect(page).toHaveURL(/acesso-negado$/);
 });
 
-test("Navegação pós-login tem barra rolável no mobile, sem cortar o conteúdo", async ({ page }) => {
+test("Navegação mobile abre por botão e fecha sem cortar o conteúdo", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page, "gestao");
   const main = page.locator(".management-main");
-  const nav = page.locator(".management-sidebar");
+  const toggle = page.getByRole("button", { name: "Abrir menu lateral" });
   await expect(main).toBeVisible();
-  await expect(nav).toBeVisible();
-  await expect(nav).toHaveCSS("overflow-x", "auto");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await toggle.click();
+  await expect(page.locator(".management-sidebar")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Recolher menu lateral" })).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator(".management-sidebar")).toHaveCSS("overflow-y", "visible");
+  await expect(page.locator(".management-sidebar")).toHaveCSS("position", "relative");
+  await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+  await expect(page.getByRole("button", { name: "Abrir menu lateral" })).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".management-sidebar")).toBeHidden();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
@@ -140,12 +146,252 @@ test("total de equipes fica exatamente no centro da rosca C3", async ({ page }) 
   const center = chart.locator(".mae-chart-center-label");
   await expect(center).toBeVisible();
   await expect(center).toContainText("equipes");
-  const plot = await chart.boundingBox();
-  const label = await center.boundingBox();
-  expect(plot).not.toBeNull();
-  expect(label).not.toBeNull();
-  const targetX = plot!.x + plot!.width * .5;
-  const targetY = plot!.y + plot!.height * .34;
-  expect(Math.abs(label!.x + label!.width / 2 - targetX)).toBeLessThan(2);
-  expect(Math.abs(label!.y + label!.height / 2 - targetY)).toBeLessThan(2);
+  // Ler ambos os retângulos no mesmo frame evita falso positivo quando
+  // ECharts redimensiona a rosca entre duas chamadas Playwright separadas.
+  const geometry = await chart.evaluate((plot) => {
+    const label = plot.querySelector(".mae-chart-center-label");
+    if (!label) return null;
+    const a = plot.getBoundingClientRect();
+    const b = label.getBoundingClientRect();
+    return {
+      dx: Math.abs(b.x + b.width / 2 - (a.x + a.width * .5)),
+      dy: Math.abs(b.y + b.height / 2 - (a.y + a.height * .34)),
+    };
+  });
+  expect(geometry).not.toBeNull();
+  expect(geometry!.dx).toBeLessThan(2);
+  expect(geometry!.dy).toBeLessThan(2);
+});
+
+
+test("Menu físico comprime e libera o dashboard sem perder valores ou filtros", async ({ page }) => {
+  for (const width of [1024, 1366, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, "gestao");
+    await page.locator(".dashboard-kpi-value").first().waitFor();
+    const values = await page.locator(".dashboard-kpi-value").allTextContents();
+    const labels = await page.locator(".dashboard-kpi-title span").allTextContents();
+    const periods = await page.locator('select[name="inicio"],select[name="fim"]').evaluateAll(
+      (elements) => elements.map((el) => (el as HTMLSelectElement).value),
+    );
+    const dims = async () => page.evaluate(() => {
+      const side = document.querySelector(".management-sidebar")!.getBoundingClientRect();
+      const main = document.querySelector(".management-main")!.getBoundingClientRect();
+      const cards = Array.from(document.querySelectorAll(".dashboard-kpi"));
+      return {
+        sideRight: side.right, mainLeft: main.left, mainWidth: main.width,
+        clip: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        cardsFit: cards.every((card) => {
+          const c = card.getBoundingClientRect();
+          const value = card.querySelector<HTMLElement>(".dashboard-kpi-value")!;
+          return c.right <= main.right + 1 && value.scrollWidth <= value.clientWidth + 1;
+        }),
+      };
+    });
+    const expanded = await dims();
+    expect(expanded.mainLeft).toBeGreaterThan(190);
+    expect(Math.abs(expanded.mainLeft - expanded.sideRight)).toBeLessThan(3);
+    expect(expanded.clip).toBeLessThanOrEqual(1);
+    expect(expanded.cardsFit).toBe(true);
+
+    await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+    await expect(page.locator(".management-shell")).toHaveClass(/management-shell-nav-collapsed/);
+    // Espera a transição física terminar, sem congelar elementos na posição antiga.
+    await expect.poll(async () => (await dims()).mainLeft).toBeLessThan(2);
+    const collapsed = await dims();
+    expect(collapsed.mainWidth).toBeGreaterThan(expanded.mainWidth + 180);
+    expect(collapsed.clip).toBeLessThanOrEqual(1);
+    expect(collapsed.cardsFit).toBe(true);
+    expect(await page.locator(".dashboard-kpi-value").allTextContents()).toEqual(values);
+    expect(await page.locator(".dashboard-kpi-title span").allTextContents()).toEqual(labels);
+    expect(await page.locator('select[name="inicio"],select[name="fim"]').evaluateAll(
+      (elements) => elements.map((el) => (el as HTMLSelectElement).value),
+    )).toEqual(periods);
+
+    await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+    await expect.poll(async () => (await dims()).mainLeft).toBeGreaterThan(190);
+    const again = await dims();
+    expect(again.clip).toBeLessThanOrEqual(1);
+    expect(again.cardsFit).toBe(true);
+    expect(await page.locator(".dashboard-kpi-value").allTextContents()).toEqual(values);
+  }
+});
+
+test("barra lateral compartilha a única rolagem do documento", async ({ page }) => {
+  for (const width of [1024, 1366, 1920]) {
+    await page.setViewportSize({ width, height: 620 });
+    await signIn(page, "gestao");
+    const sidebar = page.locator(".management-sidebar");
+    await expect(sidebar).toBeVisible();
+    await expect(sidebar).toHaveCSS("position", "relative");
+    await expect(sidebar).toHaveCSS("overflow-y", "visible");
+    await expect(sidebar).toHaveCSS("max-height", "none");
+    const docHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    expect(docHeight).toBeGreaterThan(620);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await sidebar.locator("nav").hover();
+    await page.mouse.wheel(0, 360);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    // A coluna é estrutural; seu background pode acompanhar a grade, mas
+    // os links devem ficar no viewport com scrollTop próprio zerado.
+    await expect(sidebar.locator(".management-sidebar-content")).toBeInViewport();
+    expect(await sidebar.evaluate(el => el.scrollTop)).toBe(0);
+    await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+    await expect(page.locator(".management-shell")).toHaveClass(/management-shell-nav-collapsed/);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  }
+});
+
+test("filtros compactos expandem somente as opções secundárias sem apagar valores", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await signIn(page, "gestao");
+  const advanced = page.locator("#management-advanced-filters");
+  await expect(advanced).toBeHidden();
+  await expect(page.getByRole("button", { name: "Mais filtros" })).toHaveAttribute("aria-expanded", "false");
+  const periodBefore = await page.locator('select[name="inicio"]').inputValue();
+  await page.getByRole("button", { name: "Mais filtros" }).click();
+  await expect(advanced).toBeVisible();
+  await expect(page.locator('select[name="classificacao"]')).toBeVisible();
+  await expect(page.locator('input[name="busca"]')).toBeVisible();
+  await page.getByRole("button", { name: "Menos filtros" }).click();
+  await expect(advanced).toBeHidden();
+  await expect(page.locator('select[name="inicio"]')).toHaveValue(periodBefore);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+});
+
+test("panorama priorizado, relatório completo com logos e notas pessoais ao final", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await signIn(page, "gestao");
+  const panorama = page.locator(".management-panorama");
+  await expect(panorama.getByRole("heading", { name: "Uma visão, os dados essenciais" })).toBeVisible();
+  const panoramaY = (await panorama.boundingBox())!.y;
+  const metricY = (await page.locator(".dashboard-kpi-grid").boundingBox())!.y;
+  expect(panoramaY).toBeLessThan(metricY);
+  const report = page.locator(".management-report-card");
+  await expect(report.getByRole("heading", { name: "Imprimir relatório" })).toBeVisible();
+  await expect(report.locator('input[type="checkbox"]')).not.toBeChecked();
+  await expect(page.locator(".management-notes-card")).toBeVisible();
+  await report.getByRole("button", { name: "Pré-visualizar relatório" }).click();
+  const dialog = page.getByRole("dialog", { name: "Prévia do relatório" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Relatório de acompanhamento da Gestão" })).toBeVisible();
+  await expect(dialog.locator('img[alt="MAE APS"]')).toBeVisible();
+  await expect(dialog.locator('img[alt="Universidade Federal de Campina Grande"]')).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: /Práticas de cuidado A/ })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: /Rastreabilidade e histórico/ })).toBeVisible();
+  await dialog.getByRole("button", { name: "Fechar pré-visualização" }).click();
+  await expect(dialog).toHaveCount(0);
+});
+
+test("imprimir/salvar PDF dispara window.print imediatamente sem depender de decode ou mudança de estado", async ({ page }) => {
+  await signIn(page, "gestao");
+  await page.evaluate(() => {
+    const globals = window as Window & { __maePrintCalls?: number };
+    globals.__maePrintCalls = 0;
+    window.print = () => { globals.__maePrintCalls = (globals.__maePrintCalls ?? 0) + 1; };
+    // Simula a causa da regressão: img.decode nunca resolve.
+    HTMLImageElement.prototype.decode = () => new Promise<void>(() => {});
+  });
+
+  const calls = () => page.evaluate(() =>
+    (window as Window & { __maePrintCalls?: number }).__maePrintCalls ?? 0);
+  const report = page.locator(".management-report-card");
+  await report.getByRole("button", { name: "Imprimir / salvar PDF" }).click();
+  await expect.poll(calls).toBe(1);
+
+  await report.getByRole("button", { name: "Pré-visualizar relatório" }).click();
+  const dialog = page.getByRole("dialog", { name: "Prévia do relatório" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Imprimir / PDF" }).click();
+  await expect.poll(calls).toBe(2);
+
+  await page.emulateMedia({ media: "print" });
+  await expect(page.locator(".management-print-report .management-report-document")).toBeVisible();
+  await expect(page.locator(".management-sidebar")).toBeHidden();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator(".management-print-report .management-report-doc-header img")).toHaveCount(2);
+});
+
+test("menu permanece acessível durante rolagem da página única, sem rolagem própria", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 720 });
+  await signIn(page, "gestao");
+  const side = page.locator(".management-sidebar");
+  const inner = side.locator(".management-sidebar-content");
+  await expect(side).toBeVisible();
+  await expect(inner).toHaveCSS("position", "sticky");
+  await expect(side).toHaveCSS("overflow-y", "visible");
+  await expect(inner).toHaveCSS("overflow-y", "visible");
+
+  await inner.locator("nav").hover();
+  const navBefore = await inner.boundingBox();
+  // Reproduz o gesto real: roda do mouse sobre os itens de navegação.
+  await page.mouse.wheel(0, 1100);
+  const scrollDiagnostics = await page.evaluate(() => {
+    const els = ["html", "body", ".management-shell", ".management-main", ".management-dashboard", ".management-sidebar", ".management-sidebar-content"];
+    return {
+      windowY: window.scrollY,
+      scrollingTag: document.scrollingElement?.tagName,
+      elements: els.map(sel => {
+        const el = document.querySelector(sel);
+        if (!el) return { sel, found: false };
+        const s = getComputedStyle(el);
+        return { sel, found: true, overflowX: s.overflowX, overflowY: s.overflowY,
+          height: el.clientHeight, scrollHeight: el.scrollHeight, scrollTop: el.scrollTop,
+          pos: s.position, maxHeight: s.maxHeight };
+      }),
+    };
+  });
+  console.log("MAE_SCROLL_DIAGNOSTICS", JSON.stringify(scrollDiagnostics));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(700);
+  const navAfter = await inner.boundingBox();
+  expect(navBefore && navAfter).toBeTruthy();
+  expect(Math.abs(navAfter!.y - navBefore!.y)).toBeLessThan(15);
+  await expect(side.getByRole("link", { name: "Indicadores" })).toBeInViewport();
+  await expect(side.getByRole("link", { name: "Importar SIAPS" })).toBeInViewport();
+  expect(await side.evaluate(el => el.scrollTop)).toBe(0);
+  const before = await page.locator(".dashboard-kpi-value").allTextContents();
+  await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+  await expect(side).toBeHidden();
+  await expect(page.locator(".dashboard-kpi-value")).toHaveCount(6);
+  expect(await page.locator(".dashboard-kpi-value").allTextContents()).toEqual(before);
+  await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+  await expect(side.getByRole("link", { name: "Indicadores" })).toBeInViewport();
+});
+
+test("marca do PDF é SVG sem moldura nem fundo também no modo de impressão", async ({ page }) => {
+  await signIn(page, "gestao");
+  await page.getByRole("button", { name: "Pré-visualizar relatório" }).click();
+  const logo = page.getByRole("dialog", { name: "Prévia do relatório" }).locator(".management-report-mae-logo");
+  await expect(logo).toBeVisible();
+  await expect(logo).toHaveAttribute("src", /mae-aps-assinatura-unificada\.svg/);
+  await expect(logo).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(logo).toHaveCSS("box-shadow", "none");
+  await expect(logo).toHaveCSS("border-top-width", "0px");
+  await page.emulateMedia({ media: "print" });
+  const printable = page.locator(".management-print-report .management-report-mae-logo");
+  await expect(printable).toBeVisible();
+  await expect(printable).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(printable).toHaveCSS("box-shadow", "none");
+});
+
+test("marca MAE APS retorna ao topo do Início, sem reiniciar os filtros", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 720 });
+  await signIn(page, "gestao");
+
+  const brand = page.getByRole("link", { name: "MAE APS: voltar ao início" });
+  await expect(brand).toHaveAttribute("href", "/sistema/gestao");
+  const period = await page.locator('select[name="inicio"]').inputValue();
+  await page.evaluate(() => window.scrollTo({ top: 1100, behavior: "instant" }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(700);
+  await brand.click();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(4);
+  await expect(page.locator('select[name="inicio"]')).toHaveValue(period);
+
+  await page.getByRole("navigation", { name: "Navegação da Gestão" })
+    .getByRole("link", { name: "Indicadores" }).click();
+  await expect(page).toHaveURL(/\/sistema\/gestao\/indicadores(?:[?#].*)?$/);
+  await brand.click();
+  await expect(page).toHaveURL(/\/sistema\/gestao(?:[?#].*)?$/);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(4);
 });

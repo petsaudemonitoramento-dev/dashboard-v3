@@ -14,6 +14,9 @@ test.beforeEach(async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Olá, Gestão de Saúde" }),
   ).toBeVisible();
+  // UBS/Equipe ficam sob "Mais filtros" no layout compacto.
+  await page.getByRole("button", { name: "Mais filtros" }).click();
+  await expect(page.locator('select[name="ubs"]')).toBeVisible();
 });
 
 test("encadeia Distrito → UBS → Equipe e limpa os descendentes", async ({
