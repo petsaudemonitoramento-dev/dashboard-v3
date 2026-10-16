@@ -237,11 +237,13 @@
 @media screen and (max-width: 850px) {
   .management-shell .management-topbar {
     min-height: 70px;
+    padding-top: .28rem;
+    padding-bottom: .28rem;
     gap: .45rem;
   }
   .management-shell .management-brand-wordmark {
-    width: clamp(130px, 27vw, 192px);
-    max-height: 63px;
+    width: clamp(130px, 22vw, 155px);
+    max-height: 58px;
   }
   .management-shell .management-brand-module { display: none; }
 }
