@@ -183,7 +183,7 @@
 }
 
 
-/* PR #24 — cabeçalho oficial: marca vetorial original e módulo lado a lado.
+/* Correção complementar à PR #22 — cabeçalho oficial: marca e módulo lado a lado.
  * Escopo intencionalmente isolado: não modifica a área analítica nem o menu retrátil.
  * O logo contém símbolo e lettering reais da marca; sem recriação tipográfica.
  */
