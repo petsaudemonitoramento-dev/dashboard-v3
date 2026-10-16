@@ -9,10 +9,10 @@ test("legendas pós-login maiores sem alterar estrutura dos seis KPIs nem filtro
   const nav = shell.locator(".management-sidebar");
   const cards = shell.locator(".dashboard-kpi");
   await expect(cards).toHaveCount(6);
-  await expect(nav.locator("nav a").first()).toHaveCSS("font-size", "14.4px");
-  await expect(shell.locator(".dashboard-kpi-title").first()).toHaveCSS("font-size", "12.64px");
-  await expect(shell.locator(".dashboard-kpi-description").first()).toHaveCSS("font-size", "12.32px");
-  await expect(shell.locator('select[name="inicio"]')).toHaveCSS("font-size", "13.76px");
+  await expect(nav.locator("nav a").first()).toHaveCSS("font-size", "15.84px");
+  await expect(shell.locator(".dashboard-kpi-title").first()).toHaveCSS("font-size", "14.24px");
+  await expect(shell.locator(".dashboard-kpi-description").first()).toHaveCSS("font-size", "13.92px");
+  await expect(shell.locator('select[name="inicio"]')).toHaveCSS("font-size", "15.2px");
 
   const before = await cards.locator(".dashboard-kpi-value").allTextContents();
   const gridColumns = await shell.locator(".dashboard-kpi-grid")
@@ -51,4 +51,25 @@ test("tipografia não causa corte de KPIs ou rolagem horizontal em desktop e cel
     expect(result.overflow, `largura ${width}`).toBeLessThanOrEqual(1);
     expect(result.cardsFit, `largura ${width}`).toBe(true);
   }
+});
+
+test("atalho de acessibilidade é preservado no site mas eliminado do PDF impresso", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 850 });
+  await signIn(page, "gestao");
+  const skip = page.locator(".management-shell > .skip-link");
+  await expect(skip).toHaveCount(1);
+  await expect(skip).toHaveText("Pular para o conteúdo");
+  // Ainda é funcional para usuários que utilizam teclado/leitor de tela.
+  await expect(skip).not.toHaveCSS("display", "none");
+
+  // A página renderizada para impressão contém apenas o documento:
+  // nenhuma caixa/flutuante do atalho é incorporada ao PDF.
+  await page.emulateMedia({ media: "print" });
+  await expect(skip).toHaveCSS("display", "none");
+  await expect(skip).toBeHidden();
+  await expect(page.locator(".management-print-report .management-report-document")).toBeVisible();
+  await expect(page.locator(".management-topbar")).toBeHidden();
+
+  await page.emulateMedia({ media: "screen" });
+  await expect(skip).not.toHaveCSS("display", "none");
 });
