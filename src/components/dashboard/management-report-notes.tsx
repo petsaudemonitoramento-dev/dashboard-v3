@@ -45,7 +45,7 @@ function ReportBody({ data, notes }: { data: ManagementReportData; notes: string
   return (
     <div className="management-report-document">
       <header className="management-report-doc-header">
-        <Image src="/brands/mae-aps-assinatura-unificada.svg" alt="MAE APS" width={260} height={100} unoptimized loading="eager" />
+        <Image className="management-report-mae-logo" src="/brands/mae-aps-assinatura-unificada.svg" alt="MAE APS" width={260} height={100} unoptimized loading="eager" />
         <Image src="/brands/ufcg-oficial.png" alt="Universidade Federal de Campina Grande" width={220} height={75} unoptimized loading="eager" />
       </header>
       <div className="management-report-doc-heading">
