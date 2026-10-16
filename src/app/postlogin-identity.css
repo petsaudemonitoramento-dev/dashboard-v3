@@ -1875,11 +1875,14 @@
  * Ajusta somente os quatro elementos identificados pelo axe-core.
  * O clipping horizontal impede que sombras/ornamentos externos
  * criem uma barra de rolagem ao recolher o menu, sem criar scroll interno. */
-/* A raiz NÃO recebe overflow: clip: ele altera a propagação da
- * rolagem pelo ponteiro sobre a sidebar. Somente a coluna de conteúdo
- * contém os elementos decorativos que podem extrapolar 11px. */
+/* Nunca limitar overflow no shell nem no contêiner que organiza
+ * as colunas: ambos devem permitir que o DOCUMENTO role integralmente.
+ * Limitar exclusivamente conteúdo analítico interno quando necessário. */
 @media (min-width: 851px) {
   .management-shell .management-main {
+    overflow: visible;
+  }
+  .management-shell .management-dashboard {
     overflow-x: clip;
     overflow-y: visible;
   }
