@@ -1680,7 +1680,7 @@
 .management-report-document .management-report-doc-footnote { font-size: .67rem; color: #786d86; }
 .management-report-document .management-report-note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .management-report-document footer { margin-top: 1rem; padding-top: .5rem; border-top: 1px solid #d7c7e6; color: #7b7084; font-size: .68rem; }
-@container mae-dashboard (max-width: 1200px) {
+@container mae-dashboard (max-width: 990px) {
   .management-shell .management-dashboard .management-filter-advanced { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .management-shell .management-dashboard .dashboard-bottom-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .management-shell .dashboard-bottom-grid > .management-report-card { grid-column: 1/-1; }
