@@ -278,3 +278,32 @@ test("panorama priorizado, relatório completo com logos e notas pessoais ao fin
   await dialog.getByRole("button", { name: "Fechar pré-visualização" }).click();
   await expect(dialog).toHaveCount(0);
 });
+
+test("imprimir/salvar PDF dispara window.print imediatamente sem depender de decode ou mudança de estado", async ({ page }) => {
+  await signIn(page, "gestao");
+  await page.evaluate(() => {
+    const globals = window as Window & { __maePrintCalls?: number };
+    globals.__maePrintCalls = 0;
+    window.print = () => { globals.__maePrintCalls = (globals.__maePrintCalls ?? 0) + 1; };
+    // Simula a causa da regressão: img.decode nunca resolve.
+    HTMLImageElement.prototype.decode = () => new Promise<void>(() => {});
+  });
+
+  const calls = () => page.evaluate(() =>
+    (window as Window & { __maePrintCalls?: number }).__maePrintCalls ?? 0);
+  const report = page.locator(".management-report-card");
+  await report.getByRole("button", { name: "Imprimir / salvar PDF" }).click();
+  await expect.poll(calls).toBe(1);
+
+  await report.getByRole("button", { name: "Pré-visualizar relatório" }).click();
+  const dialog = page.getByRole("dialog", { name: "Prévia do relatório" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Imprimir / PDF" }).click();
+  await expect.poll(calls).toBe(2);
+
+  await page.emulateMedia({ media: "print" });
+  await expect(page.locator(".management-print-report .management-report-document")).toBeVisible();
+  await expect(page.locator(".management-sidebar")).toBeHidden();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator(".management-print-report .management-report-doc-header img")).toHaveCount(2);
+});
