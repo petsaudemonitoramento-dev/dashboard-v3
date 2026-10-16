@@ -41,7 +41,7 @@ test("tipografia não causa corte de KPIs ou rolagem horizontal em desktop e cel
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         cardErrors: cards.flatMap((el, i) => {
           const b = el.getBoundingClientRect();
-          const title = el.querySelector<HTMLElement>(".dashboard-kpi-title")!;
+          // A tooltip absoluta é maior que o card, mas não é texto visível.\n          const title = el.querySelector<HTMLElement>(".dashboard-kpi-title > span")!;
           const number = el.querySelector<HTMLElement>(".dashboard-kpi-value")!;
           if (b.width > 110 && b.right <= main.right + 1 &&
             title.scrollWidth <= title.clientWidth + 1 &&
