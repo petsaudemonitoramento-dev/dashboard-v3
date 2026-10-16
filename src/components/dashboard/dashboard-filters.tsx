@@ -5,13 +5,14 @@ import {
   Activity,
   Building2,
   CalendarRange,
+  ChevronDown,
   CircleHelp,
   MapPin,
   Search,
   SlidersHorizontal,
   Users,
 } from "lucide-react";
-import { useEffect, useOptimistic, useRef, useTransition } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -167,6 +168,7 @@ export function ManagementDashboardFilters({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selection, setSelection] = useOptimistic(initialSelection);
+  const [moreFilters, setMoreFilters] = useState(() => initialSelection.establishmentId !== "all" || initialSelection.teamId !== "all" || initialSelection.classification !== "all" || Boolean(initialSelection.query));
   const queryInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const pendingFocusRef = useRef<string | null>(null);
@@ -284,6 +286,7 @@ export function ManagementDashboardFilters({
         </select>
       </label>
 
+      <div className="management-filter-advanced" id="management-advanced-filters" hidden={!moreFilters}>
       <label>
         <span className="dashboard-filter-label"><Building2 aria-hidden="true" />UBS <FilterHelp text="Filtra os indicadores pela Unidade Básica de Saúde vinculada aos registros do SIAPS no recorte selecionado." /></span>
         <select
@@ -346,9 +349,16 @@ export function ManagementDashboardFilters({
           />
         </label>
 
+        </div>
+      </div>
+      <div className="management-filter-controls">
+        <button type="button" className="management-more-filters" aria-expanded={moreFilters} aria-controls="management-advanced-filters" onClick={() => setMoreFilters((open) => !open)}>
+          <ChevronDown aria-hidden="true" className={moreFilters ? "rotated" : ""} />
+          {moreFilters ? "Menos filtros" : "Mais filtros"}
+        </button>
         <div className="dashboard-filter-actions">
-          <button disabled={isPending} type="submit"><Activity aria-hidden="true" className="size-4" /> Aplicar filtros</button>
           <Link href="/sistema/gestao">Limpar</Link>
+          <button disabled={isPending} type="submit"><Activity aria-hidden="true" className="size-4" /> Aplicar filtros</button>
         </div>
       </div>
 
