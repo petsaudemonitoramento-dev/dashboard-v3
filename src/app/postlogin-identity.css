@@ -1875,8 +1875,14 @@
  * Ajusta somente os quatro elementos identificados pelo axe-core.
  * O clipping horizontal impede que sombras/ornamentos externos
  * criem uma barra de rolagem ao recolher o menu, sem criar scroll interno. */
-.management-shell {
-  overflow-x: clip;
+/* A raiz NÃO recebe overflow: clip: ele altera a propagação da
+ * rolagem pelo ponteiro sobre a sidebar. Somente a coluna de conteúdo
+ * contém os elementos decorativos que podem extrapolar 11px. */
+@media (min-width: 851px) {
+  .management-shell .management-main {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
 }
 .management-shell .management-panorama-totals span { color: #685779; }
 .management-shell .management-panorama-practices-heading small { color: #705b7e; }
