@@ -870,6 +870,70 @@ export default async function ManagementDashboard({
         </article>
       </section>
 
+      <section className="dashboard-summary-highlights" aria-labelledby="resumo-executivo-titulo">
+        <div className="dashboard-card-heading">
+          <div>
+            <span>Síntese executiva</span>
+            <h2 id="resumo-executivo-titulo">Qualidade do recorte analisado</h2>
+            <p>Resumo territorial e distribuição de equipes, calculados sobre os mesmos filtros desta página.</p>
+          </div>
+        </div>
+        <div className="dashboard-summary-mini-grid">
+          <article className="dashboard-card">
+            <span>Competências no recorte</span>
+            <strong>{selectedCompetencies}</strong>
+            <small>{selectedCompetencies ? "Meses com registros oficiais disponíveis" : "Sem dados no período"}</small>
+          </article>
+          <article className="dashboard-card">
+            <span>Equipes e estabelecimentos</span>
+            <strong>{formatNumber(teamCount)} / {formatNumber(ubsCount)}</strong>
+            <small>Equipes / UBS com dados no recorte</small>
+          </article>
+          <article className="dashboard-card">
+            <span>UBS sem distrito informado</span>
+            <strong>{formatNumber(unknownDistrictUbs)}</strong>
+            <small>Vínculo territorial não identificado nos registros filtrados</small>
+          </article>
+          <article className="dashboard-card">
+            <span>Classificação das equipes</span>
+            <div className="dashboard-summary-bands">
+              {Object.entries(classificationCounts).map(([band, total]) =>
+                <span key={band}><b>{band}</b><strong>{formatNumber(total)}</strong></span>,
+              )}
+            </div>
+          </article>
+        </div>
+        <div className="dashboard-summary-ranking-grid">
+          <article className="dashboard-card">
+            <div className="dashboard-card-heading">
+              <div><span>Pontos de atenção</span><h2>Menores coberturas entre A–K</h2></div>
+            </div>
+            <ol className="dashboard-summary-ranking">
+              {practiceRanking.slice(0, 4).map(({ code, label, rate }) =>
+                <li key={code}><span><strong>{code} · {label}</strong><small>{C3_COMPONENTS[code as keyof typeof C3_COMPONENTS]}</small></span><b>{formatPercent(rate)}</b></li>,
+              )}
+              {!practiceRanking.length && <li>Sem dados disponíveis neste recorte.</li>}
+            </ol>
+          </article>
+          <article className="dashboard-card">
+            <div className="dashboard-card-heading">
+              <div><span>Destaques</span><h2>Maiores coberturas entre A–K</h2></div>
+            </div>
+            <ol className="dashboard-summary-ranking">
+              {practiceRanking.slice(-3).reverse().map(({ code, label, rate }) =>
+                <li key={code}><span><strong>{code} · {label}</strong><small>{C3_COMPONENTS[code as keyof typeof C3_COMPONENTS]}</small></span><b>{formatPercent(rate)}</b></li>,
+              )}
+              {!practiceRanking.length && <li>Sem dados disponíveis neste recorte.</li>}
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <div className="dashboard-data-note">
+        <ClipboardList className="size-4" aria-hidden="true" />
+        <span>Os percentuais apresentados são derivados exclusivamente dos dados oficiais carregados no MAE APS; não são utilizados valores simulados no Dashboard.</span>
+      </div>
+
       <section id="resumo" className="dashboard-bottom-grid">
         <article className="dashboard-card dashboard-attention">
           <div className="dashboard-card-heading">
@@ -947,69 +1011,6 @@ export default async function ManagementDashboard({
         <ManagementReportAndNotes key={`${start}:${end}`} data={report} initialNote={initialNote} notesAvailable={notesAvailable} />
       </section>
 
-      <section className="dashboard-summary-highlights" aria-labelledby="resumo-executivo-titulo">
-        <div className="dashboard-card-heading">
-          <div>
-            <span>Síntese executiva</span>
-            <h2 id="resumo-executivo-titulo">Qualidade do recorte analisado</h2>
-            <p>Resumo territorial e distribuição de equipes, calculados sobre os mesmos filtros desta página.</p>
-          </div>
-        </div>
-        <div className="dashboard-summary-mini-grid">
-          <article className="dashboard-card">
-            <span>Competências no recorte</span>
-            <strong>{selectedCompetencies}</strong>
-            <small>{selectedCompetencies ? "Meses com registros oficiais disponíveis" : "Sem dados no período"}</small>
-          </article>
-          <article className="dashboard-card">
-            <span>Equipes e estabelecimentos</span>
-            <strong>{formatNumber(teamCount)} / {formatNumber(ubsCount)}</strong>
-            <small>Equipes / UBS com dados no recorte</small>
-          </article>
-          <article className="dashboard-card">
-            <span>UBS sem distrito informado</span>
-            <strong>{formatNumber(unknownDistrictUbs)}</strong>
-            <small>Vínculo territorial não identificado nos registros filtrados</small>
-          </article>
-          <article className="dashboard-card">
-            <span>Classificação das equipes</span>
-            <div className="dashboard-summary-bands">
-              {Object.entries(classificationCounts).map(([band, total]) =>
-                <span key={band}><b>{band}</b><strong>{formatNumber(total)}</strong></span>,
-              )}
-            </div>
-          </article>
-        </div>
-        <div className="dashboard-summary-ranking-grid">
-          <article className="dashboard-card">
-            <div className="dashboard-card-heading">
-              <div><span>Pontos de atenção</span><h2>Menores coberturas entre A–K</h2></div>
-            </div>
-            <ol className="dashboard-summary-ranking">
-              {practiceRanking.slice(0, 4).map(({ code, label, rate }) =>
-                <li key={code}><span><strong>{code} · {label}</strong><small>{C3_COMPONENTS[code as keyof typeof C3_COMPONENTS]}</small></span><b>{formatPercent(rate)}</b></li>,
-              )}
-              {!practiceRanking.length && <li>Sem dados disponíveis neste recorte.</li>}
-            </ol>
-          </article>
-          <article className="dashboard-card">
-            <div className="dashboard-card-heading">
-              <div><span>Destaques</span><h2>Maiores coberturas entre A–K</h2></div>
-            </div>
-            <ol className="dashboard-summary-ranking">
-              {practiceRanking.slice(-3).reverse().map(({ code, label, rate }) =>
-                <li key={code}><span><strong>{code} · {label}</strong><small>{C3_COMPONENTS[code as keyof typeof C3_COMPONENTS]}</small></span><b>{formatPercent(rate)}</b></li>,
-              )}
-              {!practiceRanking.length && <li>Sem dados disponíveis neste recorte.</li>}
-            </ol>
-          </article>
-        </div>
-      </section>
-
-      <div className="dashboard-data-note">
-        <ClipboardList className="size-4" aria-hidden="true" />
-        <span>Os percentuais apresentados são derivados exclusivamente dos dados oficiais carregados no MAE APS; não são utilizados valores simulados no Dashboard.</span>
-      </div>
     </div>
   );
 }
