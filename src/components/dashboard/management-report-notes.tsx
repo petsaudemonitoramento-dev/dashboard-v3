@@ -149,15 +149,20 @@ export function ManagementReportAndNotes({
     });
   }
 
-  async function print() {
-    setPreview(false);
-    // As duas marcas institucionais devem terminar o carregamento antes
-    // da impressão, inclusive quando o documento estava oculto na página.
-    const images = Array.from(document.querySelectorAll<HTMLImageElement>(".management-print-report img"));
-    await Promise.all(images.map((img) => img.decode().catch(() => undefined)));
-    // A versão de impressão é parte do DOM para respeitar CSP; nenhuma janela
-    // nova, HTML arbitrário ou endpoint público de exportação.
-    window.print();
+  function print() {
+    // IMPORTANTE: imprimir no MESMO evento de clique, sem await, setTimeout
+    // ou setState prévio. Navegadores podem bloquear window.print() quando
+    // o gesto do usuário se perde durante img.decode() ou outro Promise.
+    // As imagens já foram declaradas com loading="eager" no documento.
+    if (typeof window.print !== "function") {
+      setStatus("Este navegador não oferece impressão. Abra o MAE APS no Chrome, Safari ou Edge para salvar o PDF.");
+      return;
+    }
+    try {
+      window.print();
+    } catch {
+      setStatus("Não foi possível abrir a impressão. Tente pelo navegador Chrome, Safari ou Edge.");
+    }
   }
 
   return (
