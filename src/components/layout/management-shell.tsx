@@ -58,7 +58,7 @@ export function ManagementShell({ children, email, role, userId, displayName, no
   const [bellOpen, setBellOpen] = useState(false);
   const [seenIds, setSeenIds] = useState<string[]>([]);
   const [pendingPage, setPendingPage] = useState<{ href: string; label: string } | null>(null);
-  const fallbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fallbackTimer = useRef<number | null>(null);
   const storageKey = `maeaps-notices-read-v1:${userId}`;
 
   useEffect(() => {
