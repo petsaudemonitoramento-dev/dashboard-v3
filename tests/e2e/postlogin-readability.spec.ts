@@ -9,6 +9,7 @@ test("legendas pós-login maiores sem alterar estrutura dos seis KPIs nem filtro
   const nav = shell.locator(".management-sidebar");
   const cards = shell.locator(".dashboard-kpi");
   await expect(cards).toHaveCount(6);
+  await expect(shell.locator(".management-footer")).toContainText("MAE APS · PET Saúde UFCG · v1.3.0");
   await expect(nav.locator("nav a").first()).toHaveCSS("font-size", "16.64px");
   await expect(shell.locator(".dashboard-kpi-title").first()).toHaveCSS("font-size", "15.04px");
   await expect(shell.locator(".dashboard-kpi-description").first()).toHaveCSS("font-size", "14.72px");
@@ -38,18 +39,22 @@ test("tipografia não causa corte de KPIs ou rolagem horizontal em desktop e cel
       const cards = [...document.querySelectorAll<HTMLElement>(".dashboard-kpi")];
       return {
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        cardsFit: cards.every((el) => {
+        cardErrors: cards.flatMap((el, i) => {
           const b = el.getBoundingClientRect();
           const title = el.querySelector<HTMLElement>(".dashboard-kpi-title")!;
           const number = el.querySelector<HTMLElement>(".dashboard-kpi-value")!;
-          return b.width > 110 && b.right <= main.right + 1 &&
+          if (b.width > 110 && b.right <= main.right + 1 &&
             title.scrollWidth <= title.clientWidth + 1 &&
-            number.scrollWidth <= number.clientWidth + 1;
+            number.scrollWidth <= number.clientWidth + 1) return [];
+          return [{ index: i, cardWidth: b.width, cardRight: b.right,
+            mainRight: main.right, titleWidth: title.clientWidth,
+            titleContent: title.scrollWidth, valueWidth: number.clientWidth,
+            valueContent: number.scrollWidth, value: number.innerText }];
         }),
       };
     });
     expect(result.overflow, `largura ${width}`).toBeLessThanOrEqual(1);
-    expect(result.cardsFit, `largura ${width}`).toBe(true);
+    expect(result.cardErrors, `largura ${width}: ${JSON.stringify(result.cardErrors)}`).toEqual([]);
   }
 });
 
@@ -70,7 +75,8 @@ test("atalho de acessibilidade é preservado no site mas eliminado do PDF impres
   await expect(page.locator(".management-print-report .management-report-document")).toBeVisible();
   // Mesmos valores da pré-visualização, agora com tamanho legível em A4.
   const report = page.locator(".management-print-report .management-report-document");
-  await expect(report).toHaveCSS("font-size", "14px"); // 10.5 pt
+  const reportFont = await report.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(reportFont).toBeGreaterThan(14.5); // ≥ 11 pt
 
   const cellFontSizes = await report.evaluate((el) => {
     const th = el.querySelector("th");
