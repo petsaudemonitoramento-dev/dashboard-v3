@@ -9,10 +9,10 @@ test("legendas pós-login maiores sem alterar estrutura dos seis KPIs nem filtro
   const nav = shell.locator(".management-sidebar");
   const cards = shell.locator(".dashboard-kpi");
   await expect(cards).toHaveCount(6);
-  await expect(nav.locator("nav a").first()).toHaveCSS("font-size", "15.84px");
-  await expect(shell.locator(".dashboard-kpi-title").first()).toHaveCSS("font-size", "14.24px");
-  await expect(shell.locator(".dashboard-kpi-description").first()).toHaveCSS("font-size", "13.92px");
-  await expect(shell.locator('select[name="inicio"]')).toHaveCSS("font-size", "15.2px");
+  await expect(nav.locator("nav a").first()).toHaveCSS("font-size", "16.64px");
+  await expect(shell.locator(".dashboard-kpi-title").first()).toHaveCSS("font-size", "15.04px");
+  await expect(shell.locator(".dashboard-kpi-description").first()).toHaveCSS("font-size", "14.72px");
+  await expect(shell.locator('select[name="inicio"]')).toHaveCSS("font-size", "16px");
 
   const before = await cards.locator(".dashboard-kpi-value").allTextContents();
   const gridColumns = await shell.locator(".dashboard-kpi-grid")
@@ -68,6 +68,27 @@ test("atalho de acessibilidade é preservado no site mas eliminado do PDF impres
   await expect(skip).toHaveCSS("display", "none");
   await expect(skip).toBeHidden();
   await expect(page.locator(".management-print-report .management-report-document")).toBeVisible();
+  // Mesmos valores da pré-visualização, agora com tamanho legível em A4.
+  const report = page.locator(".management-print-report .management-report-document");
+  await expect(report).toHaveCSS("font-size", "14px"); // 10.5 pt
+
+  const cellFontSizes = await report.evaluate((el) => {
+    const th = el.querySelector("th");
+    const td = el.querySelector("td");
+    return { th: th ? parseFloat(getComputedStyle(th).fontSize) : 0,
+      td: td ? parseFloat(getComputedStyle(td).fontSize) : 0 };
+  });
+  expect(cellFontSizes.th).toBeGreaterThan(12);
+  expect(cellFontSizes.td).toBeGreaterThan(12);
+  const geometry = await report.evaluate((el) => ({
+    width: el.getBoundingClientRect().width,
+    overflow: el.scrollWidth - el.clientWidth,
+    tables: Array.from(el.querySelectorAll<HTMLTableElement>("table")).every((table) =>
+      table.getBoundingClientRect().width <= el.getBoundingClientRect().width + 1),
+  }));
+  expect(geometry.overflow).toBeLessThanOrEqual(1);
+  expect(geometry.tables).toBe(true);
+
   await expect(page.locator(".management-topbar")).toBeHidden();
 
   await page.emulateMedia({ media: "screen" });
