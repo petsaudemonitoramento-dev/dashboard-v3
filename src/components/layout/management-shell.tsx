@@ -123,12 +123,17 @@ export function ManagementShell({ children, email, role, userId, displayName, no
           aria-controls="management-side-navigation" aria-expanded={menuOpen}
           onClick={() => setMenuOpen((open) => !open)}><Menu aria-hidden="true" /></button>
 
-        <Link href={homeHref} scroll onClick={returnToStart} className="management-brand" aria-label="MAE APS: voltar ao início">
-          <Image className="management-brand-symbol" src="/brands/mae-aps-simbolo-cabecalho.svg" alt="" width={560} height={740} priority />
-          <span className="management-brand-copy">
-            <strong>MAE APS</strong>
-            <small>Monitoramento, Atenção e Estratégia na APS</small>
-            <em>{isAdmin ? "Módulo Administrativo" : role === "leitura" ? "Módulo de Leitura" : "Módulo da Gestão"}</em>
+        <Link href={homeHref} scroll onClick={returnToStart} className="management-brand" aria-label="MAE APS: voltar ao início ou ao topo">
+          <Image
+            className="management-brand-wordmark"
+            src="/brands/mae-aps-cabecalho-oficial.svg"
+            alt="MAE APS"
+            width={1610}
+            height={635}
+            priority
+          />
+          <span className="management-brand-module">
+            {isAdmin ? "Módulo Administrativo" : role === "leitura" ? "Módulo de Leitura" : "Módulo da Gestão"}
           </span>
         </Link>
 
