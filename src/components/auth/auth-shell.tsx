@@ -14,6 +14,8 @@ import { SystemStatus } from "@/components/auth/system-status";
 import { AuthIntroSession } from "@/components/auth/auth-intro-session";
 import { CinematicIntro } from "@/components/auth/cinematic-intro";
 import { MotionRibbons } from "@/components/auth/motion-ribbons";
+import { MAE_APS_VERSION } from "@/lib/app-version";
+
 
 const assuranceItems = [
   { label: "Privacidade orientada à LGPD", icon: ShieldCheck },
@@ -23,8 +25,6 @@ const assuranceItems = [
   { label: "Rastreabilidade", icon: CheckCircle2 },
   { label: "Acessibilidade verificada", icon: Accessibility },
 ];
-
-import { MAE_APS_VERSION } from "@/lib/app-version";
 
 export function AuthShell({
   eyebrow,
