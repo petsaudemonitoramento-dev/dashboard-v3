@@ -14,6 +14,8 @@ import { SystemStatus } from "@/components/auth/system-status";
 import { AuthIntroSession } from "@/components/auth/auth-intro-session";
 import { CinematicIntro } from "@/components/auth/cinematic-intro";
 import { MotionRibbons } from "@/components/auth/motion-ribbons";
+import { MAE_APS_VERSION } from "@/lib/app-version";
+
 
 const assuranceItems = [
   { label: "Privacidade orientada à LGPD", icon: ShieldCheck },
@@ -282,7 +284,7 @@ export function AuthShell({
       </main>
 
       <footer className="auth-portal-footer">
-        <span><strong>MAE APS</strong> · PET-Saúde UFCG</span>
+        <span><strong>MAE APS</strong> · PET-Saúde UFCG · v{MAE_APS_VERSION}</span>
         <span>Desenvolvimento: Lucca Araújo</span>
         <span>Design: Kethilly Nayara</span>
       </footer>

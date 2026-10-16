@@ -8,6 +8,7 @@ import "./brand-system.css";
 import "./auth-motion.css";
 import "./auth-reference-fidelity.css";
 import "./postlogin-identity.css";
+import "./postlogin-readability.css";
 
 export const metadata: Metadata = {
   applicationName: "MAE APS",

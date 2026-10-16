@@ -1,0 +1,183 @@
+/*
+ * PR #22 — Ajuste exclusivamente tipográfico.
+ *
+ * Aumenta a leitura de todos os rótulos pequenos, com refinamento adicional de +0,05rem sem alterar grid-template-columns,
+ * larguras, alturas, margens, espaçamentos ou posicionamento de elementos.
+ * Importar após postlogin-identity.css garante a escala final desejada.
+ * A folha impressa mantém o mesmo modelo A4, mas usa fontes mais legíveis.
+ */
+@media screen {
+  /* Cabeçalho, navegação e atalhos: o menu continua ocupando a mesma coluna. */
+  .management-shell .management-brand-copy small { font-size: 0.91rem; }
+  .management-shell .management-brand-copy em { font-size: 0.89rem; }
+  .management-shell .management-user-copy small { font-size: 0.90rem; }
+  .management-shell .management-sidebar nav a { font-size: 1.04rem; }
+  .management-shell .management-nav-label { font-size: 0.88rem; }
+  .management-shell .management-sidebar-note { font-size: 0.96rem; }
+  .management-shell .management-sidebar-note small { font-size: 0.90rem; }
+  .management-shell .management-footer { font-size: 0.92rem; }
+
+  /* Cabeçalhos e textos de apoio no dashboard e nos módulos. */
+  .management-shell :is(.dashboard-welcome p, .module-header p) { font-size: 1.06rem; }
+  .management-shell :is(.dashboard-overline, .module-header > div:first-child > span) { font-size: 0.91rem; }
+  .management-shell :is(.dashboard-card-heading > div > span, .panel-heading .eyebrow) { font-size: 0.91rem; }
+  .management-shell :is(.dashboard-card-heading h2, .panel-heading h2) { font-size: 1.12rem; }
+  .management-shell :is(.dashboard-card-heading p, .panel-heading p) { font-size: 0.94rem; }
+  .management-shell .dashboard-scope-chips span { font-size: 0.94rem; }
+  .management-shell .dashboard-date-block :is(strong,span,small) { font-size: 0.94rem; }
+
+  /* Filtros permanecem com 41px e exatamente as mesmas colunas. */
+  .management-shell .dashboard-filter-grid label { font-size: 0.96rem; }
+  .management-shell .dashboard-filter-grid :is(select,input) { font-size: 1.00rem; }
+  .management-shell .dashboard-filter-actions :is(button,a) { font-size: 0.98rem; }
+  .management-shell .management-dashboard .management-more-filters { font-size: 0.98rem; }
+  .management-shell .management-filter-header small { font-size: 0.93rem; }
+  .management-shell .dashboard-import-cta strong { font-size: 1.11rem; }
+  .management-shell .dashboard-import-cta small { font-size: 0.91rem; }
+
+  /* Títulos e explicações dos 6 KPIs; números já são grandes e permanecem iguais. */
+  .management-shell .dashboard-kpi-title { font-size: 0.94rem; }
+  .management-shell .dashboard-kpi > .dashboard-kpi-description { font-size: 0.92rem; }
+
+  /* Gráficos, legenda de práticas, alertas e rastreabilidade. */
+  .management-shell .practice-legend span { font-size: 0.93rem; }
+  .management-shell .attention-list strong { font-size: 0.94rem; }
+  .management-shell .attention-list small { font-size: 0.88rem; }
+  .management-shell .dashboard-import-row { font-size: 0.93rem; }
+  .management-shell .dashboard-data-note { font-size: 0.93rem; }
+
+  /* Panorama municipal: ampliar a leitura sem modificar trilhas ou colunas. */
+  .management-shell .management-panorama-heading > small { font-size: 0.91rem; }
+  .management-shell .management-panorama-heading > div > span { font-size: 0.88rem; }
+  .management-shell .management-panorama-score-top { font-size: 0.94rem; }
+  .management-shell .management-panorama-score-top b { font-size: 0.91rem; }
+  .management-shell .management-panorama-score > small { font-size: 0.91rem; }
+  .management-shell .management-panorama-totals span { font-size: 0.91rem; }
+  .management-shell .management-panorama-practices-heading { font-size: 1.00rem; }
+  .management-shell .management-panorama-practices-heading small { font-size: 0.88rem; }
+  .management-shell .management-panorama-practice { font-size: 0.91rem; }
+  .management-shell .management-panorama-practice strong { font-size: 0.93rem; }
+  .management-shell .management-panorama-insight { font-size: 0.94rem; }
+
+  /* Síntese executiva, classificação e ranking preservam a ordem atual. */
+  .management-shell .dashboard-summary-mini-grid > article > span { font-size: 0.94rem; }
+  .management-shell .dashboard-summary-mini-grid > article > small { font-size: 0.91rem; }
+  .management-shell .dashboard-summary-bands b { font-size: 0.88rem; }
+  .management-shell .dashboard-summary-bands strong { font-size: 0.92rem; }
+  .management-shell .dashboard-summary-ranking li { font-size: 0.94rem; }
+  .management-shell .dashboard-summary-ranking li small { font-size: 0.90rem; }
+
+  /* Controles do PDF na interface; a folha impressa tem tipografia própria ao final. */
+  .management-shell .management-report-card-description { font-size: 0.94rem; }
+  .management-shell .management-report-check { font-size: 0.93rem; }
+  .management-shell :is(.management-report-primary,.management-report-secondary) { font-size: 0.97rem; }
+  .management-shell .management-report-card > small { font-size: 0.88rem; }
+  .management-shell .management-notes-card > label { font-size: 0.96rem; }
+  .management-shell .management-notes-controls > small { font-size: 0.90rem; }
+  .management-shell .management-notes-controls button { font-size: 0.95rem; }
+  .management-shell .management-notes-message { font-size: 0.91rem; }
+
+  /* Centro de notificações e perfil. */
+  .management-shell .management-popover-heading button { font-size: 0.93rem; }
+  .management-shell .management-notice-item strong { font-size: 0.96rem; }
+  .management-shell .management-notice-item small { font-size: 0.90rem; }
+  .management-shell .management-notice-footer { font-size: 0.94rem; }
+  .management-shell :is(.management-notice-empty,.management-notice-error) { font-size: 0.94rem; }
+  .management-shell .management-profile-link { font-size: 0.95rem; }
+  .management-shell .management-profile-readonly span { font-size: 0.93rem; }
+  .management-shell .management-profile-form label { font-size: 0.99rem; }
+  .management-shell :is(.management-profile-form p,.management-profile-hint) { font-size: 0.94rem; }
+
+  /* Indicadores, comparativos, UBS, tabelas e filtros nos módulos internos. */
+  .management-shell .module-stat-grid article span { font-size: 0.94rem; }
+  .management-shell .module-stat-grid article small { font-size: 0.90rem; }
+  .management-shell .module-data-table { font-size: 0.99rem; }
+  .management-shell .module-data-table :is(th,td) { font-size: 0.97rem; }
+  .management-shell .module-data-table small { font-size: 0.90rem; }
+  .management-shell .module-filter-bar label { font-size: 0.96rem; }
+  .management-shell .module-filter-bar :is(select,input) { font-size: 1.00rem; }
+  .management-shell .module-detail-link { font-size: 0.94rem; }
+  .management-shell .module-ranking-card li strong { font-size: 0.96rem; }
+  .management-shell .module-ranking-card li small { font-size: 0.89rem; }
+  .management-shell .module-comparison-summary small { font-size: 0.94rem; }
+  .management-shell .module-summary-narrative p { font-size: 1.00rem; }
+
+  /* Em colunas estreitas, manter todos os números inteiros e evitar
+     texto grande demais na faixa da prática/barra/percentual. */
+  @container mae-dashboard (max-width: 450px) {
+    .management-shell .management-panorama-practice { font-size: 0.87rem; }
+    .management-shell .management-panorama-practice strong { font-size: 0.90rem; }
+  }
+}
+
+/* Impressão A4: atalho de teclado não faz parte do relatório.
+ * Manter este link visível ao receber foco na navegação por teclado,
+ * ocultando-o SOMENTE ao imprimir/salvar como PDF. */
+@media print {
+  .management-shell > .skip-link,
+  .management-shell .skip-link,
+  .management-shell .skip-link:focus,
+  .management-shell .skip-link:focus-visible {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+
+/* Documento gerencial (pré-visualização e PDF):
+ * Aumento EXCLUSIVAMENTE das fontes, sem mexer em tamanho do papel, 
+ * margens, dimensões das tabelas, grid, logos ou conteúdo dos dados.
+ * A paginação pode crescer naturalmente quando há mais informações.
+ */
+.management-report-document { font-size: 11pt; }
+.management-report-document .management-report-doc-heading > span { font-size: 9pt; }
+.management-report-document h1 { font-size: 19pt; }
+.management-report-document h2 { font-size: 13.5pt; }
+.management-report-document h3 { font-size: 11.8pt; }
+.management-report-document p { font-size: 10pt; }
+.management-report-document th { font-size: 9.6pt; }
+.management-report-document td { font-size: 9.6pt; }
+.management-report-document td small { font-size: 8.8pt; }
+.management-report-document .management-report-doc-stats small { font-size: 8.8pt; }
+.management-report-document .management-report-doc-stats strong { font-size: 15pt; }
+.management-report-document .management-report-doc-stats span { font-size: 8.7pt; }
+.management-report-document .management-report-doc-footnote { font-size: 9pt; }
+.management-report-document footer { font-size: 9pt; }
+
+@media print {
+  /* A regra original de impressão tem especificidade maior que o preview. */
+  .management-shell .management-print-report .management-report-document {
+    font-size: 11pt;
+  }
+  .management-shell .management-report-document table { font-size: 9.6pt; }
+}
+
+/* Cards continuam nas mesmas colunas. Apenas permite que títulos longos
+ * quebrem dentro de sua área, especialmente na largura de 1024 px. */
+@media screen {
+  .management-shell .dashboard-kpi-title > span {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .management-shell .dashboard-kpi-value {
+    min-width: 0;
+  }
+}
+
+/* Notebook com menu aberto: rótulos longos precisam de quebra em até
+ * 3 linhas dentro dos 66px do cabeçalho, sem aumentar card/coluna. */
+@media screen and (min-width: 851px) {
+  @container mae-dashboard (max-width: 950px) {
+    .management-dashboard .dashboard-kpi-title {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      font-size: .88rem;
+    }
+    .management-dashboard .dashboard-kpi-title > span {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: normal;
+    }
+  }
+}
