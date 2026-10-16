@@ -420,7 +420,10 @@ test("menu navega de Início para todos os módulos da Gestão", async ({ page }
   ] as const;
   for (const [label, href] of destinations) {
     await nav.getByRole("link", { name: label, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`^${href.replaceAll("/", "\\/")}(?:[?#].*)?$`), { timeout: 15000 });
+    await expect.poll(() => new URL(page.url()).pathname, { timeout: 15000 }).toBe(href);
+    if (label === "Indicadores" || label === "UBS e equipes" || label === "Comparativos") {
+      await expect(page.getByRole("heading", { name: label, exact: true })).toBeVisible();
+    }
     await expect(page.locator(".management-main")).toBeVisible();
     await expect(nav.getByRole("link", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
   }
