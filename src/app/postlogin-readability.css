@@ -1,0 +1,111 @@
+/*
+ * PR #22 — Ajuste exclusivamente tipográfico.
+ *
+ * Aumenta a leitura dos rótulos pequenos sem alterar grid-template-columns,
+ * larguras, alturas, margens, espaçamentos ou posicionamento de elementos.
+ * Importar após postlogin-identity.css garante a escala final desejada.
+ * @media screen preserva a diagramação do relatório A4 sem alterações.
+ */
+@media screen {
+  /* Cabeçalho, navegação e atalhos: o menu continua ocupando a mesma coluna. */
+  .management-shell .management-brand-copy small { font-size: .76rem; }
+  .management-shell .management-brand-copy em { font-size: .74rem; }
+  .management-shell .management-user-copy small { font-size: .75rem; }
+  .management-shell .management-sidebar nav a { font-size: .9rem; }
+  .management-shell .management-nav-label { font-size: .73rem; }
+  .management-shell .management-sidebar-note { font-size: .82rem; }
+  .management-shell .management-sidebar-note small { font-size: .75rem; }
+  .management-shell .management-footer { font-size: .77rem; }
+
+  /* Cabeçalhos e textos de apoio no dashboard e nos módulos. */
+  .management-shell :is(.dashboard-welcome p, .module-header p) { font-size: .94rem; }
+  .management-shell :is(.dashboard-overline, .module-header > div:first-child > span) { font-size: .76rem; }
+  .management-shell :is(.dashboard-card-heading > div > span, .panel-heading .eyebrow) { font-size: .76rem; }
+  .management-shell :is(.dashboard-card-heading h2, .panel-heading h2) { font-size: 1rem; }
+  .management-shell :is(.dashboard-card-heading p, .panel-heading p) { font-size: .8rem; }
+  .management-shell .dashboard-scope-chips span { font-size: .8rem; }
+  .management-shell .dashboard-date-block :is(strong,span,small) { font-size: .79rem; }
+
+  /* Filtros permanecem com 41px e exatamente as mesmas colunas. */
+  .management-shell .dashboard-filter-grid label { font-size: .82rem; }
+  .management-shell .dashboard-filter-grid :is(select,input) { font-size: .86rem; }
+  .management-shell .dashboard-filter-actions :is(button,a) { font-size: .84rem; }
+  .management-shell .management-dashboard .management-more-filters { font-size: .84rem; }
+  .management-shell .management-filter-header small { font-size: .78rem; }
+  .management-shell .dashboard-import-cta strong { font-size: .99rem; }
+  .management-shell .dashboard-import-cta small { font-size: .76rem; }
+
+  /* Títulos e explicações dos 6 KPIs; números já são grandes e permanecem iguais. */
+  .management-shell .dashboard-kpi-title { font-size: .79rem; }
+  .management-shell .dashboard-kpi > .dashboard-kpi-description { font-size: .77rem; }
+
+  /* Gráficos, legenda de práticas, alertas e rastreabilidade. */
+  .management-shell .practice-legend span { font-size: .78rem; }
+  .management-shell .attention-list strong { font-size: .8rem; }
+  .management-shell .attention-list small { font-size: .73rem; }
+  .management-shell .dashboard-import-row { font-size: .78rem; }
+  .management-shell .dashboard-data-note { font-size: .78rem; }
+
+  /* Panorama municipal: ampliar a leitura sem modificar trilhas ou colunas. */
+  .management-shell .management-panorama-heading > small { font-size: .76rem; }
+  .management-shell .management-panorama-heading > div > span { font-size: .73rem; }
+  .management-shell .management-panorama-score-top { font-size: .79rem; }
+  .management-shell .management-panorama-score-top b { font-size: .76rem; }
+  .management-shell .management-panorama-score > small { font-size: .76rem; }
+  .management-shell .management-panorama-totals span { font-size: .76rem; }
+  .management-shell .management-panorama-practices-heading { font-size: .86rem; }
+  .management-shell .management-panorama-practices-heading small { font-size: .73rem; }
+  .management-shell .management-panorama-practice { font-size: .76rem; }
+  .management-shell .management-panorama-practice strong { font-size: .78rem; }
+  .management-shell .management-panorama-insight { font-size: .79rem; }
+
+  /* Síntese executiva, classificação e ranking preservam a ordem atual. */
+  .management-shell .dashboard-summary-mini-grid > article > span { font-size: .79rem; }
+  .management-shell .dashboard-summary-mini-grid > article > small { font-size: .76rem; }
+  .management-shell .dashboard-summary-bands b { font-size: .73rem; }
+  .management-shell .dashboard-summary-bands strong { font-size: .77rem; }
+  .management-shell .dashboard-summary-ranking li { font-size: .79rem; }
+  .management-shell .dashboard-summary-ranking li small { font-size: .75rem; }
+
+  /* PDF: somente os controles da interface; documento impresso não muda. */
+  .management-shell .management-report-card-description { font-size: .8rem; }
+  .management-shell .management-report-check { font-size: .78rem; }
+  .management-shell :is(.management-report-primary,.management-report-secondary) { font-size: .83rem; }
+  .management-shell .management-report-card > small { font-size: .73rem; }
+  .management-shell .management-notes-card > label { font-size: .82rem; }
+  .management-shell .management-notes-controls > small { font-size: .75rem; }
+  .management-shell .management-notes-controls button { font-size: .81rem; }
+  .management-shell .management-notes-message { font-size: .76rem; }
+
+  /* Centro de notificações e perfil. */
+  .management-shell .management-popover-heading button { font-size: .78rem; }
+  .management-shell .management-notice-item strong { font-size: .82rem; }
+  .management-shell .management-notice-item small { font-size: .75rem; }
+  .management-shell .management-notice-footer { font-size: .79rem; }
+  .management-shell :is(.management-notice-empty,.management-notice-error) { font-size: .8rem; }
+  .management-shell .management-profile-link { font-size: .81rem; }
+  .management-shell .management-profile-readonly span { font-size: .78rem; }
+  .management-shell .management-profile-form label { font-size: .85rem; }
+  .management-shell :is(.management-profile-form p,.management-profile-hint) { font-size: .8rem; }
+
+  /* Indicadores, comparativos, UBS, tabelas e filtros nos módulos internos. */
+  .management-shell .module-stat-grid article span { font-size: .79rem; }
+  .management-shell .module-stat-grid article small { font-size: .75rem; }
+  .management-shell .module-data-table { font-size: .85rem; }
+  .management-shell .module-data-table :is(th,td) { font-size: .83rem; }
+  .management-shell .module-data-table small { font-size: .75rem; }
+  .management-shell .module-filter-bar label { font-size: .82rem; }
+  .management-shell .module-filter-bar :is(select,input) { font-size: .86rem; }
+  .management-shell .module-detail-link { font-size: .8rem; }
+  .management-shell .module-ranking-card li strong { font-size: .82rem; }
+  .management-shell .module-ranking-card li small { font-size: .74rem; }
+  .management-shell .module-comparison-summary small { font-size: .79rem; }
+  .management-shell .module-summary-narrative p { font-size: .86rem; }
+
+  /* Em colunas estreitas, manter todos os números inteiros e evitar
+     texto grande demais na faixa da prática/barra/percentual. */
+  @container mae-dashboard (max-width: 450px) {
+    .management-shell .management-panorama-practice { font-size: .72rem; }
+    .management-shell .management-panorama-practice strong { font-size: .75rem; }
+  }
+}
