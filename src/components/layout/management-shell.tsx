@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
+import { MAE_APS_VERSION } from "@/lib/app-version";
 import type { ManagementNotice } from "@/lib/notifications/management";
 
 type Props = {
@@ -228,7 +229,7 @@ export function ManagementShell({ children, email, role, userId, displayName, no
         {children}
       </main>
       <footer className="management-footer">
-        <strong>MAE APS · PET Saúde UFCG</strong>
+        <strong>MAE APS · PET Saúde UFCG · v{MAE_APS_VERSION}</strong>
         <span>Desenvolvimento: Lucca Araújo</span>
         <span>Design: Kethilly Nayara</span>
       </footer>
