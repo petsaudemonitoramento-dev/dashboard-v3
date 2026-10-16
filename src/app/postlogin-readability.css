@@ -67,7 +67,7 @@
   .management-shell .dashboard-summary-ranking li { font-size: 0.94rem; }
   .management-shell .dashboard-summary-ranking li small { font-size: 0.90rem; }
 
-  /* PDF: somente os controles da interface; documento impresso não muda. */
+  /* Controles do PDF na interface; a folha impressa tem tipografia própria ao final. */
   .management-shell .management-report-card-description { font-size: 0.94rem; }
   .management-shell .management-report-check { font-size: 0.93rem; }
   .management-shell :is(.management-report-primary,.management-report-secondary) { font-size: 0.97rem; }
@@ -129,25 +129,37 @@
  * margens, dimensões das tabelas, grid, logos ou conteúdo dos dados.
  * A paginação pode crescer naturalmente quando há mais informações.
  */
-.management-report-document { font-size: 10.5pt; }
-.management-report-document .management-report-doc-heading > span { font-size: 8.6pt; }
-.management-report-document h1 { font-size: 18.6pt; }
-.management-report-document h2 { font-size: 13pt; }
-.management-report-document h3 { font-size: 11.3pt; }
-.management-report-document p { font-size: 9.8pt; }
-.management-report-document th { font-size: 9.2pt; }
-.management-report-document td { font-size: 9.2pt; }
-.management-report-document td small { font-size: 8.3pt; }
-.management-report-document .management-report-doc-stats small { font-size: 8.4pt; }
-.management-report-document .management-report-doc-stats strong { font-size: 14.7pt; }
-.management-report-document .management-report-doc-stats span { font-size: 8.1pt; }
-.management-report-document .management-report-doc-footnote { font-size: 8.5pt; }
-.management-report-document footer { font-size: 8.5pt; }
+.management-report-document { font-size: 11pt; }
+.management-report-document .management-report-doc-heading > span { font-size: 9pt; }
+.management-report-document h1 { font-size: 19pt; }
+.management-report-document h2 { font-size: 13.5pt; }
+.management-report-document h3 { font-size: 11.8pt; }
+.management-report-document p { font-size: 10pt; }
+.management-report-document th { font-size: 9.6pt; }
+.management-report-document td { font-size: 9.6pt; }
+.management-report-document td small { font-size: 8.8pt; }
+.management-report-document .management-report-doc-stats small { font-size: 8.8pt; }
+.management-report-document .management-report-doc-stats strong { font-size: 15pt; }
+.management-report-document .management-report-doc-stats span { font-size: 8.7pt; }
+.management-report-document .management-report-doc-footnote { font-size: 9pt; }
+.management-report-document footer { font-size: 9pt; }
 
 @media print {
   /* A regra original de impressão tem especificidade maior que o preview. */
   .management-shell .management-print-report .management-report-document {
-    font-size: 10.5pt;
+    font-size: 11pt;
   }
-  .management-shell .management-report-document table { font-size: 9.2pt; }
+  .management-shell .management-report-document table { font-size: 9.6pt; }
+}
+
+/* Cards continuam nas mesmas colunas. Apenas permite que títulos longos
+ * quebrem dentro de sua área, especialmente na largura de 1024 px. */
+@media screen {
+  .management-shell .dashboard-kpi-title > span {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .management-shell .dashboard-kpi-value {
+    min-width: 0;
+  }
 }
