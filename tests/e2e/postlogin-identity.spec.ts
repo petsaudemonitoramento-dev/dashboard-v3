@@ -307,3 +307,51 @@ test("imprimir/salvar PDF dispara window.print imediatamente sem depender de dec
   await expect(dialog).toBeHidden();
   await expect(page.locator(".management-print-report .management-report-doc-header img")).toHaveCount(2);
 });
+
+test("menu permanece acessível durante rolagem da página única, sem rolagem própria", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 720 });
+  await signIn(page, "gestao");
+  const side = page.locator(".management-sidebar");
+  const inner = side.locator(".management-sidebar-content");
+  await expect(side).toBeVisible();
+  await expect(inner).toHaveCSS("position", "sticky");
+  await expect(side).toHaveCSS("overflow-y", "visible");
+  await expect(inner).toHaveCSS("overflow-y", "visible");
+
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const navBefore = await inner.boundingBox();
+  const sidebarBefore = await side.boundingBox();
+  await page.evaluate(() => window.scrollTo(0, 1100));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(700);
+  const navAfter = await inner.boundingBox();
+  const sidebarAfter = await side.boundingBox();
+  expect(navBefore && navAfter && sidebarBefore && sidebarAfter).toBeTruthy();
+  expect(Math.abs(navAfter!.y - navBefore!.y)).toBeLessThan(15);
+  expect(sidebarAfter!.y).toBeLessThan(sidebarBefore!.y - 650);
+  await expect(side.getByRole("link", { name: "Indicadores" })).toBeInViewport();
+  await expect(side.getByRole("link", { name: "Importar SIAPS" })).toBeInViewport();
+  expect(await side.evaluate(el => el.scrollTop)).toBe(0);
+  const before = await page.locator(".dashboard-kpi-value").allTextContents();
+  await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+  await expect(side).toBeHidden();
+  await expect(page.locator(".dashboard-kpi-value")).toHaveCount(6);
+  expect(await page.locator(".dashboard-kpi-value").allTextContents()).toEqual(before);
+  await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+  await expect(side.getByRole("link", { name: "Indicadores" })).toBeInViewport();
+});
+
+test("marca do PDF é SVG sem moldura nem fundo também no modo de impressão", async ({ page }) => {
+  await signIn(page, "gestao");
+  await page.getByRole("button", { name: "Pré-visualizar relatório" }).click();
+  const logo = page.getByRole("dialog", { name: "Prévia do relatório" }).locator(".management-report-mae-logo");
+  await expect(logo).toBeVisible();
+  await expect(logo).toHaveAttribute("src", /mae-aps-assinatura-unificada\.svg/);
+  await expect(logo).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(logo).toHaveCSS("box-shadow", "none");
+  await expect(logo).toHaveCSS("border-top-width", "0px");
+  await page.emulateMedia({ media: "print" });
+  const printable = page.locator(".management-print-report .management-report-mae-logo");
+  await expect(printable).toBeVisible();
+  await expect(printable).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(printable).toHaveCSS("box-shadow", "none");
+});
