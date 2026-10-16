@@ -369,6 +369,11 @@ test("marca do PDF é SVG sem moldura nem fundo também no modo de impressão", 
 test("marca MAE APS retorna ao topo do Início, sem reiniciar os filtros", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 720 });
   await signIn(page, "gestao");
+  // Garantir altura para testar a âncora mesmo com poucos dados sintéticos.
+  await page.evaluate(() => {
+    const main = document.querySelector<HTMLElement>(".management-main");
+    if (main) main.style.minHeight = "2300px";
+  });
 
   const brand = page.getByRole("link", { name: "MAE APS: voltar ao topo" });
   await expect(brand).toHaveAttribute("href", "/sistema/gestao");
