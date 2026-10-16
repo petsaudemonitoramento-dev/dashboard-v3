@@ -230,6 +230,10 @@ export function ManagementDashboardFilters({
         navigate({ ...selection, query: currentQuery() });
       }}
     >
+      <div className="management-filter-header">
+        <h2><SlidersHorizontal className="size-4" aria-hidden="true" />Filtros da análise</h2>
+        <small>Selecione o recorte desejado</small>
+      </div>
       <div className="dashboard-period-group">
         <span className="dashboard-filter-label">
           <CalendarRange aria-hidden="true" />
