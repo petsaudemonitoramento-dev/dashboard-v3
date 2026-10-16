@@ -166,7 +166,8 @@ export function ManagementShell({ children, email, role, userId, displayName, no
       </header>
 
       <aside className="management-sidebar" id="management-side-navigation">
-        <nav aria-label={isAdmin ? "Navegação da Administração" : "Navegação da Gestão"}>
+        <div className="management-sidebar-content">
+          <nav aria-label={isAdmin ? "Navegação da Administração" : "Navegação da Gestão"}>
           {isAdmin ? <>
             <span className="management-nav-label">Administração e segurança</span>
             {adminItems.map(({ href, label, icon: Icon }) => {
@@ -201,10 +202,11 @@ export function ManagementShell({ children, email, role, userId, displayName, no
             <Settings2 className="size-5" /><span>Configurações</span>
           </Link>
         </nav>
-        <div className="management-sidebar-note">
-          <span className="management-sidebar-line" aria-hidden="true" />
-          <p>Mais saúde para mães e bebês.<br />Fortalecendo a APS.</p>
-          <small>MAE APS · PET Saúde UFCG</small>
+          <div className="management-sidebar-note">
+            <span className="management-sidebar-line" aria-hidden="true" />
+            <p>Mais saúde para mães e bebês.<br />Fortalecendo a APS.</p>
+            <small>MAE APS · PET Saúde UFCG</small>
+          </div>
         </div>
       </aside>
 
