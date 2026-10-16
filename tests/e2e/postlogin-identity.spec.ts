@@ -226,8 +226,14 @@ test("barra lateral compartilha a única rolagem do documento", async ({ page })
     await expect(sidebar).toHaveCSS("position", "relative");
     await expect(sidebar).toHaveCSS("overflow-y", "visible");
     await expect(sidebar).toHaveCSS("max-height", "none");
-    const docHeight = await page.evaluate(() => document.documentElement.scrollHeight);
-    expect(docHeight).toBeGreaterThan(620);
+    // Dados sintéticos podem produzir uma página curta. Aumentamos somente
+    // o corpo do cenário para validar o scroll da janela sob o menu sticky.
+    await page.locator(".management-main").evaluate((main: HTMLElement) => {
+      main.style.minHeight = "2300px";
+    });
+    await expect.poll(() => page.evaluate(() =>
+      document.scrollingElement!.scrollHeight - window.innerHeight
+    )).toBeGreaterThan(1000);
     await page.evaluate(() => window.scrollTo(0, 0));
     await sidebar.locator("nav").hover();
     await page.mouse.wheel(0, 360);
@@ -341,12 +347,19 @@ test("menu permanece acessível durante rolagem da página única, sem rolagem p
   await expect(side.getByRole("link", { name: "Indicadores" })).toBeInViewport();
   await expect(side.getByRole("link", { name: "Importar SIAPS" })).toBeInViewport();
   expect(await side.evaluate(el => el.scrollTop)).toBe(0);
-  const before = await page.locator(".dashboard-kpi-value").allTextContents();
+  // A hidratação dos indicadores é assíncrona. Compare os mesmos valores
+  // somente depois de os seis KPIs estarem carregados.
+  const kpiValues = page.locator(".dashboard-kpi-value");
+  await expect(kpiValues).toHaveCount(6);
+  await expect.poll(async () => (await kpiValues.allTextContents())
+    .every((value) => value.trim().length > 0)).toBe(true);
+  const before = await kpiValues.allTextContents();
   await page.getByRole("button", { name: "Recolher menu lateral" }).click();
   await expect(side).toBeHidden();
   await expect(page.locator(".dashboard-kpi-value")).toHaveCount(6);
-  expect(await page.locator(".dashboard-kpi-value").allTextContents()).toEqual(before);
+  await expect.poll(() => kpiValues.allTextContents()).toEqual(before);
   await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+  await expect.poll(() => kpiValues.allTextContents()).toEqual(before);
   await expect(side.getByRole("link", { name: "Indicadores" })).toBeInViewport();
 });
 
