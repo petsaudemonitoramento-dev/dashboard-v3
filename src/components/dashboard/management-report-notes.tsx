@@ -127,6 +127,7 @@ export function ManagementReportAndNotes({
   notesAvailable: boolean;
 }) {
   const [note, setNote] = useState(initialNote);
+  const [savedNote, setSavedNote] = useState(initialNote);
   const [includeNotes, setIncludeNotes] = useState(false);
   const [preview, setPreview] = useState(false);
   const [status, setStatus] = useState("");
@@ -143,7 +144,7 @@ export function ManagementReportAndNotes({
     form.set("body", operation === "delete" ? "" : note);
     startTransition(async () => {
       const result = await managePrivateNote({ ok: false, body: "", message: "" }, form);
-      if (result.ok) setNote(result.body);
+      if (result.ok) { setNote(result.body); setSavedNote(result.body); }
       setStatus(result.message);
     });
   }
@@ -198,7 +199,7 @@ export function ManagementReportAndNotes({
           </div>
         </div>
         <p role="status" aria-live="polite" className="management-notes-message">
-          {!notesAvailable ? "Diário indisponível até a migração segura do banco ser aplicada." : status || "Salvo no banco por usuário e período, com políticas de acesso exclusivas por conta. Não é compartilhado com outros perfis."}
+          {!notesAvailable ? "Diário indisponível até a migração segura do banco ser aplicada." : pending ? "Salvando com segurança..." : status || (note !== savedNote ? "Alterações ainda não salvas. Clique em Salvar anotação." : "Somente sua conta pode consultar este registro. Os dados são persistidos no banco com RLS por usuário.")}
         </p>
       </article>
 
