@@ -163,3 +163,21 @@
     min-width: 0;
   }
 }
+
+/* Notebook com menu aberto: rótulos longos precisam de quebra em até
+ * 3 linhas dentro dos 66px do cabeçalho, sem aumentar card/coluna. */
+@media screen and (min-width: 851px) {
+  @container mae-dashboard (max-width: 950px) {
+    .management-dashboard .dashboard-kpi-title {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      font-size: .88rem;
+    }
+    .management-dashboard .dashboard-kpi-title > span {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: normal;
+    }
+  }
+}
