@@ -440,3 +440,56 @@ test("menu móvel abre Indicadores e permanece funcional ao retornar ao Início"
   await page.getByRole("link", { name: "MAE APS: voltar ao início" }).click();
   await expect(page).toHaveURL(/\/sistema\/gestao(?:[?#].*)?$/, { timeout: 15000 });
 });
+
+
+test("menu recolhido permanece oculto ao rolar e variar a altura, sem alterar indicadores", async ({ page }) => {
+  for (const width of [390, 1366]) {
+    await page.setViewportSize({ width, height: 720 });
+    await signIn(page, "gestao");
+
+    const shell = page.locator(".management-shell");
+    const sidebar = page.locator(".management-sidebar");
+    const main = page.locator(".management-main");
+    // Força altura real de rolagem mesmo com pouco conteúdo no banco de teste.
+    await main.evaluate((element: HTMLElement) => { element.style.minHeight = "2400px"; });
+
+    if (width <= 850) {
+      await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+    }
+    await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+    await expect(shell).toHaveClass(/management-shell-nav-collapsed/);
+    await expect(page.getByRole("button", { name: "Abrir menu lateral" })).toHaveAttribute("aria-expanded", "false");
+    await expect(sidebar).toBeHidden();
+
+    await page.evaluate(() => window.scrollTo({ top: 1100, behavior: "instant" }));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(400);
+
+    // O chrome de navegadores móveis e mudanças de altura disparam resize
+    // sem cruzar o breakpoint de 850px. Não podem reabrir o menu.
+    await page.setViewportSize({ width, height: 610 });
+    await page.evaluate(() => window.dispatchEvent(new Event("resize")));
+    await expect(shell).toHaveClass(/management-shell-nav-collapsed/);
+    await expect(sidebar).toBeHidden();
+    await expect(page.getByRole("button", { name: "Abrir menu lateral" })).toHaveAttribute("aria-expanded", "false");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+    await expect(main).toBeVisible();
+
+    await page.getByRole("button", { name: "Abrir menu lateral" }).click();
+    await expect(sidebar).toBeVisible();
+    await expect(page.getByRole("button", { name: "Recolher menu lateral" })).toHaveAttribute("aria-expanded", "true");
+  }
+});
+
+test("só a travessia de breakpoint redefine o estado responsivo do menu", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 800 });
+  await signIn(page, "gestao");
+  await page.getByRole("button", { name: "Recolher menu lateral" }).click();
+
+  await page.setViewportSize({ width: 390, height: 800 });
+  await expect(page.locator(".management-shell")).toHaveClass(/management-shell-mobile/);
+  await expect(page.getByRole("button", { name: "Abrir menu lateral" })).toHaveAttribute("aria-expanded", "false");
+
+  await page.setViewportSize({ width: 1366, height: 800 });
+  await expect(page.locator(".management-shell")).not.toHaveClass(/management-shell-mobile/);
+  await expect(page.getByRole("button", { name: "Recolher menu lateral" })).toHaveAttribute("aria-expanded", "true");
+});
