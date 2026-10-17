@@ -62,15 +62,18 @@ export function ManagementShell({ children, email, role, userId, displayName, no
   const storageKey = `maeaps-notices-read-v1:${userId}`;
 
   useEffect(() => {
-    function syncViewport() {
-      const small = window.matchMedia("(max-width: 850px)").matches;
+    const breakpoint = window.matchMedia("(max-width: 850px)");
+    function syncBreakpoint(small: boolean) {
       setMobile(small);
-      // Estado inicial apropriado para cada largura; sem deslocar a área analítica.
+      // Apenas na entrada em outro modo responsivo mudamos o estado inicial.
+      // Resize comum (inclusive barras do navegador ao rolar) NÃO reabre o menu.
       setMenuOpen(!small);
     }
-    syncViewport();
-    window.addEventListener("resize", syncViewport);
-    return () => window.removeEventListener("resize", syncViewport);
+
+    syncBreakpoint(breakpoint.matches);
+    const onBreakpointChange = (event: MediaQueryListEvent) => syncBreakpoint(event.matches);
+    breakpoint.addEventListener("change", onBreakpointChange);
+    return () => breakpoint.removeEventListener("change", onBreakpointChange);
   }, []);
   useEffect(() => {
     // Carregamento após a hidratação, sem disparar setState diretamente no effect.
