@@ -19,6 +19,14 @@ export async function signIn(
   role: keyof typeof E2E_USERS = "gestao",
 ) {
   await page.goto("/entrar");
+  // Os testes funcionais não avaliam a vinheta (coberta por auth-native-motion).
+  // Em execuções lentas, ela pode interceptar o botão Entrar; use o atalho
+  // público "Pular" em vez de esperar a animação de seis segundos.
+  const intro = page.locator(".mae-gsap-intro");
+  if (await intro.isVisible()) {
+    await page.getByRole("button", { name: /Pular/i }).click();
+    await expect(intro).toHaveCount(0);
+  }
   await page.getByLabel("E-mail").fill(E2E_USERS[role]);
   await page.getByLabel("Senha").fill(E2E_PASSWORD);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
