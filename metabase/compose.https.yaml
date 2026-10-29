@@ -1,0 +1,29 @@
+# Overlay opcional: SOMENTE se houver hostname DNS e portas 80/443 publicas liberadas.
+# Uso: docker compose -f compose.yaml -f compose.https.yaml up -d
+services:
+  caddy:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    depends_on:
+      metabase:
+        condition: service_started
+    environment:
+      METABASE_DOMAIN: ${METABASE_DOMAIN:?configure METABASE_DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_certificates:/data
+      - caddy_runtime_config:/config
+    networks:
+      - outbound
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  caddy_certificates:
+  caddy_runtime_config:
