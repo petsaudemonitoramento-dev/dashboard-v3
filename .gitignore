@@ -16,3 +16,8 @@ supabase/.branches/
 supabase/.temp/
 docs/registro/trechos-codigo-v1.txt
 docs/registro/hash-*.txt
+
+# Metabase self-hosted: nunca versionar senhas, backups ou dados de runtime.
+metabase/secrets/
+metabase/backups/
+metabase/.env

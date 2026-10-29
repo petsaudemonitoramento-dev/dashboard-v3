@@ -22,6 +22,7 @@ type Props = {
   displayName: string;
   notices: ManagementNotice[];
   noticesUnavailable: boolean;
+  intelligenceEnabled: boolean;
 };
 
 const analysisItems = [
@@ -44,9 +45,12 @@ function initialsFromName(name: string, email: string) {
   return emailParts.length > 1 ? (emailParts[0][0] + emailParts[1][0]).toUpperCase() : local.slice(0, 2).toUpperCase() || "GM";
 }
 
-export function ManagementShell({ children, email, role, userId, displayName, notices, noticesUnavailable }: Props) {
+export function ManagementShell({ children, email, role, userId, displayName, notices, noticesUnavailable, intelligenceEnabled }: Props) {
   const pathname = usePathname();
   const isAdmin = role === "admin";
+  const visibleAnalysisItems = intelligenceEnabled
+    ? [...analysisItems, { href: "/sistema/gestao/inteligencia", label: "Análises avançadas", icon: BarChart3 }]
+    : analysisItems;
   const isImport = pathname.startsWith("/sistema/importar");
   const homeHref = isAdmin ? "/sistema/administracao" : "/sistema/gestao";
   const roleLabel = isAdmin ? "Administração" : role === "gestao" ? "Gestão" : "Leitura";
@@ -242,7 +246,7 @@ export function ManagementShell({ children, email, role, userId, displayName, no
               </Link>
             </> : null}
             <span className="management-nav-label">Análises</span>
-            {analysisItems.map(({ href, label, icon: Icon }) => {
+            {visibleAnalysisItems.map(({ href, label, icon: Icon }) => {
               const active = pathname.startsWith(href);
               return <Link key={href} href={href} onClick={() => navigateMenu(href, label)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
                 <Icon className="size-5" /><span>{label}</span>

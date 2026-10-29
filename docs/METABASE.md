@@ -1,50 +1,59 @@
-# Metabase — preparação arquitetural
+# Metabase como inteligencia analitica do MAE APS — 29/10/2026
 
-## Objetivo e arquitetura
+## Escopo oficial
 
-O Metabase será uma camada analítica complementar ao Dashboard Next.js do MAE APS. Ele não substitui o Dashboard, não recebe credenciais do Supabase Auth e não deve consultar dados brutos do SIAPS, perfis, auditoria, `auth.users` ou o schema `study`.
+**O gestor acessa somente o MAE APS**; Metabase Open Source e motor de
+consultas agregadas, usado pela equipe tecnica para formular e atualizar
+analises de tendencias, territorio, praticas A–K e qualidade de dados.
+Nao repetir os graficos operacionais ja existentes no MAE APS.
 
-A fonte estável para BI é o schema `analytics`. As views usam `security_invoker=true`: o usuário Postgres dedicado precisa de `SELECT` somente nas tabelas analíticas/dimensões que sustentam as views e nas próprias views. Nenhuma dessas relações contém prontuário ou informação clínica individual.
+## Estado verificado
 
-## Views disponíveis
+- Supabase `dashboard-v3` (MAE APS), views `analytics.dashboard_*`
+  existentes e populadas, role de consulta `mae_metabase_reader` criada
+  com `NOLOGIN`, sem superuser/bypass RLS, migration versionada.
+- 13 queries analiticas novas executadas com `EXPLAIN` e `SELECT` sobre
+  a base agregada oficial, sem falha de SQL. Nenhum CSV ou dado pessoal
+  foi exportado para GitHub.
+- 4 abas em `metabase/questions.json`, script de provisionamento
+  idempotente, testes offline, Postgres interno Docker e alternativa
+  Caddy HTTPS gratuitos versionados.
+- Guest embedding sem SSO pago codificado no MAE APS, com JWT HS256,
+  autenticacao por perfis `gestao/leitura` e feature flag desativada.
+- **Nao concluido:** hospedagem na maquina 24h, usuario admin, conexao
+  PostgreSQL pelo leitor, autorizacao do embed, DNS/HTTPS, validacao
+  dos cards no Metabase real, backup restaurado, deploy da funcionalidade.
+  Nao declarar producao antes desses passos.
 
-| View | Granularidade | Colunas principais |
-| --- | --- | --- |
-| `dashboard_team_directory` | equipe atual | `district_id`, `district_name`, `establishment_id`, `cnes`, `establishment_name`, `team_id`, `ine`, `team_name` |
-| `dashboard_c3_team_monthly` | equipe e competência | dimensões territoriais, `points_total`, `denominator`, `c3`, `classification` |
-| `dashboard_c3_practices` | prática A–K por equipe e competência | dimensões, `practice_code`, `fulfilled`, `denominator` |
-| `dashboard_competencies` | competência municipal | `points_total`, `denominator`, `c3` |
-| `dashboard_c3_establishment_monthly` | UBS e competência | dimensões, `points_total`, `denominator`, `c3`, `teams` |
-| `dashboard_c3_district_monthly` | distrito e competência | dimensões, `points_total`, `denominator`, `c3`, `establishments`, `teams` |
-| `dashboard_c3_practice_summary` | prática, UBS e competência | dimensões, `practice_code`, `fulfilled`, `denominator` |
+## Regra de C3
 
-`competency` é o primeiro dia do mês de referência. CNES e INE são identificadores de negócio; UUIDs continuam sendo as chaves internas. `fulfilled` é a contagem atendida de uma prática A–K.
+`SUM(points_total)/NULLIF(SUM(denominator),0)` para agregacoes.
+As views existentes fornecem points_total/denominator agregados por
+competencia, distrito, UBS ou pratica; nao se deve calcular media simples
+de `c3`. Diferencas entre competencias sao relatadas em **pontos
+percentuais**, nao como variacao percentual relativa. Denominador zero
+nao e desempenho zero.
 
-## Cálculo correto do C3
+## Acesso e privacidade
 
-Ao agregar mais de uma equipe, UBS ou distrito, use sempre:
+- Usar somente `analytics.dashboard_*` e credencial dedicada de leitura,
+  jamais `postgres`, service_role, chave master ou login de gestor.
+- `security_invoker=true` nas views; RLS explicita nas tabelas agregadas
+  de apoio e dimensoes core. Nunca abrir tabelas de pacientes, `auth`,
+  `app`, `siaps`, `audit` nem `storage` ao leitor.
+- Guest embedding so com painel assinado e publicado na interface
+  administrativa, sem public sharing. Usuarios autorizados podem
+  exportar dados agregados na versao gratuita: **revisar agregacao**.
+- Sem SSO pago nem white-label completo; o banner Powered by Metabase
+  permanece.
 
-```text
-SUM(points_total) / NULLIF(SUM(denominator), 0)
-```
+## Onde trabalhar
 
-Nunca use `AVG(c3)` para agregação municipal ou territorial. A média simples dos percentuais muda o peso das populações elegíveis e produz resultado incorreto. Denominador zero deve resultar em valor nulo e ser apresentado como “Sem população elegível”.
+- [Pacote e checklist definitivo de instalacao](../metabase/README.md)
+- [Abas, consultas e metodologia](../metabase/DESIGN.md)
+- [Manifesto das 14 perguntas (fonte de verdade)](../metabase/questions.json)
+- [Integracao gratuita dentro do MAE APS](../metabase/EMBED_MAE_APS.md)
+- [Testes de privilegio da role](../supabase/tests/005_metabase_reader.test.sql)
 
-Filtros recomendados: `competency`, `district_id`, `establishment_id`, `cnes`, `team_id`, `ine`, `practice_code` e `classification`.
-
-## Permissões mínimas e segurança
-
-O template [metabase-reader-template.sql](metabase-reader-template.sql) prepara `mae_metabase_reader` sem `LOGIN` e sem senha. A habilitação de `LOGIN` e a senha devem ser feitas futuramente fora do Git, por canal seguro. O papel recebe apenas `USAGE` em `core`/`analytics` e `SELECT` nas dimensões, fatos agregados e views necessários ao funcionamento de `security_invoker`.
-
-Não conceder acesso a `auth`, `app`, `siaps`, `audit`, `study`, `storage` ou `public`; não conceder `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`, `TRIGGER`, `CREATE` nem `EXECUTE` em RPCs privilegiadas. Nunca usar `service_role`, chave secreta ou a senha principal do banco no Metabase.
-
-## Passos futuros de conexão
-
-1. Aplicar e validar as migrations em CI e no Supabase remoto com backup e revisão humana.
-2. Executar o template de papel read-only como administrador do banco.
-3. Habilitar `LOGIN` e definir uma senha forte fora do repositório.
-4. Restringir rede/SSL conforme o plano Supabase e cadastrar a conexão PostgreSQL no Metabase.
-5. Expor inicialmente apenas as views `dashboard_*`, ocultando as tabelas de suporte na interface do Metabase.
-6. Criar perguntas-modelo que usem razão das somas e validar os totais contra o Dashboard MAE APS.
-
-As views são normais, não materializadas. Dados publicados ficam disponíveis imediatamente após a transação de importação; não existe job de refresh. Materialized views só devem ser consideradas após evidência real de gargalo.
+Este documento nao e prova de Metabase rodando; e o registro do que foi
+preparado antes da maquina cedida pela professora.
