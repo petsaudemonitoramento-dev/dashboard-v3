@@ -1,173 +1,216 @@
 {
-  "name": "MAE APS | Inteligência C3",
-  "description": "Panorama municipal, territórios e práticas A–K — acesso restrito à gestão. Gráficos extraídos do schema analytics.",
+  "name": "MAE APS | Inteligência em Saúde",
+  "description": "Tendências, variação territorial, práticas A–K e qualidade dos indicadores C3; dados agregados do SIAPS para gestão municipal.",
+  "scope": "MAE APS - Gestao e Leitura. Nao e um painel clinico nem publica dados individuais.",
+  "caveats": [
+    "Comparação não implica causalidade.",
+    "Queda é mera variação observada; sem limiar clínico.",
+    "Apenas informações agregadas; anos/meses de competências distintos não representam pessoas únicas."
+  ],
   "questions": [
     {
-      "id": "c3_atual",
-      "name": "C3 — Resultado municipal atual",
+      "id": "variacao_municipal",
+      "name": "Variação do C3 no mês (p.p.)",
       "display": "scalar",
-      "sql": "SELECT ROUND(points_total / NULLIF(denominator, 0), 2) AS c3_atual FROM analytics.dashboard_competencies WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies)"
+      "sql": "WITH u AS (SELECT competency, points_total / NULLIF(denominator,0) AS c3 FROM analytics.dashboard_competencies) SELECT ROUND(a.c3 - b.c3,2) AS variacao_pp FROM u a LEFT JOIN u b ON b.competency = (a.competency - INTERVAL '1 month')::date WHERE a.competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies)"
     },
     {
-      "id": "ubs_monitoradas",
-      "name": "UBS — Unidades no mês",
+      "id": "distritos_queda_continua",
+      "name": "Distritos com duas quedas consecutivas",
       "display": "scalar",
-      "sql": "SELECT COUNT(DISTINCT establishment_id) AS ubs FROM analytics.dashboard_c3_establishment_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies)"
+      "sql": "WITH x AS (SELECT district_id, competency, points_total / NULLIF(denominator,0) AS c3 FROM analytics.dashboard_c3_district_monthly WHERE district_id IS NOT NULL) SELECT COUNT(*) AS distritos_em_queda FROM x a JOIN x b ON b.district_id=a.district_id AND b.competency=(a.competency-INTERVAL '1 month')::date JOIN x c ON c.district_id=a.district_id AND c.competency=(a.competency-INTERVAL '2 months')::date WHERE a.competency=(SELECT MAX(competency) FROM analytics.dashboard_competencies) AND a.c3 < b.c3 AND b.c3 < c.c3"
     },
     {
-      "id": "equipes_monitoradas",
-      "name": "Equipes — Registradas no mês",
+      "id": "ubs_queda_mensal",
+      "name": "UBS com queda do C3 no último mês",
       "display": "scalar",
-      "sql": "SELECT COUNT(*) AS equipes FROM analytics.dashboard_c3_team_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies)"
+      "sql": "WITH x AS (SELECT establishment_id, competency, points_total / NULLIF(denominator,0) AS c3 FROM analytics.dashboard_c3_establishment_monthly) SELECT COUNT(*) AS ubs_com_queda FROM x a JOIN x b ON b.establishment_id=a.establishment_id AND b.competency=(a.competency-INTERVAL '1 month')::date WHERE a.competency=(SELECT MAX(competency) FROM analytics.dashboard_competencies) AND a.c3 < b.c3"
     },
     {
-      "id": "equipes_sem_distrito",
-      "name": "Qualidade cadastral — Equipes sem distrito",
+      "id": "defasagem_competencia",
+      "name": "Meses desde a última competência",
       "display": "scalar",
-      "sql": "SELECT COUNT(*) AS equipes_sem_distrito FROM analytics.dashboard_c3_team_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) AND district_id IS NULL"
+      "sql": "SELECT (EXTRACT(YEAR FROM age(date_trunc('month',CURRENT_DATE),MAX(competency))) * 12 + EXTRACT(MONTH FROM age(date_trunc('month',CURRENT_DATE),MAX(competency))))::integer AS meses_desde_ultima_competencia FROM analytics.dashboard_competencies"
     },
     {
-      "id": "evolucao_municipal",
-      "name": "C3 — Evolução municipal",
+      "id": "trajetoria_territorial",
+      "name": "Trajetória territorial do C3 — últimos seis meses",
       "display": "line",
-      "sql": "SELECT competency AS competencia, ROUND(points_total / NULLIF(denominator, 0), 2) AS c3, denominator AS populacao_elegivel FROM analytics.dashboard_competencies ORDER BY competency"
+      "sql": "SELECT competency AS competencia, COALESCE(district_name,'Sem distrito') AS distrito, ROUND(points_total / NULLIF(denominator,0),2) AS c3 FROM analytics.dashboard_c3_district_monthly WHERE competency >= ((SELECT MAX(competency) FROM analytics.dashboard_competencies) - INTERVAL '5 months')::date ORDER BY competencia, distrito"
     },
     {
-      "id": "evolucao_distritos",
-      "name": "C3 — Evolução por distrito",
-      "display": "line",
-      "sql": "SELECT competency AS competencia, COALESCE(district_name, 'Sem distrito') AS distrito, ROUND(SUM(points_total) / NULLIF(SUM(denominator), 0), 2) AS c3 FROM analytics.dashboard_c3_district_monthly GROUP BY competency, COALESCE(district_name, 'Sem distrito') ORDER BY competencia, distrito"
-    },
-    {
-      "id": "comparativo_ubs",
-      "name": "C3 — Comparativo das UBS (última competência)",
-      "display": "bar",
-      "sql": "SELECT cnes, establishment_name AS ubs, COALESCE(district_name, 'Sem distrito') AS distrito, ROUND(SUM(points_total) / NULLIF(SUM(denominator), 0), 2) AS c3, SUM(denominator) AS populacao_elegivel FROM analytics.dashboard_c3_establishment_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) GROUP BY cnes, establishment_name, COALESCE(district_name, 'Sem distrito') ORDER BY c3 DESC NULLS LAST, ubs"
-    },
-    {
-      "id": "equipes_atencao",
-      "name": "C3 — Equipes para acompanhamento (última competência)",
+      "id": "distritos_variacao",
+      "name": "Mudança de desempenho por distrito (mês a mês)",
       "display": "table",
-      "sql": "SELECT cnes, establishment_name AS ubs, ine, team_name AS equipe, COALESCE(district_name, 'Sem distrito') AS distrito, classification AS classificacao, ROUND(points_total / NULLIF(denominator, 0), 2) AS c3, denominator AS populacao_elegivel FROM analytics.dashboard_c3_team_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) ORDER BY c3 ASC NULLS LAST, ubs, equipe"
+      "sql": "WITH x AS (SELECT district_id, district_name, competency, points_total / NULLIF(denominator,0) AS c3, denominator FROM analytics.dashboard_c3_district_monthly) SELECT COALESCE(a.district_name,'Sem distrito') AS distrito, ROUND(b.c3,2) AS c3_anterior, ROUND(a.c3,2) AS c3_atual, ROUND(a.c3-b.c3,2) AS variacao_pp, a.denominator AS elegiveis_atual FROM x a JOIN x b ON a.district_id IS NOT DISTINCT FROM b.district_id AND b.competency=(a.competency-INTERVAL '1 month')::date WHERE a.competency=(SELECT MAX(competency) FROM analytics.dashboard_competencies) ORDER BY variacao_pp ASC NULLS LAST, distrito"
     },
     {
-      "id": "classificacoes",
-      "name": "C3 — Classificação das equipes por mês",
-      "display": "bar",
-      "sql": "SELECT competency AS competencia, COALESCE(classification, 'Sem classificação') AS classificacao, COUNT(*) AS quantidade_equipes FROM analytics.dashboard_c3_team_monthly GROUP BY competency, COALESCE(classification, 'Sem classificação') ORDER BY competencia, classificacao"
+      "id": "ubs_variacao",
+      "name": "UBS — maiores quedas entre competências",
+      "display": "table",
+      "sql": "WITH x AS (SELECT establishment_id, cnes, establishment_name, district_name, competency, points_total / NULLIF(denominator,0) AS c3, denominator FROM analytics.dashboard_c3_establishment_monthly) SELECT a.cnes, a.establishment_name AS ubs, COALESCE(a.district_name,'Sem distrito') AS distrito, ROUND(a.c3,2) AS c3_atual, ROUND(b.c3,2) AS c3_anterior, ROUND(a.c3-b.c3,2) AS variacao_pp, a.denominator AS elegiveis FROM x a JOIN x b ON a.establishment_id=b.establishment_id AND b.competency=(a.competency-INTERVAL '1 month')::date WHERE a.competency=(SELECT MAX(competency) FROM analytics.dashboard_competencies) AND a.c3 < b.c3 ORDER BY variacao_pp ASC, a.establishment_name LIMIT 30"
     },
     {
-      "id": "praticas",
-      "name": "C3 — Práticas A–K (última competência)",
+      "id": "praticas_por_distrito",
+      "name": "Práticas A–K por distrito (última competência)",
+      "display": "table",
+      "sql": "SELECT COALESCE(district_name,'Sem distrito') AS distrito, practice_code AS pratica, SUM(denominator) AS denominador, ROUND(100.0*SUM(fulfilled)/NULLIF(SUM(denominator),0),2) AS cobertura_pct FROM analytics.dashboard_c3_practice_summary WHERE competency=(SELECT MAX(competency) FROM analytics.dashboard_competencies) GROUP BY COALESCE(district_name,'Sem distrito'), practice_code ORDER BY distrito, pratica"
+    },
+    {
+      "id": "praticas_variacao",
+      "name": "Práticas A–K — variação mensal em p.p.",
+      "display": "table",
+      "sql": "WITH x AS (SELECT competency, practice_code, SUM(fulfilled) AS realizados, SUM(denominator) AS elegiveis, 100.0*SUM(fulfilled)/NULLIF(SUM(denominator),0) AS cobertura FROM analytics.dashboard_c3_practice_summary GROUP BY competency, practice_code) SELECT a.practice_code AS pratica, ROUND(b.cobertura,2) AS cobertura_anterior_pct, ROUND(a.cobertura,2) AS cobertura_atual_pct, ROUND(a.cobertura-b.cobertura,2) AS variacao_pp, a.elegiveis AS denominador_atual FROM x a JOIN x b ON a.practice_code=b.practice_code AND b.competency=(a.competency-INTERVAL '1 month')::date WHERE a.competency=(SELECT MAX(competency) FROM analytics.dashboard_competencies) ORDER BY variacao_pp ASC NULLS LAST, pratica"
+    },
+    {
+      "id": "praticas_trajetoria",
+      "name": "Cobertura das práticas A–K ao longo do tempo",
+      "display": "line",
+      "sql": "SELECT competency AS competencia, practice_code AS pratica, ROUND(100.0*SUM(fulfilled)/NULLIF(SUM(denominator),0),2) AS cobertura_pct FROM analytics.dashboard_c3_practice_summary WHERE competency >= ((SELECT MAX(competency) FROM analytics.dashboard_competencies)-INTERVAL '5 months')::date GROUP BY competency, practice_code ORDER BY competencia, pratica"
+    },
+    {
+      "id": "sem_distrito_evolucao",
+      "name": "Qualidade — equipes sem distrito por mês",
       "display": "bar",
-      "sql": "SELECT practice_code AS pratica, SUM(fulfilled) AS registros_atendidos, SUM(denominator) AS denominador_da_pratica, ROUND(100.0 * SUM(fulfilled) / NULLIF(SUM(denominator), 0), 2) AS percentual FROM analytics.dashboard_c3_practice_summary WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) GROUP BY practice_code ORDER BY practice_code"
+      "sql": "SELECT competency AS competencia, COUNT(*) AS equipes_total, COUNT(*) FILTER (WHERE district_id IS NULL) AS equipes_sem_distrito, ROUND(100.0*COUNT(*) FILTER (WHERE district_id IS NULL)/NULLIF(COUNT(*),0),2) AS percentual_sem_distrito FROM analytics.dashboard_c3_team_monthly GROUP BY competency ORDER BY competency"
+    },
+    {
+      "id": "sem_elegiveis_evolucao",
+      "name": "Qualidade — equipes sem população elegível",
+      "display": "bar",
+      "sql": "SELECT competency AS competencia, COUNT(*) AS equipes_total, COUNT(*) FILTER (WHERE denominator=0) AS equipes_sem_elegiveis, ROUND(100.0*COUNT(*) FILTER (WHERE denominator=0)/NULLIF(COUNT(*),0),2) AS percentual_sem_elegiveis FROM analytics.dashboard_c3_team_monthly GROUP BY competency ORDER BY competency"
+    },
+    {
+      "id": "variacao_denominador",
+      "name": "Qualidade — oscilação de elegíveis por distrito",
+      "display": "line",
+      "sql": "SELECT competency AS competencia, COALESCE(district_name,'Sem distrito') AS distrito, denominator AS populacao_elegivel FROM analytics.dashboard_c3_district_monthly WHERE competency >= ((SELECT MAX(competency) FROM analytics.dashboard_competencies)-INTERVAL '5 months')::date ORDER BY competencia,distrito"
     }
   ],
   "tabs": [
     {
-      "id": "panorama",
-      "title": "Panorama municipal"
+      "id": "tendencias",
+      "title": "Tendências"
     },
     {
       "id": "territorios",
-      "title": "Distritos e UBS"
+      "title": "Investigação territorial"
     },
     {
       "id": "praticas",
       "title": "Práticas A–K"
+    },
+    {
+      "id": "qualidade",
+      "title": "Qualidade dos dados"
     }
   ],
   "layout": [
     {
-      "tab": "panorama",
-      "id": "c3_atual",
+      "tab": "tendencias",
+      "id": "variacao_municipal",
       "col": 0,
       "row": 0,
-      "w": 6,
+      "w": 8,
       "h": 3
     },
     {
-      "tab": "panorama",
-      "id": "ubs_monitoradas",
-      "col": 6,
+      "tab": "tendencias",
+      "id": "distritos_queda_continua",
+      "col": 8,
       "row": 0,
-      "w": 6,
+      "w": 8,
       "h": 3
     },
     {
-      "tab": "panorama",
-      "id": "equipes_monitoradas",
-      "col": 12,
+      "tab": "tendencias",
+      "id": "ubs_queda_mensal",
+      "col": 16,
       "row": 0,
-      "w": 6,
+      "w": 8,
       "h": 3
     },
     {
-      "tab": "panorama",
-      "id": "equipes_sem_distrito",
-      "col": 18,
-      "row": 0,
-      "w": 6,
-      "h": 3
-    },
-    {
-      "tab": "panorama",
-      "id": "evolucao_municipal",
+      "tab": "tendencias",
+      "id": "trajetoria_territorial",
       "col": 0,
       "row": 3,
-      "w": 15,
-      "h": 10
-    },
-    {
-      "tab": "panorama",
-      "id": "classificacoes",
-      "col": 15,
-      "row": 3,
-      "w": 9,
-      "h": 10
-    },
-    {
-      "tab": "territorios",
-      "id": "evolucao_distritos",
-      "col": 0,
-      "row": 0,
-      "w": 12,
-      "h": 9
-    },
-    {
-      "tab": "territorios",
-      "id": "comparativo_ubs",
-      "col": 12,
-      "row": 0,
-      "w": 12,
-      "h": 9
-    },
-    {
-      "tab": "territorios",
-      "id": "equipes_atencao",
-      "col": 0,
-      "row": 9,
       "w": 24,
-      "h": 12
+      "h": 11
+    },
+    {
+      "tab": "tendencias",
+      "id": "distritos_variacao",
+      "col": 0,
+      "row": 14,
+      "w": 24,
+      "h": 10
+    },
+    {
+      "tab": "territorios",
+      "id": "ubs_variacao",
+      "col": 0,
+      "row": 0,
+      "w": 24,
+      "h": 15
+    },
+    {
+      "tab": "territorios",
+      "id": "praticas_por_distrito",
+      "col": 0,
+      "row": 15,
+      "w": 24,
+      "h": 16
     },
     {
       "tab": "praticas",
-      "id": "praticas",
+      "id": "praticas_variacao",
       "col": 0,
       "row": 0,
+      "w": 24,
+      "h": 10
+    },
+    {
+      "tab": "praticas",
+      "id": "praticas_trajetoria",
+      "col": 0,
+      "row": 10,
+      "w": 24,
+      "h": 13
+    },
+    {
+      "tab": "qualidade",
+      "id": "defasagem_competencia",
+      "col": 0,
+      "row": 0,
+      "w": 8,
+      "h": 3
+    },
+    {
+      "tab": "qualidade",
+      "id": "sem_distrito_evolucao",
+      "col": 0,
+      "row": 3,
+      "w": 12,
+      "h": 11
+    },
+    {
+      "tab": "qualidade",
+      "id": "sem_elegiveis_evolucao",
+      "col": 12,
+      "row": 3,
+      "w": 12,
+      "h": 11
+    },
+    {
+      "tab": "qualidade",
+      "id": "variacao_denominador",
+      "col": 0,
+      "row": 14,
       "w": 24,
       "h": 12
     }
   ],
-  "theme": {
-    "reference": "MAE APS Gestão V1.3",
-    "background": "#f5f8fb",
-    "primary": "#0a3570",
-    "accent": "#0c7ce9",
-    "aqua": "#16b8b1",
-    "muted": "#52687d",
-    "notice": "Referência de layout e cores, sem promessa de white-label no Metabase OSS."
-  },
   "permissions": {
     "public_sharing": false,
     "pii": false,
