@@ -85,6 +85,12 @@
       "name": "Qualidade — oscilação de elegíveis por distrito",
       "display": "line",
       "sql": "SELECT competency AS competencia, COALESCE(district_name,'Sem distrito') AS distrito, denominator AS populacao_elegivel FROM analytics.dashboard_c3_district_monthly WHERE competency >= ((SELECT MAX(competency) FROM analytics.dashboard_competencies)-INTERVAL '5 months')::date ORDER BY competencia,distrito"
+    },
+    {
+      "id": "distritos_quedas_persistentes",
+      "name": "Acompanhamento — distritos com quedas persistentes",
+      "display": "table",
+      "sql": "WITH x AS (SELECT district_id, district_name, competency, points_total / NULLIF(denominator,0) AS c3 FROM analytics.dashboard_c3_district_monthly WHERE district_id IS NOT NULL) SELECT a.district_name AS distrito, ROUND(c.c3,2) AS c3_antepenultimo, ROUND(b.c3,2) AS c3_penultimo, ROUND(a.c3,2) AS c3_atual, ROUND(a.c3-c.c3,2) AS variacao_dois_meses_pp FROM x a JOIN x b ON b.district_id=a.district_id AND b.competency=(a.competency-INTERVAL '1 month')::date JOIN x c ON c.district_id=a.district_id AND c.competency=(a.competency-INTERVAL '2 months')::date WHERE a.competency=(SELECT MAX(competency) FROM analytics.dashboard_competencies) AND a.c3 < b.c3 AND b.c3 < c.c3 ORDER BY variacao_dois_meses_pp ASC,distrito"
     }
   ],
   "tabs": [
@@ -209,6 +215,14 @@
       "row": 14,
       "w": 24,
       "h": 12
+    },
+    {
+      "tab": "tendencias",
+      "id": "distritos_quedas_persistentes",
+      "col": 0,
+      "row": 24,
+      "w": 24,
+      "h": 10
     }
   ],
   "permissions": {
