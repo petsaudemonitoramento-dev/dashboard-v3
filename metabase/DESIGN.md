@@ -8,7 +8,7 @@ Os estudos abaixo usam exclusivamente views `analytics.dashboard_*`.
 A identidade visual externa fica no MAE APS; o Metabase OSS apresenta
 o próprio banner e limita o white-label a temas básicos.
 
-## Quatro abas e 13 perguntas (manifesto fonte: `questions.json`)
+## Quatro abas e 14 perguntas (manifesto fonte: `questions.json`)
 
 | Aba | Conteúdo novo, sem duplicar o MAE APS |
 | --- | --- |
@@ -19,7 +19,7 @@ o próprio banner e limita o white-label a temas básicos.
 
 Grade do Metabase: 24 colunas, sem sobreposição; as posições e dimensões
 são determinadas por `questions.json`. A primeira aba tem 3 indicadores
-compactos, 1 gráfico e 1 tabela; a qualidade possui 1 KPI e 3 gráficos.
+compactos, 1 gráfico e 2 tabelas; a qualidade possui 1 KPI e 3 gráficos.
 
 ## Regras científicas e interpretação
 
