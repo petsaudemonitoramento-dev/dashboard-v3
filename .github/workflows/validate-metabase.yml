@@ -36,6 +36,7 @@ jobs:
           bash -n metabase/scripts/backup.sh
           bash -n metabase/scripts/check-server.sh
           python3 -m py_compile metabase/scripts/verify_dashboard.py
+          python3 -m py_compile metabase/scripts/configure_site.py
       - name: Validar Docker Compose sem expor segredos
         shell: bash
         run: |
@@ -79,7 +80,7 @@ jobs:
       - name: Gerar kit ZIP apenas com arquivos publicos do deploy
         run: |
           cd metabase
-          zip -q -r ../maeaps-metabase-kit.zip compose.yaml compose.https.yaml Caddyfile .env.example README.md DESIGN.md EMBED_MAE_APS.md ALERTAS.md questions.json scripts/prepare.sh scripts/backup.sh scripts/check-server.sh scripts/provision.py scripts/verify_dashboard.py
+          zip -q -r ../maeaps-metabase-kit.zip compose.yaml compose.https.yaml Caddyfile .env.example README.md DESIGN.md EMBED_MAE_APS.md ALERTAS.md questions.json scripts/prepare.sh scripts/backup.sh scripts/check-server.sh scripts/provision.py scripts/verify_dashboard.py scripts/configure_site.py
       - uses: actions/upload-artifact@v4
         with:
           name: maeaps-metabase-kit
