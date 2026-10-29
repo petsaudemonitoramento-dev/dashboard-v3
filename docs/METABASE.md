@@ -59,3 +59,17 @@ Nunca conectar usando `postgres`, `service_role`, chave secreta do Supabase ou l
 Para PostgreSQL/Supabase no Metabase: https://www.metabase.com/docs/latest/databases/connections/postgresql
 
 As views não são materializadas; novos uploads SIAPS publicados ficam disponíveis após commit. Não habilitar refresh/materialização sem evidência de gargalo.
+
+## Implantacao portatil na maquina 24h
+
+O kit unico e mantido em [`metabase/`](../metabase/README.md). Ele inclui:
+`compose.yaml`, inicializacao segura de segredos, PostgreSQL persistente para o Metabase,
+backup, seis perguntas em `questions.json` e criacao opcional dos graficos pela API apos setup humano.
+O GitHub Actions [Validar pacote Metabase VM](../.github/workflows/validate-metabase.yml)
+valida Compose/JSON/scripts e gera o artefato `maeaps-metabase-kit.zip` sem segredos.
+O uso do iPad e suficiente para acompanhar GitHub e usar acesso remoto autorizado;
+**nao requer instalar Metabase no computador pessoal**.
+
+A preparacao no GitHub nao equivale a Metabase rodando: a maquina cedida precisa de Docker,
+recursos, autorizacao para rede/seguranca, setup do administrador e role PostgreSQL
+com LOGIN habilitado via canal seguro antes dos testes ponta a ponta.
