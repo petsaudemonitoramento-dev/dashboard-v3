@@ -1,112 +1,53 @@
-# MAE APS — perguntas iniciais para Metabase
+# MAE APS — catalogo analitico do Metabase
 
-Este catálogo usa **exclusivamente** o banco `dashboard-v3`, schema `analytics`. Foi preparado para criação das perguntas na interface de uma instância Metabase autenticada. **Ainda não são dashboards publicados**: a criação depende de uma instância Metabase acessível.
+**Fonte de verdade para SQL e layout:**
+[`metabase/questions.json`](../metabase/questions.json).
+O catalogo antigo de seis perguntas foi substituido: os indicadores
+basicos ja existem dentro do MAE APS. A nova area **Inteligencia em Saude**
+deve oferecer valor adicional, sem duplicacao.
 
-> A coluna `c3` da base está em pontos percentuais (0 a 100). Toda agregação entre equipes/UBS/distritos deve dividir a soma de pontos pela soma dos denominadores; não usar `AVG(c3)`. Denominador zero deve aparecer como "Sem população elegível".
+| Aba | IDs das perguntas | Pergunta analitica |
+| --- | --- | --- |
+| Tendencias | `variacao_municipal`, `distritos_queda_continua`, `ubs_queda_mensal`, `trajetoria_territorial`, `distritos_variacao` | Como os territorios mudaram de um mes para o outro? |
+| Investigacao territorial | `ubs_variacao`, `praticas_por_distrito` | Onde houve maior reducao e quais praticas apresentam coberturas menores? |
+| Praticas A–K | `praticas_variacao`, `praticas_trajetoria` | Que praticas variaram mais e como suas coberturas evoluiram? |
+| Qualidade dos dados | `defasagem_competencia`, `sem_distrito_evolucao`, `sem_elegiveis_evolucao`, `variacao_denominador` | Quais limites do dado podem afetar a interpretacao? |
 
-## 1. Evolução municipal do C3 (gráfico de linha)
+## Qualidade metodologica
 
-```sql
-SELECT competency AS competencia,
-       ROUND(points_total / NULLIF(denominator, 0), 2) AS c3,
-       denominator AS populacao_elegivel,
-       points_total AS pontos
-FROM analytics.dashboard_competencies
-ORDER BY competency;
-```
+- Somente 7 views agregadas `analytics.dashboard_*` do projeto
+  `dashboard-v3` do MAE APS e auxiliares; sem dados pessoais.
+- Escala de C3 0–100, agregacao por razao de somas.
+- `variacao_pp`: diferenca de pontuacoes entre competencias em
+  **pontos percentuais**.
+- Comparacoes usam competencias de meses **consecutivos**;
+  sem dados anteriores nao contam como zero.
+- Tres meses de quedas consecutivas = duas variacoes negativas
+  em meses subsequentes; nao implica inferencia causal.
+- Praticas usam `100*SUM(fulfilled)/NULLIF(SUM(denominator),0)`.
+- Dados sem distrito ou sem elegiveis nao representam
+  automaticamente falha de profissional ou atendimento.
+- `defasagem_competencia` e referencia temporal, nao regra de
+  atraso oficial do SIAPS.
 
-Eixos: `competencia` (mês) e `c3` (0–100). Exibir `populacao_elegivel` no detalhamento.
+## Testes executados antes da maquina
 
-## 2. C3 por distrito ao longo do período (linhas por distrito)
+As 13 queries foram planejadas por `EXPLAIN` e executadas como
+`SELECT` limitado no Supabase oficial em 29/10/2026. Todas
+responderam com sucesso. Isso nao certifica a renderizacao real
+dentro de um Metabase ainda inexistente.
 
-```sql
-SELECT competency AS competencia,
-       COALESCE(district_name, 'Sem distrito') AS distrito,
-       ROUND(SUM(points_total) / NULLIF(SUM(denominator), 0), 2) AS c3,
-       SUM(denominator) AS populacao_elegivel
-FROM analytics.dashboard_c3_district_monthly
-WHERE 1=1
-  [[AND competency >= {{inicio}}]]
-  [[AND competency <= {{fim}}]]
-GROUP BY competency, COALESCE(district_name, 'Sem distrito')
-ORDER BY competencia, distrito;
-```
+## O que sera configurado no Metabase
 
-Variáveis opcionais `inicio` e `fim` do tipo Data. Não somar competências como se fossem gestantes únicas; são recortes mensais.
+- Publicar as quatro abas e seus cards com
+  `python3 scripts/provision.py --apply`;
+- Conferir formato numerico, eixos/legendas e legibilidade no iPad;
+- Se desejar filtros adicionais, criar variaveis e mapear aos graficos
+  seguindo a [documentacao de filtros](https://www.metabase.com/docs/latest/dashboards/filters);
+  nao assumir que filtros globais ja estao funcionando.
+- Publicar Guest Embed JWT, nunca link publico;
+- Conferir os indicadores com MAE APS no mesmo recorte antes de disponibilizar
+  para a gestao.
 
-## 3. Comparativo por UBS (barras horizontais)
-
-```sql
-SELECT cnes, establishment_name AS ubs,
-       COALESCE(district_name,'Sem distrito') AS distrito,
-       ROUND(SUM(points_total) / NULLIF(SUM(denominator),0), 2) AS c3,
-       SUM(denominator) AS populacao_elegivel,
-       SUM(teams) AS equipes
-FROM analytics.dashboard_c3_establishment_monthly
-WHERE competency = {{competencia}}
-  [[AND district_id = {{distrito_id}}]]
-GROUP BY cnes, establishment_name, COALESCE(district_name,'Sem distrito')
-ORDER BY c3 DESC NULLS LAST, ubs;
-```
-
-`competencia`: Data obrigatória, sempre primeiro dia do mês; `distrito_id`: Número opcional. Exibir em branco ou "Sem população elegível" quando `c3` for nulo.
-
-## 4. Equipes que exigem atenção (tabela filtrável)
-
-```sql
-SELECT cnes, establishment_name AS ubs, ine,
-       team_name AS equipe,
-       COALESCE(district_name,'Sem distrito') AS distrito,
-       classification AS classificacao,
-       ROUND(points_total / NULLIF(denominator,0),2) AS c3,
-       denominator AS populacao_elegivel
-FROM analytics.dashboard_c3_team_monthly
-WHERE competency = {{competencia}}
-  [[AND district_id = {{distrito_id}}]]
-ORDER BY c3 ASC NULLS LAST, ubs, equipe;
-```
-
-Usar as classificações oficiais já calculadas pela view. Não criar limites próprios sem referência à regra de C3.
-
-## 5. Distribuição mensal das classificações (barras empilhadas)
-
-```sql
-SELECT competency AS competencia,
-       COALESCE(classification,'Sem classificação') AS classificacao,
-       COUNT(*) AS quantidade_equipes
-FROM analytics.dashboard_c3_team_monthly
-WHERE 1=1
-  [[AND competency >= {{inicio}}]]
-  [[AND competency <= {{fim}}]]
-GROUP BY competency, COALESCE(classification,'Sem classificação')
-ORDER BY competencia, classificacao;
-```
-
-## 6. Práticas A–K por competência (barras / tabela)
-
-```sql
-SELECT practice_code AS pratica,
-       SUM(fulfilled) AS registros_atendidos,
-       SUM(denominator) AS denominador_da_pratica,
-       ROUND(100.0 * SUM(fulfilled) / NULLIF(SUM(denominator),0), 2) AS percentual
-FROM analytics.dashboard_c3_practice_summary
-WHERE competency = {{competencia}}
-  [[AND district_id = {{distrito_id}}]]
-  [[AND cnes = {{cnes}}]]
-GROUP BY practice_code
-ORDER BY practice_code;
-```
-
-Variáveis `competencia` (Data), `distrito_id` (Número), `cnes` (Texto). Interpretar o percentual como a razão dos campos na view, não como percentual individual de gestantes.
-
-## Validação antes de publicar
-
-1. Comparar C3 do mês mais recente com a tela inicial do MAE APS, e repetir por um distrito e uma UBS.
-2. Testar período sem dados, denominador zero, equipe sem distrito, competência mais antiga e filtros combinados.
-3. Confirmar que o usuário `mae_metabase_reader` **não pode** consultar `auth`, `app`, `siaps`, `audit`, `study`, `storage` nem aliases do schema `public`.
-4. Desativar publicação pública dos painéis. Compartilhar somente com usuários de gestão autorizados; considerar guest embedding apenas com JWT assinado no servidor e escopo de dados revisto.
-5. Configurar timezone America/Fortaleza na instância e manter competência como `DATE` (1º dia do mês).
-6. Nunca colar senhas, URL com senha ou chaves em issues, PRs, logs ou no chat.
-
-**Ordem para montar o dashboard:** Evolução municipal → Comparativo por UBS → Classificações → Equipes que exigem atenção → Práticas A–K → Distribuição territorial.
-
+O programa de pesquisa pode adicionar perguntas novas no Metabase pela
+equipe tecnica, sem precisar alterar codigo do MAE APS a cada nova consulta.
