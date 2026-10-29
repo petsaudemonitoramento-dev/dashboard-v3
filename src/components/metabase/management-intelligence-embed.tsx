@@ -32,8 +32,9 @@ export function ManagementIntelligenceEmbed({ instanceUrl, dashboardId }: EmbedC
     };
 
     if (window.customElements.get("metabase-dashboard")) {
-      setStatus("ready");
-      return;
+      // Atualização assíncrona para preservar a regra React de effects puros.
+      const frame = window.requestAnimationFrame(() => setStatus("ready"));
+      return () => window.cancelAnimationFrame(frame);
     }
 
     let script = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
