@@ -56,14 +56,14 @@ def validate(package):
         raise ValueError("Perguntas duplicadas")
     tabs = package["tabs"]
     tab_ids = [t["id"] for t in tabs]
-    if len(tabs) != 3 or len(tab_ids) != len(set(tab_ids)):
+    if len(tabs) != 4 or len(tab_ids) != len(set(tab_ids)):
         raise ValueError("Abas inconsistentes")
 
     for q in qs:
         sql = q["sql"].upper().strip()
         if q["display"] not in {"scalar", "bar", "line", "table"}:
             raise ValueError("Tipo de visualizacao nao suportado")
-        if not sql.startswith("SELECT ") or ";" in sql or "--" in sql:
+        if not (sql.startswith("SELECT ") or sql.startswith("WITH ")) or ";" in sql or "--" in sql:
             raise ValueError("Somente SELECT sem multiplas instrucoes")
         if "ANALYTICS.DASHBOARD_" not in sql:
             raise ValueError("Pergunta fora das views de indicadores")
@@ -171,7 +171,7 @@ def main():
         print("Nao sobrescrever layout existente automaticamente.")
     else:
         api("PUT", "/dashboard/%s" % dash["id"], layout_payload(package, saved))
-        print("Dashboard criado com 3 abas, 4 indicadores e 6 analises.")
+        print("Dashboard criado com %s abas e %s analises." % (len(package["tabs"]), len(qs)))
     print("Dashboard ID %s. Conferir SQL, filtros, permissao, periodo e visualizacao na UI." % dash["id"])
 
 
