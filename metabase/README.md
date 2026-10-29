@@ -83,16 +83,10 @@ O painel permanece ligado apenas ao `127.0.0.1:3000` nesse momento.
 **Somente se ja existir DNS de hostname valido apontando para a maquina, portas
 80 e 443 liberadas e autorizacao da equipe responsavel.**
 
-Atualizar manualmente na `.env` local, sem segredos no Git:
-
-```dotenv
-METABASE_DOMAIN=bi.DOMINIO-REAL-APROVADO
-MB_SITE_URL=https://bi.DOMINIO-REAL-APROVADO
-```
-
-Depois:
+Configurar dominio sem editar segredos manualmente:
 
 ```bash
+python3 scripts/configure_site.py bi.DOMINIO-REAL-APROVADO
 bash scripts/check-server.sh --https
 docker compose -f compose.yaml -f compose.https.yaml up -d
 ```
