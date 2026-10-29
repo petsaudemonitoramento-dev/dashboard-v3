@@ -11,7 +11,7 @@ feita pelo responsavel autorizado no navegador.
 
 ## O que ja foi construido e testado na nuvem
 
-- 13 consultas analiticas reais (variacao de C3, quedas consecutivas, ranking de
+- 14 consultas analiticas reais (variacao de C3, quedas consecutivas, ranking de
   variacoes, cobertura por pratica e qualidade dos dados) organizadas em 4 abas;
 - SQL testado com EXPLAIN e SELECT agregado no projeto Supabase MAE APS;
 - script de provisionamento sem bibliotecas externas, repetivel e que nao apaga
@@ -119,7 +119,7 @@ nao executar a sobreposicao Caddy; usar a rota HTTPS aprovada pela TI.
 5. Criar API key de administracao no Metabase por acesso seguro e disponibilizar
    somente na sessao de terminal para a instalacao das perguntas.
 
-### Etapa 4 — carregar e verificar os 13 cards / 4 abas
+### Etapa 4 — carregar e verificar os 14 cards / 4 abas
 
 ```bash
 python3 scripts/provision.py --dry-run
@@ -161,7 +161,7 @@ no plano gratis: consultar apenas dados agregados sem informacoes pessoais.
 - [ ] Docker/Compose e PostgreSQL interno persistente com backup externo testado
 - [ ] Dominio HTTPS valido e browser iPad/desktop consegue abrir o guest embed
 - [ ] Conexao SSL restrita com `mae_metabase_reader`, sem tabelas sensiveis
-- [ ] Quatro abas / treze consultas presentes, com `verify_dashboard.py` OK
+- [ ] Quatro abas / quatorze consultas presentes, com `verify_dashboard.py` OK
 - [ ] SQL conferido com recortes reais de competencia, distrito e UBS
 - [ ] Regra de classificacao nao inventada; variacao em pontos percentuais
 - [ ] Compartilhamento publico desabilitado; painel Guest JWT publicado
