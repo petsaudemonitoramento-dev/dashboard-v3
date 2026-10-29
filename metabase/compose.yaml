@@ -24,7 +24,7 @@ services:
       - no-new-privileges:true
 
   metabase:
-    image: metabase/metabase:v0.64.1
+    image: metabase/metabase:v0.64.4.1
     restart: unless-stopped
     depends_on:
       metabase-db:
