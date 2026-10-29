@@ -20,10 +20,10 @@ PACKAGE = json.loads((SCRIPT.parents[1] / "questions.json").read_text("utf8"))
 class ManifestTests(unittest.TestCase):
     def test_json_integrity_and_layout(self):
         questions = MODULE.validate(PACKAGE)
-        self.assertEqual(len(questions), 13)
+        self.assertEqual(len(questions), 14)
         self.assertEqual(len(PACKAGE["tabs"]), 4)
         layout = MODULE.layout_payload(PACKAGE, {q["id"]: i + 20 for i, q in enumerate(questions)})
-        self.assertEqual(len(layout["dashcards"]), 13)
+        self.assertEqual(len(layout["dashcards"]), 14)
         self.assertEqual({t["name"] for t in layout["tabs"]},
                          {"Tendências", "Investigação territorial", "Práticas A–K", "Qualidade dos dados"})
 
@@ -84,12 +84,12 @@ class ProvisionTests(unittest.TestCase):
              patch.object(sys, "argv", ["provision.py", "--apply"]):
             MODULE.main()
             first_writes = len([x for x in writes if x[0] in ("POST", "PUT")])
-            self.assertEqual(first_writes, 15)  # 1 dashboard, 13 perguntas, 1 layout
-            self.assertEqual(len(dashcards), 13)
+            self.assertEqual(first_writes, 16)  # 1 dashboard, 14 perguntas, 1 layout
+            self.assertEqual(len(dashcards), 14)
             self.assertEqual(len(tabs), 4)
             MODULE.main()
             self.assertEqual(len([x for x in writes if x[0] in ("POST", "PUT")]), first_writes)
-            self.assertEqual(len(dashcards), 13)
+            self.assertEqual(len(dashcards), 14)
 
 
 if __name__ == "__main__":
