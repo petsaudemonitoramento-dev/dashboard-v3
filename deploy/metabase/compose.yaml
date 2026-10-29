@@ -1,0 +1,54 @@
+# MAE APS: Metabase gratuito, sem banco de saúde local e sem porta publica.
+# Versao do Metabase fixa: verificar atualizacoes de seguranca antes do deploy.
+name: mae-aps-metabase
+
+services:
+  metabase:
+    image: metabase/metabase:v0.64.3.6
+    restart: unless-stopped
+    depends_on:
+      app-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${METABASE_PORT:-3000}:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_HOST: app-db
+      MB_DB_PORT: "5432"
+      MB_DB_DBNAME: metabaseappdb
+      MB_DB_USER: metabase
+      MB_DB_PASS: "${METABASE_APP_DB_PASSWORD:?Execute bootstrap.sh antes de subir}"
+      MB_ENCRYPTION_SECRET_KEY: "${MB_ENCRYPTION_SECRET_KEY:?Chave de criptografia obrigatoria}"
+      MB_SESSION_SECRET_KEY: "${MB_SESSION_SECRET_KEY:?Chave de sessao obrigatoria}"
+      MB_DISABLE_LEGACY_STARTUP_ENCRYPTION: "true"
+      MB_SITE_NAME: "MAE APS - Analises"
+      MB_REPORT_TIMEZONE: America/Fortaleza
+      JAVA_TIMEZONE: America/Fortaleza
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/api/health"]
+      start_period: 120s
+      interval: 30s
+      timeout: 8s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+
+  app-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: metabaseappdb
+      POSTGRES_USER: metabase
+      POSTGRES_PASSWORD: "${METABASE_APP_DB_PASSWORD:?Execute bootstrap.sh antes de subir}"
+    volumes:
+      - metabase_app_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metabase -d metabaseappdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  metabase_app_pgdata:
