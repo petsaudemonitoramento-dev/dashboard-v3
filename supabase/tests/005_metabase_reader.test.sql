@@ -14,7 +14,7 @@ SELECT ok(NOT has_table_privilege('mae_metabase_reader','auth.users','SELECT'),'
 SELECT ok(NOT has_table_privilege('mae_metabase_reader','app.profiles','SELECT'),'user profiles denied');
 SELECT ok(NOT has_table_privilege('mae_metabase_reader','siaps.imports','SELECT'),'raw import metadata denied');
 SELECT ok(NOT has_table_privilege('mae_metabase_reader','audit.events','SELECT'),'audit events denied');
-SELECT ok(NOT has_table_privilege('mae_metabase_reader','public.dashboard_competencies','SELECT'),'public API alias denied');
+SELECT ok(to_regclass('public.dashboard_competencies') IS NULL OR NOT has_table_privilege('mae_metabase_reader', to_regclass('public.dashboard_competencies'), 'SELECT'),'public API alias absent or denied');
 SELECT ok(NOT has_table_privilege('mae_metabase_reader','analytics.c3_team_monthly','UPDATE'),'write operations denied');
 SELECT ok(NOT has_schema_privilege('mae_metabase_reader','analytics','CREATE'),'schema modifications denied');
 SELECT ok(EXISTS(SELECT 1 FROM pg_policies WHERE schemaname='analytics' AND tablename='c3_team_monthly' AND policyname='c3_monthly_metabase_read' AND cmd='SELECT'),'fact-table RLS explicit');
