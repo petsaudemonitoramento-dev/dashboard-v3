@@ -1,0 +1,42 @@
+{
+  "name": "MAE APS — C3",
+  "description": "Conjunto inicial de indicadores agregados, sem dados pessoais. Revisar antes de publicar.",
+  "questions": [
+    {
+      "id": "evolucao_municipal",
+      "name": "C3 — Evolução municipal",
+      "display": "line",
+      "sql": "SELECT competency AS competencia, ROUND(points_total / NULLIF(denominator, 0), 2) AS c3, denominator AS populacao_elegivel FROM analytics.dashboard_competencies ORDER BY competency"
+    },
+    {
+      "id": "evolucao_distritos",
+      "name": "C3 — Evolução por distrito",
+      "display": "line",
+      "sql": "SELECT competency AS competencia, COALESCE(district_name, 'Sem distrito') AS distrito, ROUND(SUM(points_total) / NULLIF(SUM(denominator), 0), 2) AS c3 FROM analytics.dashboard_c3_district_monthly GROUP BY competency, COALESCE(district_name, 'Sem distrito') ORDER BY competencia, distrito"
+    },
+    {
+      "id": "comparativo_ubs",
+      "name": "C3 — Comparativo das UBS (última competência)",
+      "display": "bar",
+      "sql": "SELECT cnes, establishment_name AS ubs, COALESCE(district_name, 'Sem distrito') AS distrito, ROUND(SUM(points_total) / NULLIF(SUM(denominator), 0), 2) AS c3, SUM(denominator) AS populacao_elegivel FROM analytics.dashboard_c3_establishment_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) GROUP BY cnes, establishment_name, COALESCE(district_name, 'Sem distrito') ORDER BY c3 DESC NULLS LAST, ubs"
+    },
+    {
+      "id": "equipes_atencao",
+      "name": "C3 — Equipes para acompanhamento (última competência)",
+      "display": "table",
+      "sql": "SELECT cnes, establishment_name AS ubs, ine, team_name AS equipe, COALESCE(district_name, 'Sem distrito') AS distrito, classification AS classificacao, ROUND(points_total / NULLIF(denominator, 0), 2) AS c3, denominator AS populacao_elegivel FROM analytics.dashboard_c3_team_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) ORDER BY c3 ASC NULLS LAST, ubs, equipe"
+    },
+    {
+      "id": "classificacoes",
+      "name": "C3 — Classificação das equipes por mês",
+      "display": "bar",
+      "sql": "SELECT competency AS competencia, COALESCE(classification, 'Sem classificação') AS classificacao, COUNT(*) AS quantidade_equipes FROM analytics.dashboard_c3_team_monthly GROUP BY competency, COALESCE(classification, 'Sem classificação') ORDER BY competencia, classificacao"
+    },
+    {
+      "id": "praticas",
+      "name": "C3 — Práticas A–K (última competência)",
+      "display": "bar",
+      "sql": "SELECT practice_code AS pratica, SUM(fulfilled) AS registros_atendidos, SUM(denominator) AS denominador_da_pratica, ROUND(100.0 * SUM(fulfilled) / NULLIF(SUM(denominator), 0), 2) AS percentual FROM analytics.dashboard_c3_practice_summary WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) GROUP BY practice_code ORDER BY practice_code"
+    }
+  ]
+}
