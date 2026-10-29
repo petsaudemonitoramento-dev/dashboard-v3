@@ -60,7 +60,7 @@ jobs:
           print('Infraestrutura validada: apenas Metabase localhost, Postgres privado.')
           PY
           # Validar tambem o proxy HTTPS opcional (DNS ficticio, sem publicar portas).
-          printf '\\nMETABASE_DOMAIN=bi.exemplo.invalid\\n' >> .env
+          echo 'METABASE_DOMAIN=bi.exemplo.invalid' >> .env
           docker compose -f compose.yaml -f compose.https.yaml config --format json > /tmp/metabase-https-config.json
           python3 - <<'PY'
           import json
