@@ -1,75 +1,59 @@
-# Metabase — integração complementar ao MAE APS
+# Metabase como inteligencia analitica do MAE APS — 29/10/2026
 
-## Situação em 29/10/2026
+## Escopo oficial
 
-- **Concluído:** banco oficial `dashboard-v3` (Supabase `nyexakdyxtstcyycmlng`), views `analytics.dashboard_*` existentes e populadas.
-- **Concluído:** role PostgreSQL dedicada `mae_metabase_reader` criada no banco oficial pela migration `20261029172844_mae_aps_metabase_reader_read_only`, com `NOLOGIN`, sem senha, grants mínimos e RLS específicas. Não foi alterada a autenticação das pessoas usuárias.
-- **Concluído:** SQL das seis perguntas iniciais documentado em [METABASE_PERGUNTAS.md](METABASE_PERGUNTAS.md).
-- **Pendente:** identificar e autenticar uma instância Metabase persistente (institucional ou própria), habilitar LOGIN com segredo definido por canal seguro, conectar o banco, criar/publicar as perguntas e validar contra o dashboard do MAE APS.
-- **Não executado:** nenhuma conexão à instância Metabase, painel criado nessa instância, incorporação no Next.js ou deploy do aplicativo. Não marcar a integração como concluída antes desse teste.
+**O gestor acessa somente o MAE APS**; Metabase Open Source e motor de
+consultas agregadas, usado pela equipe tecnica para formular e atualizar
+analises de tendencias, territorio, praticas A–K e qualidade de dados.
+Nao repetir os graficos operacionais ja existentes no MAE APS.
 
-## Objetivo e arquitetura
+## Estado verificado
 
-O Metabase complementa o Dashboard Next.js do **MAE APS — gestão**; não substitui o dashboard, não recebe credenciais do Supabase Auth e não acessa prontuário individual nem tabelas brutas SIAPS, perfis, auditoria, `auth.users` ou `study`.
+- Supabase `dashboard-v3` (MAE APS), views `analytics.dashboard_*`
+  existentes e populadas, role de consulta `mae_metabase_reader` criada
+  com `NOLOGIN`, sem superuser/bypass RLS, migration versionada.
+- 13 queries analiticas novas executadas com `EXPLAIN` e `SELECT` sobre
+  a base agregada oficial, sem falha de SQL. Nenhum CSV ou dado pessoal
+  foi exportado para GitHub.
+- 4 abas em `metabase/questions.json`, script de provisionamento
+  idempotente, testes offline, Postgres interno Docker e alternativa
+  Caddy HTTPS gratuitos versionados.
+- Guest embedding sem SSO pago codificado no MAE APS, com JWT HS256,
+  autenticacao por perfis `gestao/leitura` e feature flag desativada.
+- **Nao concluido:** hospedagem na maquina 24h, usuario admin, conexao
+  PostgreSQL pelo leitor, autorizacao do embed, DNS/HTTPS, validacao
+  dos cards no Metabase real, backup restaurado, deploy da funcionalidade.
+  Nao declarar producao antes desses passos.
 
-Fonte de BI: views do schema `analytics` com `security_invoker=true`. O papel Postgres de BI precisa também de `SELECT` nas tabelas agregadas e dimensões `core` que sustentam as views. O usuário de conexão não deve poder modificar dados.
+## Regra de C3
 
-## Views disponíveis
+`SUM(points_total)/NULLIF(SUM(denominator),0)` para agregacoes.
+As views existentes fornecem points_total/denominator agregados por
+competencia, distrito, UBS ou pratica; nao se deve calcular media simples
+de `c3`. Diferencas entre competencias sao relatadas em **pontos
+percentuais**, nao como variacao percentual relativa. Denominador zero
+nao e desempenho zero.
 
-| View | Granularidade | Colunas principais |
-| --- | --- | --- |
-| `dashboard_team_directory` | equipe atual | `district_id`, `district_name`, `establishment_id`, `cnes`, `establishment_name`, `team_id`, `ine`, `team_name` |
-| `dashboard_c3_team_monthly` | equipe e competência | dimensões territoriais, `points_total`, `denominator`, `c3`, `classification` |
-| `dashboard_c3_practices` | prática A–K por equipe e competência | dimensões, `practice_code`, `fulfilled`, `denominator` |
-| `dashboard_competencies` | competência municipal | `points_total`, `denominator`, `c3` |
-| `dashboard_c3_establishment_monthly` | UBS e competência | dimensões, `points_total`, `denominator`, `c3`, `teams` |
-| `dashboard_c3_district_monthly` | distrito e competência | dimensões, `points_total`, `denominator`, `c3`, `establishments`, `teams` |
-| `dashboard_c3_practice_summary` | prática, UBS e competência | dimensões, `practice_code`, `fulfilled`, `denominator` |
+## Acesso e privacidade
 
-`competency` é o primeiro dia do mês de referência. CNES e INE são identificadores de negócio, não dados pessoais. UUIDs são chaves internas.
+- Usar somente `analytics.dashboard_*` e credencial dedicada de leitura,
+  jamais `postgres`, service_role, chave master ou login de gestor.
+- `security_invoker=true` nas views; RLS explicita nas tabelas agregadas
+  de apoio e dimensoes core. Nunca abrir tabelas de pacientes, `auth`,
+  `app`, `siaps`, `audit` nem `storage` ao leitor.
+- Guest embedding so com painel assinado e publicado na interface
+  administrativa, sem public sharing. Usuarios autorizados podem
+  exportar dados agregados na versao gratuita: **revisar agregacao**.
+- Sem SSO pago nem white-label completo; o banner Powered by Metabase
+  permanece.
 
-## Regra matemática obrigatória
+## Onde trabalhar
 
-Sempre que agregar mais de uma equipe/UBS/distrito, calcular:
+- [Pacote e checklist definitivo de instalacao](../metabase/README.md)
+- [Abas, consultas e metodologia](../metabase/DESIGN.md)
+- [Manifesto das 13 perguntas (fonte de verdade)](../metabase/questions.json)
+- [Integracao gratuita dentro do MAE APS](../metabase/EMBED_MAE_APS.md)
+- [Testes de privilegio da role](../supabase/tests/005_metabase_reader.test.sql)
 
-```sql
-SUM(points_total) / NULLIF(SUM(denominator), 0)
-```
-
-**Nunca `AVG(c3)`.** Denominador zero deve ser tratado como valor nulo e apresentado como "Sem população elegível". Filtros usuais: competência, distrito, UBS, CNES, equipe, INE, prática e classificação.
-
-## Permissões e proteção
-
-A role `mae_metabase_reader` é sem LOGIN e sem senha de propósito. O arquivo versionado [migration Metabase](../supabase/migrations/20261029172844_mae_aps_metabase_reader_read_only.sql) define acesso mínimo e políticas RLS, testados por [005_metabase_reader.test.sql](../supabase/tests/005_metabase_reader.test.sql). O template original [metabase-reader-template.sql](metabase-reader-template.sql) permanece apenas como referência histórica; não reaplicar sem verificar a migration atual.
-
-Na produção, a role não possui `SELECT` em `auth.users`, `app.profiles`, `audit.events`, `siaps.imports` ou `public.dashboard_competencies` (verificado por consulta de privilégios). A role não é superuser, não usa bypass RLS e inicia transações como read-only.
-
-Nunca conectar usando `postgres`, `service_role`, chave secreta do Supabase ou login individual da gestão.
-
-## Ativação pendente — instância de Metabase
-
-1. Confirmar a **URL da instância Metabase** e o acesso administrativo autorizado. Sem instância hospedada e acessível, a preparação do banco não significa que o Metabase já esteja em operação.
-2. Configurar uma senha forte para `mae_metabase_reader` fora do Git, do chat e dos logs; habilitar `LOGIN` apenas quando a configuração de rede/SSL for efetivada. Guardar segredo exclusivamente no gerenciador de credenciais da instância.
-3. Na instância, **Admin → Databases → Add a database** → driver PostgreSQL: banco `postgres`, usuário `mae_metabase_reader`, hostname de conexão direta/pooler fornecido pelo dashboard Supabase desse projeto e SSL habilitado (preferir verificação da identidade com certificado).
-4. Sincronizar **apenas** o schema `analytics` em Metabase; usar as sete views `dashboard_*`; ocultar as tabelas de suporte `c3_team_monthly` e `c3_practice_counts` no modelo de exploração. A conexão precisa de `USAGE` em `core` por causa de `security_invoker`, mas não sincronizar `core` na interface.
-5. Criar as perguntas descritas em [METABASE_PERGUNTAS.md](METABASE_PERGUNTAS.md) e montar um dashboard com filtros de competência/distrito/UBS.
-6. Comparar os resultados do Metabase com o painel MAE APS no mesmo mês e recorte; checar zeros, nulos, nenhum dado e histórico. Verificar isolamento do banco e usuários Metabase autorizados.
-7. Manter **public sharing desativado**. Se posteriormente for incorporado dentro do MAE APS, usar integração autenticada com JWT assinado pelo servidor e revisar as permissões dos usuários e parâmetros bloqueados antes do deploy. Não expor segredo no navegador.
-
-Para PostgreSQL/Supabase no Metabase: https://www.metabase.com/docs/latest/databases/connections/postgresql
-
-As views não são materializadas; novos uploads SIAPS publicados ficam disponíveis após commit. Não habilitar refresh/materialização sem evidência de gargalo.
-
-## Implantacao portatil na maquina 24h
-
-O kit unico e mantido em [`metabase/`](../metabase/README.md). Ele inclui:
-`compose.yaml`, inicializacao segura de segredos, PostgreSQL persistente para o Metabase,
-backup, seis perguntas em `questions.json` e criacao opcional dos graficos pela API apos setup humano.
-O GitHub Actions [Validar pacote Metabase VM](../.github/workflows/validate-metabase.yml)
-valida Compose/JSON/scripts e gera o artefato `maeaps-metabase-kit.zip` sem segredos.
-O uso do iPad e suficiente para acompanhar GitHub e usar acesso remoto autorizado;
-**nao requer instalar Metabase no computador pessoal**.
-
-A preparacao no GitHub nao equivale a Metabase rodando: a maquina cedida precisa de Docker,
-recursos, autorizacao para rede/seguranca, setup do administrador e role PostgreSQL
-com LOGIN habilitado via canal seguro antes dos testes ponta a ponta.
+Este documento nao e prova de Metabase rodando; e o registro do que foi
+preparado antes da maquina cedida pela professora.
