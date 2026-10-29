@@ -59,3 +59,14 @@ jobs:
           print('Infraestrutura validada: apenas Metabase localhost, Postgres privado.')
           PY
           rm -f .env secrets/app_db_password
+
+      - name: Gerar kit ZIP apenas com arquivos publicos do deploy
+        run: |
+          cd metabase
+          zip -q -r ../maeaps-metabase-kit.zip compose.yaml .env.example README.md questions.json scripts/prepare.sh scripts/backup.sh scripts/provision.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: maeaps-metabase-kit
+          path: maeaps-metabase-kit.zip
+          if-no-files-found: error
+          retention-days: 30
