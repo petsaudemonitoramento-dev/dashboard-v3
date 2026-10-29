@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
     return jsonError("Solicitação inválida.", 400);
   }
   const data = payload as Record<string, unknown>;
-  if (Object.keys(data).some((key) => !["entityType", "entityId"].includes(key))
+  if (Object.keys(data).some((key) => !["entityType", "entityId", "customContext"].includes(key))
       || data.entityType !== "dashboard"
-      || data.entityId !== config.dashboardId) {
+      || (data.entityId !== config.dashboardId && data.entityId !== String(config.dashboardId))) {
     return jsonError("Painel não autorizado.", 403);
   }
 
