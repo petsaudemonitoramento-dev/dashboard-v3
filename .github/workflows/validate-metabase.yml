@@ -79,7 +79,7 @@ jobs:
       - name: Gerar kit ZIP apenas com arquivos publicos do deploy
         run: |
           cd metabase
-          zip -q -r ../maeaps-metabase-kit.zip compose.yaml compose.https.yaml Caddyfile .env.example README.md DESIGN.md EMBED_MAE_APS.md questions.json scripts/prepare.sh scripts/backup.sh scripts/check-server.sh scripts/provision.py scripts/verify_dashboard.py
+          zip -q -r ../maeaps-metabase-kit.zip compose.yaml compose.https.yaml Caddyfile .env.example README.md DESIGN.md EMBED_MAE_APS.md ALERTAS.md questions.json scripts/prepare.sh scripts/backup.sh scripts/check-server.sh scripts/provision.py scripts/verify_dashboard.py
       - uses: actions/upload-artifact@v4
         with:
           name: maeaps-metabase-kit
