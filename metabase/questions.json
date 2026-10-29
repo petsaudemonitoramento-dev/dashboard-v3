@@ -1,7 +1,31 @@
 {
-  "name": "MAE APS — C3",
-  "description": "Conjunto inicial de indicadores agregados, sem dados pessoais. Revisar antes de publicar.",
+  "name": "MAE APS | Inteligência C3",
+  "description": "Panorama municipal, territórios e práticas A–K — acesso restrito à gestão. Gráficos extraídos do schema analytics.",
   "questions": [
+    {
+      "id": "c3_atual",
+      "name": "C3 — Resultado municipal atual",
+      "display": "scalar",
+      "sql": "SELECT ROUND(points_total / NULLIF(denominator, 0), 2) AS c3_atual FROM analytics.dashboard_competencies WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies)"
+    },
+    {
+      "id": "ubs_monitoradas",
+      "name": "UBS — Unidades no mês",
+      "display": "scalar",
+      "sql": "SELECT COUNT(DISTINCT establishment_id) AS ubs FROM analytics.dashboard_c3_establishment_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies)"
+    },
+    {
+      "id": "equipes_monitoradas",
+      "name": "Equipes — Registradas no mês",
+      "display": "scalar",
+      "sql": "SELECT COUNT(*) AS equipes FROM analytics.dashboard_c3_team_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies)"
+    },
+    {
+      "id": "equipes_sem_distrito",
+      "name": "Qualidade cadastral — Equipes sem distrito",
+      "display": "scalar",
+      "sql": "SELECT COUNT(*) AS equipes_sem_distrito FROM analytics.dashboard_c3_team_monthly WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) AND district_id IS NULL"
+    },
     {
       "id": "evolucao_municipal",
       "name": "C3 — Evolução municipal",
@@ -38,5 +62,116 @@
       "display": "bar",
       "sql": "SELECT practice_code AS pratica, SUM(fulfilled) AS registros_atendidos, SUM(denominator) AS denominador_da_pratica, ROUND(100.0 * SUM(fulfilled) / NULLIF(SUM(denominator), 0), 2) AS percentual FROM analytics.dashboard_c3_practice_summary WHERE competency = (SELECT MAX(competency) FROM analytics.dashboard_competencies) GROUP BY practice_code ORDER BY practice_code"
     }
-  ]
+  ],
+  "tabs": [
+    {
+      "id": "panorama",
+      "title": "Panorama municipal"
+    },
+    {
+      "id": "territorios",
+      "title": "Distritos e UBS"
+    },
+    {
+      "id": "praticas",
+      "title": "Práticas A–K"
+    }
+  ],
+  "layout": [
+    {
+      "tab": "panorama",
+      "id": "c3_atual",
+      "col": 0,
+      "row": 0,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "tab": "panorama",
+      "id": "ubs_monitoradas",
+      "col": 6,
+      "row": 0,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "tab": "panorama",
+      "id": "equipes_monitoradas",
+      "col": 12,
+      "row": 0,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "tab": "panorama",
+      "id": "equipes_sem_distrito",
+      "col": 18,
+      "row": 0,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "tab": "panorama",
+      "id": "evolucao_municipal",
+      "col": 0,
+      "row": 3,
+      "w": 15,
+      "h": 10
+    },
+    {
+      "tab": "panorama",
+      "id": "classificacoes",
+      "col": 15,
+      "row": 3,
+      "w": 9,
+      "h": 10
+    },
+    {
+      "tab": "territorios",
+      "id": "evolucao_distritos",
+      "col": 0,
+      "row": 0,
+      "w": 12,
+      "h": 9
+    },
+    {
+      "tab": "territorios",
+      "id": "comparativo_ubs",
+      "col": 12,
+      "row": 0,
+      "w": 12,
+      "h": 9
+    },
+    {
+      "tab": "territorios",
+      "id": "equipes_atencao",
+      "col": 0,
+      "row": 9,
+      "w": 24,
+      "h": 12
+    },
+    {
+      "tab": "praticas",
+      "id": "praticas",
+      "col": 0,
+      "row": 0,
+      "w": 24,
+      "h": 12
+    }
+  ],
+  "theme": {
+    "reference": "MAE APS Gestão V1.3",
+    "background": "#f5f8fb",
+    "primary": "#0a3570",
+    "accent": "#0c7ce9",
+    "aqua": "#16b8b1",
+    "muted": "#52687d",
+    "notice": "Referência de layout e cores, sem promessa de white-label no Metabase OSS."
+  },
+  "permissions": {
+    "public_sharing": false,
+    "pii": false,
+    "source_schema": "analytics",
+    "reader_role": "mae_metabase_reader"
+  }
 }
