@@ -59,12 +59,25 @@ jobs:
           assert services['metabase']['image']=='metabase/metabase:v0.64.4.1'
           print('Infraestrutura validada: apenas Metabase localhost, Postgres privado.')
           PY
+          # Validar tambem o proxy HTTPS opcional (DNS ficticio, sem publicar portas).
+          printf '\\nMETABASE_DOMAIN=bi.exemplo.invalid\\n' >> .env
+          docker compose -f compose.yaml -f compose.https.yaml config --format json > /tmp/metabase-https-config.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/metabase-https-config.json'))
+          services=data['services']
+          assert set(services)=={'metabase', 'metabase-db', 'caddy'}
+          assert services['caddy']['image']=='caddy:2.11.7-alpine'
+          assert not services['metabase-db'].get('ports')
+          assert sorted(port['published'] for port in services['caddy']['ports'])==['443','80']
+          print('HTTPS opcional validado; 80/443 apenas no overlay habilitado explicitamente.')
+          PY
           rm -f .env secrets/app_db_password
 
       - name: Gerar kit ZIP apenas com arquivos publicos do deploy
         run: |
           cd metabase
-          zip -q -r ../maeaps-metabase-kit.zip compose.yaml .env.example README.md DESIGN.md EMBED_MAE_APS.md questions.json scripts/prepare.sh scripts/backup.sh scripts/provision.py
+          zip -q -r ../maeaps-metabase-kit.zip compose.yaml compose.https.yaml Caddyfile .env.example README.md DESIGN.md EMBED_MAE_APS.md questions.json scripts/prepare.sh scripts/backup.sh scripts/provision.py
       - uses: actions/upload-artifact@v4
         with:
           name: maeaps-metabase-kit
