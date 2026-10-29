@@ -67,7 +67,7 @@ Não foi feito merge nem publicação do frontend nesta fase.
 3. Criar administrador inicial pela interface do Metabase e conectar o
    Supabase via role `mae_metabase_reader` (habilitada por canal seguro).
 4. Aplicar `python3 scripts/provision.py --apply` depois de configurar
-   uma chave de API administrativa em cofre de segredos; validar 3 abas/10 cartões.
+   uma chave de API administrativa em cofre de segredos; validar 4 abas/13 consultas.
 5. Admin → Embedding: habilitar **Guest embeds**.
 6. Compartilhar o dashboard **via Embed → Guest → Publish** (NÃO public link),
    conferir ID de dashboard e segredo de assinatura em Admin → Embedding.
@@ -124,3 +124,7 @@ instância testada, autenticação validada, filtros revisados e CI verde.
 
 Documentação: https://www.metabase.com/docs/latest/embedding/guest-embedding
 e https://www.metabase.com/docs/latest/embedding/securing-embeds .
+
+## Publicação segura e HTTPS grátis
+
+O kit também inclui `compose.https.yaml` e `Caddyfile` com Caddy OSS e certificados ACME automáticos, utilizáveis **somente se o hostname DNS e as portas 80/443 forem liberados pela rede da máquina**. A ativação é opcional; sem hostname/porta não há HTTPS público automaticamente. Consulte `README.md` antes de habilitar. A implantação exige validar o suporte a web components no Safari/iPad e revisar o conteúdo exportável dos gráficos.
