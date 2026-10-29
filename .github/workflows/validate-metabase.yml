@@ -1,0 +1,61 @@
+name: MAE APS - Pacote Metabase VM
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'metabase/**'
+      - '.github/workflows/validate-metabase.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'metabase/**'
+      - '.github/workflows/validate-metabase.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-metabase-package:
+    runs-on: ubuntu-latest
+    name: Validar Compose, scripts e perguntas (sem VM)
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Validar SQL das perguntas e estrutura JSON
+        run: |
+          python3 -m json.tool metabase/questions.json >/dev/null
+          python3 metabase/scripts/provision.py --dry-run
+          python3 -m py_compile metabase/scripts/provision.py
+      - name: Sintaxe dos scripts bash
+        run: |
+          bash -n metabase/scripts/prepare.sh
+          bash -n metabase/scripts/backup.sh
+      - name: Validar Docker Compose sem expor segredos
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd metabase
+          mkdir -p secrets
+          printf 'senha-ficticia-do-ci\n' > secrets/app_db_password
+          cat > .env <<'EOF'
+          MB_SITE_URL=http://localhost:3000
+          MB_ENCRYPTION_SECRET_KEY=chave_ficticia_nao_usar_ci
+          MB_SESSION_SECRET_KEY=chave_ficticia_nao_usar_ci
+          EOF
+          docker compose -f compose.yaml config --quiet
+          docker compose -f compose.yaml config --format json > /tmp/metabase-compose-config.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/metabase-compose-config.json'))
+          services=data['services']
+          assert set(services)=={'metabase', 'metabase-db'}
+          assert not services['metabase-db'].get('ports')
+          published=services['metabase']['ports']
+          assert len(published)==1 and published[0]['host_ip']=='127.0.0.1'
+          assert services['metabase']['image']=='metabase/metabase:v0.64.1'
+          print('Infraestrutura validada: apenas Metabase localhost, Postgres privado.')
+          PY
+          rm -f .env secrets/app_db_password
