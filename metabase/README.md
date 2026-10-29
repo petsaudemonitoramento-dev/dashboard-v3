@@ -11,7 +11,7 @@ iPad (navegador/SSH autorizado)
         |
    VPN ou tunel SSH (preferencia inicial)
         |
-maquina 24h: Metabase v0.64.1 — 127.0.0.1:3000
+maquina 24h: Metabase v0.64.4.1 — 127.0.0.1:3000
         |                         |
         | leitura SSL             +-- Postgres privado (metabaseappdb)
         |                                  guarda dashboards, perguntas e usuarios
@@ -98,7 +98,7 @@ docker compose -f compose.yaml logs --tail 80 metabase
 O backup inclui apenas os **metadados do Metabase**. Guardar backup cifrado **fora da maquina** e manter
 `MB_ENCRYPTION_SECRET_KEY` em cofre, separadamente do dump. Restauracao deve ser testada antes do uso definitivo.
 Para atualizar, primeiro fazer backup, revisar o changelog e **alterar explicitamente a tag**
-`metabase/metabase:v0.64.1` na PR; nunca atualizar automaticamente para `latest`.
+`metabase/metabase:v0.64.4.1` na PR; nunca atualizar automaticamente para `latest`.
 
 Para publicar fora do tunel SSH, adicionar proxy reverso HTTPS (certificado valido), firewall/restricoes
 de origem, autenticao administrativa robusta e `MB_SITE_URL=https://...`. Jamais abrir o PostgreSQL interno.
