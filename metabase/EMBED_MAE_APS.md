@@ -67,7 +67,7 @@ Não foi feito merge nem publicação do frontend nesta fase.
 3. Criar administrador inicial pela interface do Metabase e conectar o
    Supabase via role `mae_metabase_reader` (habilitada por canal seguro).
 4. Aplicar `python3 scripts/provision.py --apply` depois de configurar
-   uma chave de API administrativa em cofre de segredos; validar 4 abas/13 consultas.
+   uma chave de API administrativa em cofre de segredos; validar 4 abas/14 consultas.
 5. Admin → Embedding: habilitar **Guest embeds**.
 6. Compartilhar o dashboard **via Embed → Guest → Publish** (NÃO public link),
    conferir ID de dashboard e segredo de assinatura em Admin → Embedding.
