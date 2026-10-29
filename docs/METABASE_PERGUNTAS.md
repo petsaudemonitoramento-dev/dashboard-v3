@@ -8,7 +8,7 @@ deve oferecer valor adicional, sem duplicacao.
 
 | Aba | IDs das perguntas | Pergunta analitica |
 | --- | --- | --- |
-| Tendencias | `variacao_municipal`, `distritos_queda_continua`, `ubs_queda_mensal`, `trajetoria_territorial`, `distritos_variacao` | Como os territorios mudaram de um mes para o outro? |
+| Tendencias | `variacao_municipal`, `distritos_queda_continua`, `ubs_queda_mensal`, `trajetoria_territorial`, `distritos_variacao`, `distritos_quedas_persistentes` | Como os territorios mudaram de um mes para o outro? |
 | Investigacao territorial | `ubs_variacao`, `praticas_por_distrito` | Onde houve maior reducao e quais praticas apresentam coberturas menores? |
 | Praticas A–K | `praticas_variacao`, `praticas_trajetoria` | Que praticas variaram mais e como suas coberturas evoluiram? |
 | Qualidade dos dados | `defasagem_competencia`, `sem_distrito_evolucao`, `sem_elegiveis_evolucao`, `variacao_denominador` | Quais limites do dado podem afetar a interpretacao? |
