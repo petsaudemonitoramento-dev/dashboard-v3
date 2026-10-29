@@ -67,26 +67,29 @@ A role foi criada com `NOLOGIN` por seguranca, portanto **nao conecta ate que um
 e defina a senha pelo seu canal seguro**. Nao utilizar usuario `postgres`, senha mestra, service_role ou chave
 secret do Supabase. Sincronizar `analytics`, ocultar tabelas de apoio e desabilitar compartilhamento publico.
 
-## Carregar seis perguntas e criar dashboard
+## Provisionar o painel de BI (10 perguntas, 3 abas)
 
-Apos configurar manualmente usuario admin e fonte `MAE APS - SIAPS C3`, no servidor:
+O layout e versionado em [questions.json](questions.json) com grid nativo de 24 colunas:
+
+| Aba | Visualizacoes |
+| --- | --- |
+| **Panorama municipal** | C3 atual, total de UBS, total de equipes, equipes sem distrito, evolucao C3, classificacao das equipes |
+| **Distritos e UBS** | Evolucao distrital, comparativo de UBS, tabela de equipes para acompanhamento |
+| **Praticas A–K** | Indicadores por pratica |
+
+A paleta de referencia (`#0a3570`, `#0c7ce9`, `#16b8b1`) segue o MAE APS, mas **o Metabase OSS nao permite white-label completo**. Titulos, graficos e abas sao nativos; a tipografia, o cabecalho e as cores da interface padrao do Metabase podem ser diferentes do prototipo visual externo.
+
+Depois que a pessoa autorizada criar o primeiro usuario na UI e cadastrar a fonte `MAE APS - SIAPS C3`, executar no servidor:
 
 ```bash
 python3 scripts/provision.py --dry-run
-# Injetar METABASE_API_KEY via cofre de segredos/sessao segura, NUNCA por Git.
+# Injetar METABASE_API_KEY apenas no ambiente seguro da propria maquina.
 python3 scripts/provision.py --apply
 ```
 
-O script em Python 3 (biblioteca padrao) cria a colecao MAE APS, seis perguntas e um dashboard
-**somente se nao existem**, sem substituir perguntas existentes. A chave precisa de permissoes
-de gerenciamento de perguntas e dashboards, e **METABASE_URL** pode apontar para
-`http://127.0.0.1:3000`. O script nao cria usuarios, roles nem banco de dados, e nao recebe
-credenciais do Supabase.
+O script Python usa somente biblioteca padrao, consulta uma fonte ja cadastrada e instala a colecao, as 10 perguntas, os 3 tabs e as posicoes. **Se o dashboard ja tiver cards/abas, nao os substitui ou apaga**. A chave da API nao deve aparecer no chat, CI, GitHub ou historico de comandos.
 
-O conjunto usa a competencia mais recente para comparativos e todas as competencias para tendencias.
-Os filtros interativos avancados por UBS/distrito estao documentados em
-[`docs/METABASE_PERGUNTAS.md`](../docs/METABASE_PERGUNTAS.md) e precisam de revisao/configuracao
-na interface do Metabase antes de serem disponibilizados.
+Os filtros de competencia e distrito (incluindo ligacao entre perguntas SQL e parametros do Metabase) dependem de validacao na UI da instancia real. **O prototipo HTML usa filtros ficticios; nao prova que os filtros nativos ja estejam ligados.** Ver [plano visual](DESIGN.md) e [catalogo SQL](../docs/METABASE_PERGUNTAS.md).
 
 ## Backup, atualizacao e seguranca
 
