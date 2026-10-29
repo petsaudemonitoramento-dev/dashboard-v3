@@ -1,0 +1,11 @@
+# TLS automatico gratuito por ACME. Precisa hostname real no DNS e portas 80/443.
+# Configuracao de rede da professora deve autorizar explicitamente a publicacao.
+{$METABASE_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy metabase:3000
+  header {
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    -Server
+  }
+}
