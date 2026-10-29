@@ -72,7 +72,6 @@ export function ManagementIntelligenceEmbed({ instanceUrl, dashboardId }: EmbedC
       {status === "ready" && createElement("metabase-dashboard", {
         "dashboard-id": String(dashboardId),
         "with-title": "false",
-        "with-downloads": "false",
         style: { display: "block", width: "100%", minHeight: "750px" },
       })}
     </section>
