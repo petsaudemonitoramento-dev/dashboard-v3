@@ -29,6 +29,7 @@ jobs:
           python3 -m json.tool metabase/questions.json >/dev/null
           python3 metabase/scripts/provision.py --dry-run
           python3 -m py_compile metabase/scripts/provision.py
+          python3 -m unittest discover -s metabase/tests -p 'test_*.py' -v
       - name: Sintaxe dos scripts bash
         run: |
           bash -n metabase/scripts/prepare.sh
@@ -63,7 +64,7 @@ jobs:
       - name: Gerar kit ZIP apenas com arquivos publicos do deploy
         run: |
           cd metabase
-          zip -q -r ../maeaps-metabase-kit.zip compose.yaml .env.example README.md questions.json scripts/prepare.sh scripts/backup.sh scripts/provision.py
+          zip -q -r ../maeaps-metabase-kit.zip compose.yaml .env.example README.md DESIGN.md EMBED_MAE_APS.md questions.json scripts/prepare.sh scripts/backup.sh scripts/provision.py
       - uses: actions/upload-artifact@v4
         with:
           name: maeaps-metabase-kit
