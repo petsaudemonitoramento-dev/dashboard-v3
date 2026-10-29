@@ -51,7 +51,7 @@ nao e desempenho zero.
 
 - [Pacote e checklist definitivo de instalacao](../metabase/README.md)
 - [Abas, consultas e metodologia](../metabase/DESIGN.md)
-- [Manifesto das 13 perguntas (fonte de verdade)](../metabase/questions.json)
+- [Manifesto das 14 perguntas (fonte de verdade)](../metabase/questions.json)
 - [Integracao gratuita dentro do MAE APS](../metabase/EMBED_MAE_APS.md)
 - [Testes de privilegio da role](../supabase/tests/005_metabase_reader.test.sql)
 
