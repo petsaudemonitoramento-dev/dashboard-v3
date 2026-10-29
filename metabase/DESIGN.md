@@ -64,7 +64,7 @@ compactos, 1 gráfico e 2 tabelas; a qualidade possui 1 KPI e 3 gráficos.
 
 ## Estado comprovado
 
-As 13 queries foram submetidas a `EXPLAIN` e executadas como SELECT
+As 14 queries foram submetidas a `EXPLAIN` e executadas como SELECT
 limitado na base real `dashboard-v3` em 29/10/2026.
 O script de provisionamento valida as dimensões e a organização sem
 Metabase real; UI final, gráficos renderizados, filtros e segurança
