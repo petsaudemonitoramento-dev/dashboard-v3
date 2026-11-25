@@ -1,0 +1,27 @@
+name: Generate maintenance lockfile
+on:
+  push:
+    branches: [maintenance/mae-lockfile-nov25]
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Resolve targeted dependency updates without lifecycle scripts
+        run: |
+          npm pkg set 'dependencies.next=16.4.6' 'devDependencies.eslint-config-next=16.4.6' 'dependencies.zod=4.6.7' 'dependencies.@sentry/nextjs=10.78.0'
+          npm install --package-lock-only --ignore-scripts --no-audit
+          npm audit fix --package-lock-only --ignore-scripts || true
+      - name: Export generated manifests
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; for(const file of ["package.json","package-lock.json"]){const s=fs.readFileSync(file).toString("base64"); for(let i=0;i<s.length;i+=3000)console.log("MANIFEST "+file+" "+i+" "+s.slice(i,i+3000)); console.log("ENDMANIFEST "+file+" "+s.length);}'
+      - name: Audit updated dependencies
+        run: npm run audit:security
