@@ -75,7 +75,7 @@ export async function signUpAction(
 
   return {
     ok: true,
-    message: "Conta criada. Confirme o e-mail para continuar.",
+    message: "Sua solicitação de acesso ao MAE APS foi registrada. Se receber um e-mail de confirmação, confirme seu endereço. O acesso depende da análise e da liberação pelo administrador do sistema.",
   };
 }
 
