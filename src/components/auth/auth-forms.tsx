@@ -125,6 +125,20 @@ export function SignInForm() {
 
 export function SignUpForm() {
   const [state, action] = useActionState(signUpAction, INITIAL_STATE);
+  if (state.ok) {
+    return (
+      <div className="auth-form">
+        <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900" role="status">
+          <p className="font-bold">Solicitação de acesso recebida</p>
+          <p className="mt-1 font-semibold">Aguardando liberação</p>
+          <p className="mt-2">{state.message}</p>
+        </div>
+        <Link className="auth-back-link" href="/entrar">
+          Voltar para entrar
+        </Link>
+      </div>
+    );
+  }
   return (
     <form action={action} className="auth-form">
       <Field autoComplete="email" label="E-mail" name="email" type="email" />
