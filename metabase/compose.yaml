@@ -1,0 +1,73 @@
+# Metabase exclusivo do MAE APS. Nenhum banco PostgreSQL e exposto na rede.
+# O banco metabase-db guarda contas, perguntas e dashboards; NAO e o banco de indicadores SIAPS.
+name: maeaps-metabase
+services:
+  metabase-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: metabaseappdb
+      POSTGRES_USER: metabaseapp
+      POSTGRES_PASSWORD_FILE: /run/secrets/app_db_password
+    secrets:
+      - app_db_password
+    volumes:
+      - metabase_app_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metabaseapp -d metabaseappdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - database_private
+    security_opt:
+      - no-new-privileges:true
+
+  metabase:
+    image: metabase/metabase:v0.64.4.1
+    restart: unless-stopped
+    depends_on:
+      metabase-db:
+        condition: service_healthy
+    ports:
+      # Somente acesso local/SSH. Usar um proxy TLS protegido se acesso remoto for liberado.
+      - "127.0.0.1:3000:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabaseappdb
+      MB_DB_HOST: metabase-db
+      MB_DB_PORT: "5432"
+      MB_DB_USER: metabaseapp
+      MB_DB_PASS_FILE: /run/secrets/app_db_password
+      MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY:?execute scripts/prepare.sh}
+      MB_SESSION_SECRET_KEY: ${MB_SESSION_SECRET_KEY:?execute scripts/prepare.sh}
+      MB_DISABLE_LEGACY_STARTUP_ENCRYPTION: "true"
+      MB_LOAD_SAMPLE_CONTENT: "false"
+      MB_ANON_TRACKING_ENABLED: "false"
+      MB_PASSWORD_COMPLEXITY: strong-enough
+      MB_PASSWORD_LENGTH: "15"
+      MB_SITE_URL: ${MB_SITE_URL:-http://localhost:3000}
+      JAVA_TIMEZONE: America/Fortaleza
+    secrets:
+      - app_db_password
+    networks:
+      - database_private
+      - outbound
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  metabase_app_data:
+
+secrets:
+  app_db_password:
+    file: ./secrets/app_db_password
+
+networks:
+  database_private:
+    internal: true
+  outbound: {}
