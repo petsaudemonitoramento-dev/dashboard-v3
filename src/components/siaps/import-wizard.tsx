@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, FileSpreadsheet, LoaderCircle, ShieldCheck, UploadCloud } from "lucide-react";
+import { AlertCircle, CheckCircle2, FileSpreadsheet, LoaderCircle, ShieldCheck, UploadCloud, Plus } from "lucide-react";
 
 import { compactSiapsRow, parseSiapsWorkbook, sha256Hex, type SiapsParseResult } from "@/lib/siaps/parser";
 import { readImportApiResponse, SIAPS_REQUEST_TOO_LARGE_MESSAGE, SIAPS_XLSX_TOO_LARGE_MESSAGE } from "@/lib/siaps/errors";
@@ -47,6 +47,25 @@ export function ImportWizard() {
   const [schemaChanges, setSchemaChanges] = useState<CheckResponse["schemaChanges"]>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ message: string; ok: boolean } | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+  const focusFileOnReset = useRef(false);
+
+  useEffect(() => {
+    if (result?.ok) successRef.current?.focus();
+    if (!result && focusFileOnReset.current) {
+      focusFileOnReset.current = false;
+      fileInputRef.current?.focus();
+    }
+  }, [result]);
+
+  function startNewImport() {
+    if (busy) return;
+    focusFileOnReset.current = true;
+    setFilename(""); setHash(""); setParsed(null); setCompetency("");
+    setPreflight(null); setDuplicate(null); setSchemaChanges(null); setResult(null);
+  }
 
   function payload(mode: "check" | "publish", previewId?: string) {
     if (!parsed?.rows.length || !MONTH.test(competency)) throw new Error("Selecione um arquivo válido e informe a competência.");
@@ -127,15 +146,15 @@ export function ImportWizard() {
     </div>
     <span className="sr-only" aria-live="polite">{busy ? "Analisando arquivo." : "Pronto para interação."}</span>
 
-    <label className="upload-dropzone flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center">
+    {!result?.ok && <label className="upload-dropzone flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center">
       {busy ? <LoaderCircle aria-hidden="true" className="mb-3 size-9 animate-spin" /> : <UploadCloud aria-hidden="true" className="mb-3 size-9" />}
       <strong>Selecione a planilha XLSX do SIAPS</strong>
       <span className="mt-1 text-sm text-slate-700">Nenhum dado é gravado durante a leitura local ou a análise.</span>
-      <input className="sr-only" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      <input ref={fileInputRef} disabled={busy} className="sr-only" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         onChange={e => void selectFile(e.target.files?.[0])}/>
-    </label>
+    </label>}
 
-    {parsed && <>
+    {parsed && !result?.ok && <>
       <div className="grid gap-3 md:grid-cols-4">
         <div className="metric-card">
           <FileSpreadsheet className="size-5" aria-hidden="true"/><span>Arquivo / aba</span>
@@ -213,10 +232,25 @@ export function ImportWizard() {
           onClick={() => void publish()}>{preflight.new ? "Confirmar inclusão segura" : "Registrar verificação sem alterações"}</button>
       </section>}
     </>}
-    {result && <div role={result.ok ? "status" : "alert"}
-      className={`rounded-xl border p-4 ${result.ok ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-red-200 bg-red-50 text-red-800"}`}>
-      {result.ok ? <CheckCircle2 aria-hidden="true" className="mr-2 inline size-5"/> : <AlertCircle aria-hidden="true" className="mr-2 inline size-5"/>}
-      {result.message}
+    {result?.ok && <div ref={successRef} tabIndex={-1} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 sm:p-6">
+      <div role="status" className="flex items-start gap-3">
+        <CheckCircle2 aria-hidden="true" className="mt-0.5 size-6 shrink-0"/>
+        <div className="min-w-0">
+          <h3 className="font-semibold text-lg">Importação finalizada</h3>
+          <p className="mt-1">{result.message}</p>
+          <p className="mt-2 break-all text-sm">Arquivo: {filename}</p>
+          <p className="mt-1 text-sm">Competência: {competency.slice(5,7)}/{competency.slice(0,4)}</p>
+          <p className="mt-2 text-sm">Não é necessário enviar este arquivo novamente. Para importar outra competência, inicie uma nova importação.</p>
+        </div>
+      </div>
+      <div className="mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-end">
+        <button type="button" className="primary-button w-full sm:w-auto" disabled={busy} onClick={startNewImport}>
+          <Plus aria-hidden="true" className="mr-2 inline size-4"/> Realizar nova importação
+        </button>
+      </div>
+    </div>}
+    {result && !result.ok && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
+      <AlertCircle aria-hidden="true" className="mr-2 inline size-5"/>{result.message}
     </div>}
   </section>;
 }
