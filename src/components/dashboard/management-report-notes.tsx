@@ -4,7 +4,7 @@ import Image from "next/image";
 import { FileText, Printer, Save, Trash2, X, StickyNote } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
-import { managePrivateNote } from "@/app/(sistema)/sistema/gestao/notes-actions";
+import { managePrivateNote, type PrivateNote } from "@/app/(sistema)/sistema/gestao/notes-actions";
 
 type Stat = { label: string; value: string; detail: string };
 type Practice = { code: string; label: string; value: number | null; fulfilled: number; description: string };
@@ -120,32 +120,46 @@ function ReportBody({ data, notes }: { data: ManagementReportData; notes: string
 }
 
 export function ManagementReportAndNotes({
-  data, initialNote, notesAvailable,
+  data, initialNotes, notesAvailable,
 }: {
   data: ManagementReportData;
-  initialNote: string;
+  initialNotes: PrivateNote[];
   notesAvailable: boolean;
 }) {
-  const [note, setNote] = useState(initialNote);
-  const [savedNote, setSavedNote] = useState(initialNote);
+  const [notes, setNotes] = useState(initialNotes);
+  const [note, setNote] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
   const [includeNotes, setIncludeNotes] = useState(false);
   const [preview, setPreview] = useState(false);
   const [status, setStatus] = useState("");
   const [pending, startTransition] = useTransition();
   const previewRef = useRef<HTMLDivElement>(null);
-  const printableNotes = includeNotes ? note : "";
+  const printableNotes = includeNotes ? notes.map((entry) => entry.body).join("\n\n") : "";
 
-  function update(operation: "save" | "delete") {
-    if (!notesAvailable) return;
+  function update(operation: "create" | "update" | "delete", id?: string) {
+    if (!notesAvailable || pending) return;
+    if (operation === "delete" && !window.confirm("Excluir esta anotação?")) return;
     const form = new FormData();
     form.set("period_start", data.periodStart);
     form.set("period_end", data.periodEnd);
     form.set("operation", operation);
+    if (id) form.set("id", id);
     form.set("body", operation === "delete" ? "" : note);
     startTransition(async () => {
-      const result = await managePrivateNote({ ok: false, body: "", message: "" }, form);
-      if (result.ok) { setNote(result.body); setSavedNote(result.body); }
-      setStatus(result.message);
+      try {
+        const result = await managePrivateNote(form);
+        if (result.ok) {
+          if (operation === "delete") {
+            setNotes((old) => old.filter((entry) => entry.id !== id));
+            if (editing === id) { setNote(""); setEditing(null); }
+          } else if (result.entry) {
+            const entry = result.entry;
+            setNotes((old) => operation === "create" ? [entry, ...old] : old.map((item) => item.id === entry.id ? entry : item));
+            setNote(""); setEditing(null);
+          }
+        }
+        setStatus(result.message);
+      } catch { setStatus("Não foi possível concluir a operação. Tente novamente."); }
     });
   }
 
@@ -189,7 +203,7 @@ export function ManagementReportAndNotes({
           <div><span>Anotações da Gestão</span><h2>Minhas anotações</h2><p>Registre observações e oportunidades de melhoria para futuras consultas.</p></div>
           <StickyNote className="size-6" aria-hidden="true" />
         </div>
-        <label htmlFor="management-private-note">Anotações do período {data.period} — visíveis apenas nesta conta</label>
+        <label htmlFor="management-private-note">{editing ? "Editar anotação" : "Nova anotação"} · {data.period} — visível apenas nesta conta</label>
         <textarea
           id="management-private-note"
           autoComplete="off"
@@ -203,13 +217,28 @@ export function ManagementReportAndNotes({
         <div className="management-notes-controls">
           <small>Não registre nomes nem informações identificáveis de pacientes. {note.length}/2000 caracteres</small>
           <div>
-            <button type="button" onClick={() => update("delete")} disabled={!notesAvailable || pending}><Trash2 className="size-4" /> Limpar</button>
-            <button type="button" className="management-notes-save" onClick={() => update("save")} disabled={!notesAvailable || pending}><Save className="size-4" /> {pending ? "Salvando..." : "Salvar anotação"}</button>
+            <button type="button" onClick={() => { setNote(""); setEditing(null); setStatus(""); }} disabled={!notesAvailable || pending}>{editing ? "Cancelar edição" : "Limpar campo"}</button>
+            <button type="button" className="management-notes-save" onClick={() => update(editing ? "update" : "create", editing ?? undefined)} disabled={!notesAvailable || pending || !note.trim()}><Save className="size-4" /> {pending ? "Salvando..." : editing ? "Salvar edição" : "Salvar anotação"}</button>
           </div>
         </div>
         <p role="status" aria-live="polite" className="management-notes-message">
-          {!notesAvailable ? "Diário indisponível até a migração segura do banco ser aplicada." : pending ? "Salvando com segurança..." : status || (note !== savedNote ? "Alterações ainda não salvas. Clique em Salvar anotação." : "Somente sua conta pode consultar este registro. Os dados são persistidos no banco com RLS por usuário.")}
+          {!notesAvailable ? "Não foi possível consultar as anotações. Atualize a página." : pending ? "Processando com segurança..." : status || (note.trim() ? "Alterações ainda não salvas." : "Somente sua conta pode consultar estes registros.")}
         </p>
+        <section aria-label="Histórico de anotações" style={{ borderTop: "1px solid #ded7e8", paddingTop: 12, marginTop: 8 }}>
+          <h3>Histórico de anotações · {notes.length}</h3>
+          <small>Os registros seguem o intervalo selecionado nos filtros acima.</small>
+          {notesAvailable && notes.length === 0 && <p>Nenhuma anotação registrada neste período.</p>}
+          <div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+            {notes.map((entry) => <article key={entry.id} style={{ border: "1px solid #ded7e8", borderRadius: 10, padding: 12 }}>
+              <small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Fortaleza" }).format(new Date(entry.created_at))}</small>
+              <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{entry.body}</p>
+              <div className="management-notes-controls"><div>
+                <button type="button" disabled={pending} onClick={() => { if (note.trim() && !window.confirm("Descartar o texto ainda não salvo?")) return; setEditing(entry.id); setNote(entry.body); setStatus(""); document.getElementById("management-private-note")?.focus(); }}>Editar</button>
+                <button type="button" disabled={pending} onClick={() => update("delete", entry.id)}><Trash2 className="size-4" /> Excluir</button>
+              </div></div>
+            </article>)}
+          </div>
+        </section>
       </article>
 
       <div className="management-print-report" aria-hidden={!preview}>
