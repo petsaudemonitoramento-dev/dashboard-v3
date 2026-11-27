@@ -41,6 +41,19 @@ test("exibe prévia e só publica novas equipes depois de autorização", async 
   await expect(page.getByText("Prévia antes da publicação")).toBeVisible();
   await page.getByRole("button", { name: "Confirmar inclusão segura" }).click();
   await expect(page.getByText(/Conciliação publicada: 1 novas equipes/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Importação finalizada" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Analisar duplicidades e permissões" })).toHaveCount(0);
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Realizar nova importação" }).click();
+  await expect(page.locator('input[type="file"]')).toBeAttached();
+  await expect(page.getByText("Importação finalizada")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Confirmar inclusão segura" })).toHaveCount(0);
+  // The same file can be selected again for a fresh analysis; no stale token.
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "e2e-valid-import.xlsx", mimeType: XLSX_MIME, buffer: validWorkbook(),
+  });
+  await expect(page.getByRole("button", { name: "Analisar duplicidades e permissões" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Confirmar inclusão segura" })).toHaveCount(0);
 });
 
 test("bloqueia publicação de equipes com conflito e fora do escopo", async ({ page }) => {
