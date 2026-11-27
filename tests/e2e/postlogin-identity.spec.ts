@@ -493,3 +493,33 @@ test("só a travessia de breakpoint redefine o estado responsivo do menu", async
   await expect(page.locator(".management-shell")).not.toHaveClass(/management-shell-mobile/);
   await expect(page.getByRole("button", { name: "Recolher menu lateral" })).toHaveAttribute("aria-expanded", "true");
 });
+
+
+test("anotações privadas: criar duas, recarregar, editar e excluir separadamente", async ({ page }) => {
+  await signIn(page, "gestao");
+  const card = page.locator(".management-notes-card");
+  const input = card.locator("textarea");
+  const first = "Teste sintético A " + Date.now();
+  const second = "Teste sintético B " + Date.now();
+  await input.fill(first);
+  await card.getByRole("button", { name: "Salvar anotação" }).click();
+  await expect(card.getByText(first, { exact: true })).toBeVisible();
+  await input.fill(second);
+  await card.getByRole("button", { name: "Salvar anotação" }).click();
+  await expect(card.getByText(second, { exact: true })).toBeVisible();
+  await page.reload();
+  const a = card.locator("article").filter({ hasText: first });
+  const b = card.locator("article").filter({ hasText: second });
+  await expect(a).toBeVisible();
+  await expect(b).toBeVisible();
+  await a.getByRole("button", { name: "Editar" }).click();
+  await input.fill(first + " editada");
+  await card.getByRole("button", { name: "Salvar edição" }).click();
+  await expect(card.getByText(first + " editada", { exact: true })).toBeVisible();
+  await expect(b).toBeVisible();
+  page.on("dialog", (dialog) => dialog.accept());
+  await a.getByRole("button", { name: "Excluir" }).click();
+  await expect(a).toHaveCount(0);
+  await b.getByRole("button", { name: "Excluir" }).click();
+  await expect(b).toHaveCount(0);
+});

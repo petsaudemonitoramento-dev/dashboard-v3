@@ -188,6 +188,7 @@ export default async function EstablishmentsTeamsPage({
             <caption className="sr-only">UBS, distrito, equipes, denominador, C3, classificação e ação</caption>
             <thead><tr><th scope="col">UBS</th><th scope="col">Distrito</th><th scope="col">Equipes</th><th scope="col">Denominador</th><th scope="col">C3</th><th scope="col">Classificação</th><th scope="col">Ação</th></tr></thead>
             <tbody>
+              {establishments.length === 0 && <tr><td colSpan={7}>Nenhuma UBS encontrada para os filtros selecionados.</td></tr>}
               {establishments.map((item) => (
                 <tr key={item.id}>
                   <th scope="row"><strong>{item.name}</strong><br/><small>CNES {item.code}</small></th>
@@ -220,6 +221,7 @@ export default async function EstablishmentsTeamsPage({
             <caption className="sr-only">Equipes, UBS, distrito, denominador, C3, classificação e ação</caption>
             <thead><tr><th scope="col">Equipe</th><th scope="col">UBS</th><th scope="col">Distrito</th><th scope="col">Denominador</th><th scope="col">C3</th><th scope="col">Classificação</th><th scope="col">Ação</th></tr></thead>
             <tbody>
+              {teams.length === 0 && <tr><td colSpan={7}>Nenhuma equipe encontrada para os filtros selecionados.</td></tr>}
               {teams.map((item) => (
                 <tr key={item.id}>
                   <th scope="row"><strong>{item.name}</strong><br/><small>INE {item.code}</small></th>

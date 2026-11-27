@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   BarChart3, Bell, Building2, ChevronDown, DatabaseZap,
   GitCompareArrows, LayoutDashboard, LandPlot, LogOut,
@@ -46,6 +46,8 @@ function initialsFromName(name: string, email: string) {
 
 export function ManagementShell({ children, email, role, userId, displayName, notices, noticesUnavailable }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [noticePending, startNoticeTransition] = useTransition();
   const isAdmin = role === "admin";
   const isImport = pathname.startsWith("/sistema/importar");
   const homeHref = isAdmin ? "/sistema/administracao" : "/sistema/gestao";
@@ -177,9 +179,9 @@ export function ManagementShell({ children, email, role, userId, displayName, no
 
           <div className="management-notifications">
             <button type="button" className="management-bell" aria-label={`Notificações: ${unread.length} não lidas`}
-              aria-expanded={bellOpen} aria-controls="management-notification-panel"
+              aria-expanded={bellOpen} aria-busy={noticePending} aria-controls="management-notification-panel"
               onClick={() => setBellOpen((value) => !value)}>
-              <Bell aria-hidden="true" />
+              {noticePending ? <span className="management-nav-spinner" aria-hidden="true" /> : <Bell aria-hidden="true" />}
               {unread.length > 0 ? <span className="management-bell-badge">{unread.length > 9 ? "9+" : unread.length}</span> : null}
             </button>
             {bellOpen && <section id="management-notification-panel" className="management-notice-popover" aria-label="Notificações">
@@ -190,12 +192,12 @@ export function ManagementShell({ children, email, role, userId, displayName, no
               {notices.length === 0 && !noticesUnavailable ? <p className="management-notice-empty">Nenhuma pendência identificada nos dados disponíveis.</p> : null}
               {notices.map((notice) => (
                 <Link href={notice.href} key={notice.id} className={`management-notice-item ${seenIds.includes(notice.id) ? "is-read" : ""}`}
-                  onClick={() => readOne(notice.id)}>
+                  onNavigate={(event) => { event.preventDefault(); readOne(notice.id); startNoticeTransition(() => router.push(notice.href)); }}>
                   <span className={`management-notice-dot ${notice.severity}`} aria-hidden="true" />
                   <span><strong>{notice.title}</strong><small>{notice.description}</small></span>
                 </Link>
               ))}
-              {role === "gestao" ? <Link className="management-notice-footer" href="/sistema/importar" onClick={() => setBellOpen(false)}>Ver histórico de importações →</Link> : null}
+              {role === "gestao" ? <Link className="management-notice-footer" href="/sistema/importar" onNavigate={(event) => { event.preventDefault(); setBellOpen(false); startNoticeTransition(() => router.push("/sistema/importar")); }}>Ver histórico de importações →</Link> : null}
             </section>}
           </div>
 
@@ -264,6 +266,7 @@ export function ManagementShell({ children, email, role, userId, displayName, no
       </aside>
 
       <main className="management-main" id="conteudo-principal" tabIndex={-1}>
+        {noticePending ? <div className="management-nav-pending" role="status" aria-live="polite"><span className="management-nav-spinner" aria-hidden="true" /><span>Carregando informações da notificação…</span></div> : null}
         {pendingPage && pathname !== pendingPage.href ? (
           <div className="management-nav-pending" role="status" aria-live="polite">
             <span className="management-nav-spinner" aria-hidden="true" />

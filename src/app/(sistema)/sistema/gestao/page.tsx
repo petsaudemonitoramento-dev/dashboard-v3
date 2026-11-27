@@ -578,14 +578,14 @@ export default async function ManagementDashboard({
 
   // Anotações nunca chegam de terceiros: a chave é o usuário autenticado,
   // e a autorização de SELECT também é garantida por RLS no banco.
-  const notesResult = await supabase.schema("app").from("management_private_notes")
-    .select("body")
+  const notesResult = await supabase.schema("app").from("management_private_note_entries")
+    .select("id,body,created_at,updated_at")
     .eq("user_id", profile.userId)
     .eq("period_start", `${start}-01`)
     .eq("period_end", `${end}-01`)
-    .maybeSingle();
+    .order("created_at", { ascending: false });
   const notesAvailable = !notesResult.error;
-  const initialNote = typeof notesResult.data?.body === "string" ? notesResult.data.body : "";
+  const initialNotes = notesResult.data ?? [];
 
   const report: ManagementReportData = {
     period: heroPeriod,
@@ -1008,7 +1008,7 @@ export default async function ManagementDashboard({
           )}
         </article>
 
-        <ManagementReportAndNotes key={`${start}:${end}`} data={report} initialNote={initialNote} notesAvailable={notesAvailable} />
+        <ManagementReportAndNotes key={`${start}:${end}`} data={report} initialNotes={initialNotes} notesAvailable={notesAvailable} />
       </section>
 
     </div>
